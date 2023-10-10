@@ -97,7 +97,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
     // mainCanvasContext.rect(cursX - 10, cursY - 10, 20, 20);
     // mainCanvasContext.fill();
     // mainCanvasContext.closePath();
-    window.requestAnimationFrame(__gameLoop);
+    gameState.time.frameID = window.requestAnimationFrame(__gameLoop);
 
   };
 
