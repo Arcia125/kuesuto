@@ -32,6 +32,7 @@ export type Time = {
   framesThisSecond: number;
   lastFpsUpdate: number;
   frameID: number;
+  resetDeltaCount: number;
 };
 
 export type Elements = {

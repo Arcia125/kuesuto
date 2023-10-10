@@ -1,10 +1,10 @@
 import { GameState } from './models';
 
 const keyMappings = {
-  up: ['ArrowUp'],
-  down: ['ArrowDown'],
-  left: ['ArrowLeft'],
-  right: ['ArrowRight'],
+  up: ['ArrowUp', 'w'],
+  down: ['ArrowDown', 's'],
+  left: ['ArrowLeft', 'a',],
+  right: ['ArrowRight', 'd'],
 };
 
 export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEvent) => {

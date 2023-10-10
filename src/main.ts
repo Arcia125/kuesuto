@@ -79,6 +79,7 @@ const init = () => {
       maxFPS: 60,
       timeStep: 1000 / 60,
       frameID: 0,
+      resetDeltaCount: 0,
     },
     elements: {
       mainCanvas,

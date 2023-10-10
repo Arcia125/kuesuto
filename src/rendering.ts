@@ -48,9 +48,79 @@ const drawSprite = (
     spriteY,
     spriteWidth,
     spriteHeight,
-  }: { canvasX: number, canvasY: number, canvasWidth: number, canvasHeight: number, spriteX: number, spriteY: number, spriteWidth: number, spriteHeight: number }) => {
+  }: {
+    /** x position on the canvas */
+    canvasX: number,
+    /** y Position on the canvas */
+    canvasY: number,
+    canvasWidth: number,
+    canvasHeight: number,
+    /** x Position on the spritesheet */
+    spriteX: number,
+    /** y Position on the spritesheet */
+    spriteY: number,
+    /** width of the sprite on the spritesheet */
+    spriteWidth: number,
+    /** height of the sprite on the spritesheet */
+    spriteHeight: number
+  }) => {
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(spriteSheet, spriteX, spriteY, spriteWidth, spriteHeight, canvasX, canvasY, canvasWidth, canvasHeight);
+};
+
+const getSpriteXFromLastFrameTimeMS = (
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  gameState: GameState,
+  spriteFrameSize: number
+) => {
+  const animationSpeed = .005;
+  const animationBasis = gameState.time.lastFrameTimeMs;
+  const movingMultiplier = 2;
+  const playerSpriteX = 0 + Math.floor((animationBasis * (animationSpeed * (gameState.player.moving ? movingMultiplier : 1))) % 4) * spriteFrameSize;
+  return playerSpriteX;
+};
+
+const getSpriteXFromDelta = (
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  gameState: GameState,
+  spriteFrameSize: number
+) => {
+  const animationSpeed = 5;
+  const animationBasis = gameState.time.delta;
+  const movingMultiplier = 4;
+  const playerSpriteX = 0 + Math.floor((animationBasis * (animationSpeed * (gameState.player.moving ? movingMultiplier : 1))) % 4) * spriteFrameSize;
+  return playerSpriteX;
+};
+
+const getSpriteXFromFrameId = (
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  gameState: GameState,
+  spriteFrameSize: number
+) => {
+  const animationSpeed = .1;
+  const animationBasis = gameState.time.frameID;
+  const movingMultiplier = 3;
+  const playerSpriteX = 0 + Math.floor((animationBasis * (animationSpeed * (gameState.player.moving ? movingMultiplier : 1))) % 4) * spriteFrameSize;
+  return playerSpriteX;
+};
+
+let lastAnimationTime = performance.now();
+const getSpriteXFromFrameIdSimple = (
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  gameState: GameState,
+  spriteFrameSize: number
+) => {
+  const staggerFrames = 15;
+  const position = Math.floor(gameState.time.frameID / staggerFrames) % 3;
+  const prevAnimationTime = lastAnimationTime;
+  lastAnimationTime = performance.now()
+  console.log(prevAnimationTime - lastAnimationTime);
+  const frameX = spriteFrameSize * position;
+  return frameX;
 };
 
 const drawPlayerSprite = (
@@ -58,14 +128,24 @@ const drawPlayerSprite = (
   canvas: HTMLCanvasElement,
   gameState: GameState
 ) => {
-  const size = 32;
-  const animationSpeed = 5;
-  const playerSpriteX = 0 + Math.floor((gameState.time.delta * animationSpeed) % 4) * size;
-  const spriteMovingOffsetY = ((4 * +gameState.player.moving) * size);
+  const spriteFrameSize = 32;
+
+
+  // const playerSpriteX = getSpriteXFromLastFrameTimeMS(ctx, canvas, gameState, spriteFrameSize);
+  // const playerSpriteX = getSpriteXFromDelta(ctx, canvas, gameState, spriteFrameSize);
+  // const playerSpriteX = getSpriteXFromFrameId(ctx, canvas, gameState, spriteFrameSize);
+  const playerSpriteX = getSpriteXFromFrameIdSimple(ctx, canvas, gameState, spriteFrameSize);
+
+
+  const spriteMovingOffsetY = ((4 * +gameState.player.moving) * spriteFrameSize);
   const facingUp = gameState.player.yDir < 0;
   const facingDown = gameState.player.yDir > 0;
   const facingSide = gameState.player.xDir !== 0;
-  const spriteDirOffsetY = 0 + (facingDown ? 0 : (facingUp ? size * 3 : facingSide ? gameState.player.xDir > 0 ? size * 2 : size : 0));
+  const spriteDirOffsetY = 0 + (facingDown ?
+    0 : (facingUp ?
+      spriteFrameSize * 3 : facingSide ?
+        gameState.player.xDir > 0 ?
+          spriteFrameSize * 2 : spriteFrameSize : 0));
   const playerSpriteY = 0 + spriteMovingOffsetY + spriteDirOffsetY;
 
   const canvasX = gameState.player.x;
@@ -74,12 +154,12 @@ const drawPlayerSprite = (
   drawSprite(ctx, canvas, playerSpritesheet, {
     canvasX,
     canvasY,
-    canvasWidth: size * 4,
-    canvasHeight: size * 4,
+    canvasWidth: (canvas.width / 50) * 4,
+    canvasHeight: (canvas.width / 50) * 4,
     spriteX: playerSpriteX,
     spriteY: playerSpriteY,
-    spriteWidth: size,
-    spriteHeight: size,
+    spriteWidth: spriteFrameSize,
+    spriteHeight: spriteFrameSize,
   });
 };
 

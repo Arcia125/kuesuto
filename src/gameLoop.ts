@@ -47,6 +47,7 @@ const update = (gameState: GameState, timestamp: number) => {
 };
 
 const resetDelta = (gameState: GameState) => {
+  gameState.time.resetDeltaCount++;
   gameState.time.delta = 0;
 };
 
