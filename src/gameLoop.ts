@@ -2,37 +2,51 @@ import { GameState } from './models';
 import { render } from './rendering';
 
 const updatePlayerPosition = (gameState: GameState, timestamp: number) => {
-
+  let moving = false;
+  let yDir = gameState.player.yDir;
+  let xDir = gameState.player.xDir;
+  let movedX = false;
+  let movedY = false;
   if (gameState.controls.up) {
     gameState.player.y -= (gameState.player.speedY * gameState.time.delta);
-    gameState.player.yDir = -1;
+    yDir = -1;
+    moving = true;
+    movedY = true;
   }
   if (gameState.controls.down) {
     gameState.player.y += (gameState.player.speedY * gameState.time.delta);
-    gameState.player.yDir = 1;
+    yDir = 1;
+    moving = true;
+    movedY = true;
   }
   if (gameState.controls.left) {
     gameState.player.x -= (gameState.player.speedX * gameState.time.delta);
-    gameState.player.xDir = 1;
+    xDir = 1;
+    moving = true;
+    movedX = true;
   }
   if (gameState.controls.right) {
     gameState.player.x += (gameState.player.speedX * gameState.time.delta);
-    gameState.player.xDir = -1;
+    xDir = -1;
+    moving = true;
+    movedX = true;
   }
+  gameState.player.moving = moving;
+
+  if (movedX && !movedY) {
+    yDir = 0;
+  } else if (movedY && !movedX) {
+    xDir = 0;
+  }
+  gameState.player.yDir = yDir;
+  gameState.player.xDir = xDir;
 };
 
 const update = (gameState: GameState, timestamp: number) => {
-  // gameState.world.frames++;
-  // let gameTime = timestamp;
-  // gameTime *= 0.001;
-  // const deltaTime = gameTime - gameState.world.time;
-  // gameState.world.deltaTime = deltaTime;
-  // gameState.world.time = gameTime;
-
   updatePlayerPosition(gameState, timestamp);
 };
 
-const panic = (gameState: GameState) => {
+const resetDelta = (gameState: GameState) => {
   gameState.time.delta = 0;
 };
 
@@ -67,7 +81,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
       gameState.time.delta -= gameState.time.timeStep;
 
       if (++numUpdateSteps >= 240) {
-        panic(gameState);
+        resetDelta(gameState);
         break;
       }
     }

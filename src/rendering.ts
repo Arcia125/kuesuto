@@ -53,24 +53,44 @@ const drawSprite = (
   ctx.drawImage(spriteSheet, spriteX, spriteY, spriteWidth, spriteHeight, canvasX, canvasY, canvasWidth, canvasHeight);
 };
 
+const drawPlayerSprite = (
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  gameState: GameState
+) => {
+  const size = 32;
+  const animationSpeed = 5;
+  const playerSpriteX = 0 + Math.floor((gameState.time.delta * animationSpeed) % 4) * size;
+  const spriteMovingOffsetY = ((4 * +gameState.player.moving) * size);
+  const facingUp = gameState.player.yDir < 0;
+  const facingDown = gameState.player.yDir > 0;
+  const facingSide = gameState.player.xDir !== 0;
+  const spriteDirOffsetY = 0 + (facingDown ? 0 : (facingUp ? size * 3 : facingSide ? gameState.player.xDir > 0 ? size * 2 : size : 0));
+  const playerSpriteY = 0 + spriteMovingOffsetY + spriteDirOffsetY;
+
+  const canvasX = gameState.player.x;
+  const canvasY = gameState.player.y;
+
+  drawSprite(ctx, canvas, playerSpritesheet, {
+    canvasX,
+    canvasY,
+    canvasWidth: size * 4,
+    canvasHeight: size * 4,
+    spriteX: playerSpriteX,
+    spriteY: playerSpriteY,
+    spriteWidth: size,
+    spriteHeight: size,
+  });
+};
+
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   resetContext(ctx, canvas, "#fff");
   drawGrid(ctx, canvas, 0, "#000");
 
-  drawSprite(ctx, canvas, playerSpritesheet, {
-    canvasX: gameState.player.x,
-    canvasY: gameState.player.y,
-    canvasWidth: 24 * 4,
-    canvasHeight: 24 * 4,
-    spriteX: 0,
-    spriteY: 0,
-    spriteWidth: 24,
-    spriteHeight: 24,
-  });
+  drawPlayerSprite(ctx, canvas, gameState);
 
   // const gameStateContainer = document.querySelector("#game-state");
   if (gameState.elements.gameStateContainer) {
-    console.log('rendering game state');
     gameState.elements.gameStateContainer.innerHTML = JSON.stringify(gameState, null, 2);
   }
 }

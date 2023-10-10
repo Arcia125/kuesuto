@@ -5,6 +5,7 @@ export type Player = {
   yDir: number;
   speedX: number;
   speedY: number;
+  moving: boolean;
 };
 
 export type Controls = {

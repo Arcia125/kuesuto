@@ -58,6 +58,7 @@ const init = () => {
       yDir: 0,
       speedX: .25,
       speedY: .25,
+      moving: false,
     },
     controls: {
       up: false,
