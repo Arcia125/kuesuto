@@ -124,7 +124,7 @@ document.addEventListener("keyup", (event) => {
   createKeyUpHandler(gameState)(event);
 });
 
-document.addEventListener("resize", (event) => {
+window.addEventListener("resize", (event) => {
   gameState.elements.mainCanvas.width = window.innerWidth;
   gameState.elements.mainCanvas.height = window.innerHeight;
 });
