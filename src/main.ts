@@ -1,6 +1,7 @@
+import { createKeyDownHandler, createKeyUpHandler } from './controls';
 import { GameState } from './models';
 import './style.css'
-import { render } from './rendering';
+import { gameLoop } from "./gameLoop";
 
 
 // document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -43,13 +44,20 @@ const init = () => {
     throw new Error('Main canvas context not found');
   }
 
+  const gameStateContainer = document.querySelector<HTMLPreElement>("#game-state");
+  if (!gameStateContainer) {
+    throw new Error('Game State Container not found');
+  }
+
 
   const gameState: GameState = {
     player: {
       x: 0,
       y: 0,
-      speedX: 10,
-      speedY: 10,
+      xDir: 0,
+      yDir: 0,
+      speedX: .25,
+      speedY: .25,
     },
     controls: {
       up: false,
@@ -57,6 +65,25 @@ const init = () => {
       left: false,
       right: false,
     },
+    world: {
+      running: false,
+      started: false,
+    },
+    time: {
+      delta: 0,
+      fps: 60,
+      framesThisSecond: 0,
+      lastFpsUpdate: 0,
+      lastFrameTimeMs: 0,
+      maxFPS: 60,
+      timeStep: 1000 / 60,
+      frameID: 0,
+    },
+    elements: {
+      mainCanvas,
+      mainCanvasContext,
+      gameStateContainer
+    }
   };
 
 
@@ -77,16 +104,6 @@ const init = () => {
   }
 }
 
-const keyMappings = {
-  up: ['ArrowUp'],
-  down: ['ArrowDown'],
-  left: ['ArrowLeft'],
-  right: ['ArrowRight'],
-};
-
-
-
-
 try {
   const initilization = init();
   // ({ mainCanvas, mainCanvasContext, gameState } = init());
@@ -99,58 +116,30 @@ try {
 }
 
 document.addEventListener("keydown", (event) => {
-  if (keyMappings.up.includes(event.key)) {
-    gameState.controls.up = true;
-  }
-  if (keyMappings.down.includes(event.key)) {
-    gameState.controls.down = true;
-  }
-  if (keyMappings.left.includes(event.key)) {
-    gameState.controls.left = true;
-  }
-  if (keyMappings.right.includes(event.key)) {
-    gameState.controls.right = true;
-  }
+  createKeyDownHandler(gameState)(event);
 });
 
 document.addEventListener("keyup", (event) => {
-  if (keyMappings.up.includes(event.key)) {
-    gameState.controls.up = false;
-  }
-  if (keyMappings.down.includes(event.key)) {
-    gameState.controls.down = false;
-  }
-  if (keyMappings.left.includes(event.key)) {
-    gameState.controls.left = false;
-  }
-  if (keyMappings.right.includes(event.key)) {
-    gameState.controls.right = false;
-  }
+  createKeyUpHandler(gameState)(event);
 });
 
-setInterval(() => {
-  if (gameState.controls.up) {
-    gameState.player.y -= gameState.player.speedY;
-  }
-  if (gameState.controls.down) {
-    gameState.player.y += gameState.player.speedY;
-  }
-  if (gameState.controls.left) {
-    gameState.player.x -= gameState.player.speedX;
-  }
-  if (gameState.controls.right) {
-    gameState.player.x += gameState.player.speedX;
-  }
-}, 16);
+document.addEventListener("resize", (event) => {
+  gameState.elements.mainCanvas.width = window.innerWidth;
+  gameState.elements.mainCanvas.height = window.innerHeight;
+});
+
+// setInterval(() => {
+//   handleControlsUpdate(gameState);
+//   gameState.world.time = performance.now();
+//   console.log(gameState.world.time);
+// }, 16);
 
 const start = () => {
-  console.log(mainCanvas)
-
-
   if (mainCanvasContext && mainCanvas && gameState) {
-    render(mainCanvasContext, mainCanvas, gameState);
+    gameState.world.started = true;
+    gameState.world.running = true;
+    gameLoop(mainCanvasContext, mainCanvas, gameState);
   }
 };
 
 start();
-

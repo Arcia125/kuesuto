@@ -45,3 +45,11 @@ h1 {
   height: 100%;
   width: 100%;
 }
+
+#game-state {
+  position: absolute;
+  right: 100px;
+  z-index: 999;
+  width: 275px;
+  background-color: rgba(0, 0, 0, 0.7);
+}

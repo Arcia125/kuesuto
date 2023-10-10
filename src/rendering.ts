@@ -54,37 +54,25 @@ const drawSprite = (
 };
 
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
-  if (!ctx) {
-    throw new Error('Missing canvas context');
+  resetContext(ctx, canvas, "#fff");
+  drawGrid(ctx, canvas, 0, "#000");
+
+  drawSprite(ctx, canvas, playerSpritesheet, {
+    canvasX: gameState.player.x,
+    canvasY: gameState.player.y,
+    canvasWidth: 24 * 4,
+    canvasHeight: 24 * 4,
+    spriteX: 0,
+    spriteY: 0,
+    spriteWidth: 24,
+    spriteHeight: 24,
+  });
+
+  // const gameStateContainer = document.querySelector("#game-state");
+  if (gameState.elements.gameStateContainer) {
+    console.log('rendering game state');
+    gameState.elements.gameStateContainer.innerHTML = JSON.stringify(gameState, null, 2);
   }
-
-  const __render = () => {
-
-    resetContext(ctx, canvas, "#fff");
-    drawGrid(ctx, canvas, 0, "#000");
-
-    drawSprite(ctx, canvas, playerSpritesheet, {
-      canvasX: gameState.player.x,
-      canvasY: gameState.player.y,
-      canvasWidth: 24 * 4,
-      canvasHeight: 24 * 4,
-      spriteX: 0,
-      spriteY: 0,
-      spriteWidth: 24,
-      spriteHeight: 24,
-    })
+}
 
 
-
-    // mainCanvasContext.beginPath();
-    // mainCanvasContext.fillStyle = '#ff0';
-    // mainCanvasContext.rect(cursX - 10, cursY - 10, 20, 20);
-    // mainCanvasContext.fill();
-    // mainCanvasContext.closePath();
-    window.requestAnimationFrame(__render)
-
-  }
-
-
-  __render();
-};
