@@ -5,6 +5,7 @@ const keyMappings = {
   down: ['ArrowDown', 's'],
   left: ['ArrowLeft', 'a',],
   right: ['ArrowRight', 'd'],
+  toggleDebugGameState: ['O']
 };
 
 export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEvent) => {
@@ -19,6 +20,10 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
   }
   if (keyMappings.right.includes(event.key)) {
     gameState.controls.right = true;
+  }
+  if (keyMappings.toggleDebugGameState.includes(event.key)) {
+    gameState.settings.debugGameState = !gameState.settings.debugGameState;
+    gameState.elements.gameStateContainer.style.display = gameState.settings.debugGameState ? 'block' : 'none';
   }
 };
 

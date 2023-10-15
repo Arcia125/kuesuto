@@ -59,6 +59,8 @@ const init = () => {
       speedX: .25,
       speedY: .25,
       moving: false,
+      spriteSize: 16,
+      lastAnimationName: '',
     },
     controls: {
       up: false,
@@ -70,6 +72,10 @@ const init = () => {
       running: false,
       started: false,
     },
+    settings: {
+      debugGameState: true,
+      debugPlayerSpriteSheet: true,
+    },
     time: {
       delta: 0,
       fps: 60,
@@ -78,6 +84,7 @@ const init = () => {
       lastFrameTimeMs: 0,
       maxFPS: 60,
       timeStep: 1000 / 60,
+      stepID: 0,
       frameID: 0,
       resetDeltaCount: 0,
     },

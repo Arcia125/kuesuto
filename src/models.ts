@@ -6,6 +6,8 @@ export type Player = {
   speedX: number;
   speedY: number;
   moving: boolean;
+  spriteSize: number;
+  lastAnimationName: string;
 };
 
 export type Controls = {
@@ -31,8 +33,14 @@ export type Time = {
   timeStep: number;
   framesThisSecond: number;
   lastFpsUpdate: number;
+  stepID: number;
   frameID: number;
   resetDeltaCount: number;
+};
+
+export type Settings = {
+  debugGameState: boolean;
+  debugPlayerSpriteSheet: boolean;
 };
 
 export type Elements = {
@@ -42,9 +50,10 @@ export type Elements = {
 };
 
 export type GameState = {
-  player: Player,
-  controls: Controls,
-  world: World,
-  time: Time,
-  elements: Elements,
+  player: Player;
+  controls: Controls;
+  world: World;
+  time: Time;
+  settings: Settings;
+  elements: Elements;
 };

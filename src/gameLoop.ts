@@ -8,29 +8,37 @@ const updatePlayerPosition = (gameState: GameState, timestamp: number) => {
   let movedX = false;
   let movedY = false;
   if (gameState.controls.up) {
-    gameState.player.y -= (gameState.player.speedY * gameState.time.delta);
+    // gameState.player.y -= (gameState.player.speedY * gameState.time.delta);
     yDir = -1;
     moving = true;
     movedY = true;
   }
   if (gameState.controls.down) {
-    gameState.player.y += (gameState.player.speedY * gameState.time.delta);
+    // gameState.player.y += (gameState.player.speedY * gameState.time.delta);
     yDir = 1;
     moving = true;
     movedY = true;
   }
   if (gameState.controls.left) {
-    gameState.player.x -= (gameState.player.speedX * gameState.time.delta);
-    xDir = 1;
-    moving = true;
-    movedX = true;
-  }
-  if (gameState.controls.right) {
-    gameState.player.x += (gameState.player.speedX * gameState.time.delta);
+    // gameState.player.x -= (gameState.player.speedX * gameState.time.delta);
     xDir = -1;
     moving = true;
     movedX = true;
   }
+  if (gameState.controls.right) {
+    // gameState.player.x += (gameState.player.speedX * gameState.time.delta);
+    xDir = 1;
+    moving = true;
+    movedX = true;
+  }
+
+
+  if (moving) {
+    const angle = Math.atan2(yDir, xDir);
+    gameState.player.x += (Math.cos(angle) * gameState.player.speedX * gameState.time.delta);
+    gameState.player.y += (Math.sin(angle) * gameState.player.speedY * gameState.time.delta);
+  }
+
   gameState.player.moving = moving;
 
   if (movedX && !movedY) {
@@ -59,7 +67,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
   const __gameLoop = (timestamp: number) => {
 
     if (timestamp < gameState.time.lastFrameTimeMs + (1000 / gameState.time.maxFPS)) {
-      gameState.time.frameID = window.requestAnimationFrame(__gameLoop);
+      gameState.time.stepID = window.requestAnimationFrame(__gameLoop);
       return;
     }
 
@@ -89,6 +97,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
 
 
 
+    gameState.time.frameID++;
     render(ctx, canvas, gameState);
 
 
@@ -98,7 +107,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
     // mainCanvasContext.rect(cursX - 10, cursY - 10, 20, 20);
     // mainCanvasContext.fill();
     // mainCanvasContext.closePath();
-    gameState.time.frameID = window.requestAnimationFrame(__gameLoop);
+    gameState.time.stepID = window.requestAnimationFrame(__gameLoop);
 
   };
 
