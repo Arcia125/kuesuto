@@ -1,6 +1,6 @@
 import { EventEmitter } from './events';
 
-export type Player = {
+export type GameEntityState = {
   x: number;
   y: number;
   xDir: number;
@@ -15,6 +15,20 @@ export type Player = {
   animationFrameX: number;
   animationFrameXStart: number;
 };
+
+export interface GameSprite {
+  spriteFrames: Record<string, AnimationFrame>;
+  spriteSheet: HTMLImageElement;
+  spriteJSON: SpriteJSON;
+}
+
+export interface GameEntity {
+  id: number;
+  name: string;
+  state: GameEntityState;
+  sprite?: GameSprite;
+  update: (gameState: GameState, timeStamp: number) => void;
+}
 
 export type Controls = {
   up: boolean;
@@ -53,7 +67,12 @@ export type Elements = {
 };
 
 export type GameState = {
-  player: Player;
+  // player: {
+  //   id: number;
+  //   state: GameEntityState
+  //   update: (gameState: GameState, timeStamp: number) => void;
+  // };
+  entities: GameEntity[];
   controls: Controls;
   world: World;
   time: Time;

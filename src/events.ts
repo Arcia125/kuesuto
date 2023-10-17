@@ -20,11 +20,17 @@ class EventEmitter {
     const listeners = this.listeners[eventName];
 
     if (listeners) {
-      listeners.forEach(listener => listener(eventName, payload));
+      const listenerLen = listeners.length;
+      for (let i = 0; i < listenerLen; i++) {
+        listeners[i](eventName, payload);
+      }
     }
     const allListeners = this.listeners[EventEmitter.ALL];
     if (allListeners) {
-      allListeners.forEach(listener => listener(eventName, payload));
+      const allListenerLen = allListeners.length;
+      for (let i = 0; i < allListenerLen; i++) {
+        allListeners[i](eventName, payload);
+      }
     }
   }
 

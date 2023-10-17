@@ -1,57 +1,12 @@
 import { GameState } from './models';
 import { render } from './rendering';
 
-const updatePlayerPosition = (gameState: GameState, timestamp: number) => {
-  let moving = false;
-  let yDir = gameState.player.yDir;
-  let xDir = gameState.player.xDir;
-  let movedX = false;
-  let movedY = false;
-  if (gameState.controls.up) {
-    // gameState.player.y -= (gameState.player.speedY * gameState.time.delta);
-    yDir = -1;
-    moving = true;
-    movedY = true;
-  }
-  if (gameState.controls.down) {
-    // gameState.player.y += (gameState.player.speedY * gameState.time.delta);
-    yDir = 1;
-    moving = true;
-    movedY = true;
-  }
-  if (gameState.controls.left) {
-    // gameState.player.x -= (gameState.player.speedX * gameState.time.delta);
-    xDir = -1;
-    moving = true;
-    movedX = true;
-  }
-  if (gameState.controls.right) {
-    // gameState.player.x += (gameState.player.speedX * gameState.time.delta);
-    xDir = 1;
-    moving = true;
-    movedX = true;
-  }
-
-
-  if (moving) {
-    const angle = Math.atan2(yDir, xDir);
-    gameState.player.x += (Math.cos(angle) * gameState.player.speedX * gameState.time.delta);
-    gameState.player.y += (Math.sin(angle) * gameState.player.speedY * gameState.time.delta);
-  }
-
-  gameState.player.moving = moving;
-
-  if (movedX && !movedY) {
-    yDir = 0;
-  } else if (movedY && !movedX) {
-    xDir = 0;
-  }
-  gameState.player.yDir = yDir;
-  gameState.player.xDir = xDir;
-};
-
 const update = (gameState: GameState, timestamp: number) => {
-  updatePlayerPosition(gameState, timestamp);
+  const entities = gameState.entities;
+  const entityCount = entities.length;
+  for (let i = 0; i < entityCount; i++) {
+    entities[i].update(gameState, timestamp);
+  }
 };
 
 const resetDelta = (gameState: GameState) => {
@@ -79,6 +34,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
 
       gameState.time.lastFpsUpdate = timestamp;
       gameState.time.framesThisSecond = 0;
+      gameState.emitter.emit('fps', { fps: gameState.time.fps });
     }
 
     gameState.time.framesThisSecond++;
@@ -95,18 +51,9 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
       }
     }
 
-
-
     gameState.time.frameID++;
     render(ctx, canvas, gameState);
 
-
-
-    // mainCanvasContext.beginPath();
-    // mainCanvasContext.fillStyle = '#ff0';
-    // mainCanvasContext.rect(cursX - 10, cursY - 10, 20, 20);
-    // mainCanvasContext.fill();
-    // mainCanvasContext.closePath();
     gameState.time.stepID = window.requestAnimationFrame(__gameLoop);
 
   };

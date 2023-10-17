@@ -3,6 +3,7 @@ import { GameState } from './models';
 import './style.css'
 import { gameLoop } from "./gameLoop";
 import { EventEmitter } from './events';
+import { PlayerEntity } from './entities';
 
 
 // document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -31,6 +32,11 @@ let mainCanvasContext: CanvasRenderingContext2D;
 let gameState: GameState;
 
 const init = () => {
+  const emitter = new EventEmitter();
+
+  // emitter.on(EventEmitter.ALL, console.log);
+
+
   const mainCanvas = document.querySelector<HTMLCanvasElement>('#main-game-canvas');
 
   if (!mainCanvas) {
@@ -45,14 +51,25 @@ const init = () => {
     throw new Error('Main canvas context not found');
   }
 
+  emitter.emit('init', {
+    mainCanvas,
+    mainCanvasContext
+  });
+
   const gameStateContainer = document.querySelector<HTMLPreElement>("#game-state");
   if (!gameStateContainer) {
     throw new Error('Game State Container not found');
   }
 
 
+  // emitter.on(EventEmitter.ALL, console.log);
+  // emitter.on(EventEmitter.ALL, console.log);
+  // emitter.on(EventEmitter.ALL, console.log);
+
+  emitter.on('fps', (_, msg) => console.log(msg));
+
   const gameState: GameState = {
-    player: {
+    entities: [new PlayerEntity({
       x: 0,
       y: 0,
       xDir: 0,
@@ -66,7 +83,7 @@ const init = () => {
       animationToEnd: false,
       animationFrameX: 0,
       animationFrameXStart: 0,
-    },
+    }, emitter)],
     controls: {
       up: false,
       down: false,
@@ -78,8 +95,8 @@ const init = () => {
       started: false,
     },
     settings: {
-      debugGameState: true,
-      debugPlayerSpriteSheet: true,
+      debugGameState: false,
+      debugPlayerSpriteSheet: false,
     },
     time: {
       delta: 0,
@@ -98,7 +115,7 @@ const init = () => {
       mainCanvasContext,
       gameStateContainer
     },
-    emitter: new EventEmitter()
+    emitter,
   };
 
   // gameState.emitter.on('player.animationEnd', console.log);
