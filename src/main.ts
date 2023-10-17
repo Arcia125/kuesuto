@@ -2,6 +2,7 @@ import { createKeyDownHandler, createKeyUpHandler } from './controls';
 import { GameState } from './models';
 import './style.css'
 import { gameLoop } from "./gameLoop";
+import { EventEmitter } from './events';
 
 
 // document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -60,7 +61,11 @@ const init = () => {
       speedY: .25,
       moving: false,
       spriteSize: 16,
+      currentAnimationName: '',
       lastAnimationName: '',
+      animationToEnd: false,
+      animationFrameX: 0,
+      animationFrameXStart: 0,
     },
     controls: {
       up: false,
@@ -92,8 +97,13 @@ const init = () => {
       mainCanvas,
       mainCanvasContext,
       gameStateContainer
-    }
+    },
+    emitter: new EventEmitter()
   };
+
+  // gameState.emitter.on('player.animationEnd', console.log);
+  // gameState.emitter.on('renderSprite', console.log);
+  // gameState.emitter.on(EventEmitter.ALL, console.log);
 
 
 

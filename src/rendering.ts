@@ -1,51 +1,13 @@
-import { GameState } from './models';
-import playerSpriteJSON from './player.json';
+import { getImage } from './images';
+import { GameState, SpriteJSON } from './models';
+import playerSpriteJSONRAW from './player.json';
+import { getSpriteFrames } from './sprites';
 
-const getImage = (callback: () => void, src: string) => {
-  const image = new Image();
-  image.onload = callback;
-
-  image.src = src;
-  return image;
-};
-
+const playerSpriteJSON = playerSpriteJSONRAW as SpriteJSON;
 
 const playerSpritesheet = getImage(() => console.log('loaded player'), './player.png');
 
-const parseFrameData = (rawData: any) => {
-  const dataItems = rawData.split(' ');
-  const data = dataItems.reduce((dataAcc: Record<string, any>, dataItem: string) => {
-    const [dataKey, dataValue] = dataItem.split('=');
-    if (['true', 'false'].includes(dataValue)) {
-      dataAcc[dataKey] = dataValue === 'true';
-    } else {
-      dataAcc[dataKey] = dataValue;
-    }
-    return dataAcc;
-  }, {} as Record<string, any>);
-  return data;
-};
-
-const playerSpriteFrames = Object.entries(playerSpriteJSON.frames).reduce((acc, [frameName, frameValue], frameIndex) =>  {
-  const [animationName, animationFrame] = frameName.split('--');
-
-  if (acc[animationName]) {
-    acc[animationName].frames.push(frameValue);
-  } else {
-    const rawData = playerSpriteJSON.meta.frameTags.find(({ name }: { name: string }) => animationName === name).data;
-
-    const data = parseFrameData(rawData);
-
-
-    acc[animationName] = {
-      frames: [frameValue],
-      data
-    };
-  }
-  return acc;
-}, {} as Record<string, any>);
-
-console.log(playerSpriteFrames);
+const playerSpriteFrames = getSpriteFrames(playerSpriteJSON);
 
 const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, background: CanvasFillStrokeStyles['fillStyle']) => {
   ctx.beginPath();
@@ -105,210 +67,76 @@ const drawSprite = (
   ctx.drawImage(spriteSheet, spriteX, spriteY, spriteWidth, spriteHeight, canvasX, canvasY, canvasWidth, canvasHeight);
 };
 
-// const getSpriteXFromLastFrameTimeMS = (
-//   ctx: CanvasRenderingContext2D,
-//   canvas: HTMLCanvasElement,
-//   gameState: GameState,
-//   spriteFrameSize: number
-// ) => {
-//   const animationSpeed = .005;
-//   const animationBasis = gameState.time.lastFrameTimeMs;
-//   const movingMultiplier = 2;
-//   const playerSpriteX = 0 + Math.floor((animationBasis * (animationSpeed * (gameState.player.moving ? movingMultiplier : 1))) % 4) * spriteFrameSize;
-//   return playerSpriteX;
-// };
-
-// const getSpriteXFromDelta = (
-//   ctx: CanvasRenderingContext2D,
-//   canvas: HTMLCanvasElement,
-//   gameState: GameState,
-//   spriteFrameSize: number
-// ) => {
-//   const animationSpeed = 5;
-//   const animationBasis = gameState.time.delta;
-//   const movingMultiplier = 4;
-//   const playerSpriteX = 0 + Math.floor((animationBasis * (animationSpeed * (gameState.player.moving ? movingMultiplier : 1))) % 4) * spriteFrameSize;
-//   return playerSpriteX;
-// };
-
-// const getSpriteXFromFrameId = (
-//   ctx: CanvasRenderingContext2D,
-//   canvas: HTMLCanvasElement,
-//   gameState: GameState,
-//   spriteFrameSize: number
-// ) => {
-//   const animationSpeed = .1;
-//   const animationBasis = gameState.time.frameID;
-//   const movingMultiplier = 3;
-//   const playerSpriteX = 0 + Math.floor((animationBasis * (animationSpeed * (gameState.player.moving ? movingMultiplier : 1))) % 4) * spriteFrameSize;
-//   return playerSpriteX;
-// };
-
-const getSpriteColumnOld = (
-  ctx: CanvasRenderingContext2D,
-  canvas: HTMLCanvasElement,
-  gameState: GameState,
-) => {
-  const staggerFrames = 15;
-  const column = Math.floor(gameState.time.frameID / staggerFrames) % 5;
-  return column;
-};
-
-const getSpriteRowOld = (gameState: GameState) => {
-
-  // const spriteMovingOffsetY = ((4 * +gameState.player.moving) * spriteFrameSize);
-  const facingUp = gameState.player.yDir < 0;
-  const facingDown = gameState.player.yDir > 0;
-  const facingRight = gameState.player.xDir < 0;
-  const facingLeft = gameState.player.xDir > 0;
-  const downRowMultiple = 0;
-  const leftRowMultiple = 1;
-  const rightRowMultiple = 2;
-  const upRowMultiple = 3;
-  const movingRowMultiple = 4;
-  let row;
-  switch (true) {
-    case facingUp:
-      row = upRowMultiple;
-      break
-    case facingDown:
-      row = downRowMultiple;
-      break
-    case facingLeft:
-      row = leftRowMultiple;
-      break
-    case facingRight:
-      row = rightRowMultiple;
-      break
-    default:
-      row = 0;
-      break;
-  }
-  if (gameState.player.moving) {
-    row += movingRowMultiple
-  }
-  // const spriteDirOffsetY =
-  //   facingDown ? downRowMultiple :
-  //     facingUp ? spriteFrameSize * upRowMultiple :
-  //       facingSide && facingRight ? spriteFrameSize * rightRowMultiple :
-  //         facingSide ? spriteFrameSize : 0;
-  return row;
-};
-
-// const getSpriteColumn = (
-//   ctx: CanvasRenderingContext2D,
-//   canvas: HTMLCanvasElement,
-//   gameState: GameState,
-// ) => {
-//   const staggerFrames = 5;
-//   const column = Math.floor(gameState.time.frameID / staggerFrames) % 5;
-//   return column;
-// };
-
 const getSpritePos = (gameState: GameState, direction: 'up' | 'down' | 'left' | 'right') => {
+  let spriteFrameEntries;
 
-  // const spriteMovingOffsetY = ((4 * +gameState.player.moving) * spriteFrameSize);
-
-  // const downRowMultiple = 0;
-  // const leftRowMultiple = 1;
-  // const rightRowMultiple = 2;
-  // const upRowMultiple = 3;
-  // const movingRowMultiple = 4;
-
-  // let row;
-  // if (facingUp && gameState.player.moving) {
-  //   if (gameState.player.moving) {
-  //     row = playerSpriteFrames['Walk Up'][0].frame.y;
-  //   } else {
-  //     row = playerSpriteFrames['Bounce Up'][0].frame.y;
-  //   }
-  // } else if (facingUp) {
-  //   row = playerSpriteFrames['Bounce Up'][0].frame.y;
-  // } else if (facingRight && gameState.player.moving) {
-  //   row = playerSpriteFrames['Walk Right'][0].frame.y;
-  // } else if (facingRight) {
-
-  // }
-
-  const spriteFrameEntry = Object.entries(playerSpriteFrames).find(([frameName, frameValue]) => {
+  spriteFrameEntries = Object.entries(playerSpriteFrames).filter(([frameName, frameValue]) => {
     return frameValue.data.movement === gameState.player.moving && frameValue.data.direction === direction;
   });
-  if (!spriteFrameEntry) {
-    throw new Error('Failed to load sprite sheet');
+
+  const [spriteFrameName, spriteFrameValue] = spriteFrameEntries.find(([name, value], i) => {
+    if (!name) {
+      throw new Error('Failed to load sprite sheet');
+    }
+
+    let found = null;
+    if (gameState.player.currentAnimationName === name && gameState.player.animationToEnd && gameState.player.animationFrameX === 0) {
+      gameState.player.lastAnimationName = name;
+      gameState.emitter.emit(`player.animationEnd`, { name });
+      gameState.player.animationToEnd = false;
+      found = false;
+    }
+    if (gameState.player.lastAnimationName === name && spriteFrameEntries.length > 1) {
+      found = false;
+    }
+    if (gameState.player.animationFrameX >= (value.frames.length - 1)) {
+      gameState.player.animationToEnd = true;
+      if (found !== false) {
+        found = true;
+      }
+    } else {
+      if (found !== false) {
+        found = true;
+      }
+    }
+
+    if (found) {
+      const timeSinceLastFrame = gameState.time.lastFrameTimeMs - gameState.player.animationFrameXStart;
+
+      if (gameState.player.animationFrameX >= value.frames.length) {
+        gameState.player.animationFrameX = 0;
+      }
+      if (timeSinceLastFrame > value.frames[gameState.player.animationFrameX]?.duration) {
+        gameState.player.animationFrameXStart = gameState.time.lastFrameTimeMs;
+        gameState.player.animationFrameX++;
+
+        if (gameState.player.animationFrameX >= value.frames.length) {
+          gameState.player.animationFrameX = 0;
+        }
+
+      }
+    }
+    return found;
+
+  }) || spriteFrameEntries[0];
+  if (spriteFrameName === '') {
+    throw new Error('Sprite frame name not found');
   }
 
-  const [spriteFrameName, spriteFrameValue] = spriteFrameEntry;
-
-
-  // const spriteFrameValue = spriteFrameEntry?.[1];
-  let y = spriteFrameValue.frames[0].frame.y;
-
-  const staggerFrames = 5;
-  const frameXIndex = Math.floor(gameState.time.frameID / staggerFrames) % spriteFrameValue.frames.length;
-  const x = spriteFrameValue.frames[frameXIndex]?.frame.x;
-
-  if (frameXIndex === (spriteFrameValue.frames.length - 1)) {
-    gameState.player.lastAnimationName = spriteFrameName;
-    console.log({ lastAnim: gameState.player.lastAnimationName, frameXIndex, len: spriteFrameValue.frames.length });
+  if (!spriteFrameValue) {
+    throw new Error('Sprite frame value not found');
   }
 
+  gameState.player.currentAnimationName = spriteFrameName;
 
-
-  if (frameXIndex === 0 && gameState.player.lastAnimationName === spriteFrameName) {
-    // the animation just happened...
-  }
-
-  // gameState.player.
-
-
-  // console.log(row, direction);
-
-
-  // frameValue.frames[0].frame.y;
-
-  // let row;
-  // switch (true) {
-  //   case facingUp:
-  //     // row = upRowMultiple;
-  //     break
-  //   case facingDown:
-  //     // row = downRowMultiple;
-  //     break
-  //   case facingLeft:
-  //     // row = leftRowMultiple;
-  //     break
-  //   case facingRight:
-  //     // row = rightRowMultiple;
-  //     break
-  //   default:
-  //     row = 0;
-  //     break;
-  // }
-  // if (gameState.player.moving) {
-  //   // row += movingRowMultiple
-  // }
-  // const spriteDirOffsetY =
-  //   facingDown ? downRowMultiple :
-  //     facingUp ? spriteFrameSize * upRowMultiple :
-  //       facingSide && facingRight ? spriteFrameSize * rightRowMultiple :
-  //         facingSide ? spriteFrameSize : 0;
-  return { x, y };
+  return spriteFrameValue.frames[gameState.player.animationFrameX];
 };
-
 
 const drawPlayerSprite = (
   ctx: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
   gameState: GameState
 ) => {
-  const spriteFrameSize = gameState.player.spriteSize;
-
-
-  // const playerSpriteX = getSpriteXFromLastFrameTimeMS(ctx, canvas, gameState, spriteFrameSize);
-  // const playerSpriteX = getSpriteXFromDelta(ctx, canvas, gameState, spriteFrameSize);
-  // const playerSpriteX = getSpriteXFromFrameId(ctx, canvas, gameState, spriteFrameSize);
-  // const playerSpriteX = getSpriteColumn(ctx, canvas, gameState) * spriteFrameSize;
-  // const playerSpriteY = getSpriteRow(gameState) * spriteFrameSize;
   const facingUp = gameState.player.yDir < 0;
   const facingDown = gameState.player.yDir > 0;
   const facingRight = gameState.player.xDir > 0;
@@ -318,23 +146,31 @@ const drawPlayerSprite = (
     facingDown ? 'down' :
       facingRight ? 'right' :
         facingLeft ? 'left' : 'down';
-  // const playerSpriteX = getSpriteColumn(ctx, canvas, gameState) * spriteFrameSize;
-  const { x: playerSpriteX, y: playerSpriteY } = getSpritePos(gameState, direction);
+  const playerSpriteFrame = getSpritePos(gameState, direction);
+
+  const spriteFrameWidth = playerSpriteFrame.spriteSourceSize.w;
+  const spriteFrameHeight = playerSpriteFrame.spriteSourceSize.h;
+  const playerSpriteX = playerSpriteFrame.frame.x;
+  const playerSpriteY = playerSpriteFrame.frame.y;
 
 
   const canvasX = gameState.player.x;
   const canvasY = gameState.player.y;
 
-  drawSprite(ctx, canvas, playerSpritesheet, {
+  const spriteData = {
     canvasX,
     canvasY,
-    canvasWidth: (canvas.width / 50) * 2,
-    canvasHeight: (canvas.width / 50) * 2,
+    canvasWidth: (canvas.width / 50) * 4,
+    canvasHeight: (canvas.width / 50) * 4,
     spriteX: playerSpriteX,
     spriteY: playerSpriteY,
-    spriteWidth: spriteFrameSize,
-    spriteHeight: spriteFrameSize,
-  });
+    spriteWidth: spriteFrameWidth,
+    spriteHeight: spriteFrameHeight,
+  };
+
+  gameState.emitter.emit('renderSprite', { name: 'player', spriteData });
+
+  drawSprite(ctx, canvas, playerSpritesheet, spriteData);
 
 
   if (gameState.settings.debugPlayerSpriteSheet) {
@@ -355,7 +191,7 @@ const drawPlayerSprite = (
     ctx.strokeStyle = 'teal';
     const tempLineWidth = ctx.lineWidth;
     ctx.lineWidth = 5;
-    ctx.rect(spriteOffset + (playerSpriteX * sheetScale), spriteOffset + (playerSpriteY * sheetScale), spriteFrameSize * sheetScale, spriteFrameSize * sheetScale);
+    ctx.rect(spriteOffset + (playerSpriteX * sheetScale), spriteOffset + (playerSpriteY * sheetScale), spriteFrameWidth * sheetScale, spriteFrameHeight * sheetScale);
     ctx.stroke();
     ctx.lineWidth = tempLineWidth;
     ctx.closePath();
@@ -363,6 +199,8 @@ const drawPlayerSprite = (
 };
 
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+  gameState.emitter.emit('renderStart');
+
   resetContext(ctx, canvas, "#fff");
   drawGrid(ctx, canvas, 0, "#000");
 
@@ -372,6 +210,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   if (gameState.settings.debugGameState && gameState.elements.gameStateContainer) {
     gameState.elements.gameStateContainer.innerHTML = JSON.stringify(gameState, null, 2);
   }
+  gameState.emitter.emit('renderEnd');
 }
 
 

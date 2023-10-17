@@ -1,3 +1,5 @@
+import { EventEmitter } from './events';
+
 export type Player = {
   x: number;
   y: number;
@@ -7,7 +9,11 @@ export type Player = {
   speedY: number;
   moving: boolean;
   spriteSize: number;
+  currentAnimationName: string;
   lastAnimationName: string;
+  animationToEnd: boolean;
+  animationFrameX: number;
+  animationFrameXStart: number;
 };
 
 export type Controls = {
@@ -18,9 +24,6 @@ export type Controls = {
 };
 
 export type World = {
-  // frames: number;
-  // time: number;
-  // deltaTime: number;
   running: boolean;
   started: boolean;
 };
@@ -56,4 +59,58 @@ export type GameState = {
   time: Time;
   settings: Settings;
   elements: Elements;
+  emitter: EventEmitter;
+};
+
+export type Position = {
+  x: number;
+  y: number;
+};
+
+export type Dimensions = {
+  w: number;
+  h: number;
+};
+
+export type Rect = Position & Dimensions;
+
+export type Frame = {
+  frame: Rect;
+  rotated: boolean;
+  trimmed: boolean;
+  spriteSourceSize: Rect;
+  sourceSize: Dimensions;
+  duration: number;
+};
+
+type FrameTag = {
+  name: string;
+  from: number;
+  direction: "forward";
+  color: "#000000ff";
+  data: string;
+};
+
+export type Meta = {
+  app: string;
+  version: string;
+  image: string;
+  format: string;
+  size: Dimensions;
+  scale: string;
+  frameTags: FrameTag[];
+};
+
+export type AnimationFrame = {
+  frames: Frame[];
+  data: {
+    direction: "up" | "down" | "left" | "right";
+    blink: boolean;
+    movement: boolean;
+  };
+};
+
+export type SpriteJSON = {
+  frames: Record<string, Frame>;
+  meta: Meta;
 };
