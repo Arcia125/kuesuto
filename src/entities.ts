@@ -13,7 +13,7 @@ export class Entity implements GameEntity {
 
   }
 
-  public update(gameState: GameState, timeStamp: number) {
+  public update(_gameState: GameState, _timeStamp: number) {
   }
 }
 
@@ -34,7 +34,7 @@ export class PlayerEntity extends SpriteEntity {
     // this.spriteFrames = getSpriteFrames(this.spriteJSON);
   }
 
-  public update = (gameState: GameState, timeStamp: number) => {
+  public update = (gameState: GameState, _timeStamp: number) => {
     let moving = false;
     let yDir = this.state.yDir;
     let xDir = this.state.xDir;

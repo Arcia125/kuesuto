@@ -29,7 +29,7 @@ const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padd
 
 const drawSprite = (
   ctx: CanvasRenderingContext2D,
-  canvas: HTMLCanvasElement,
+  _canvas: HTMLCanvasElement,
   spriteSheet: HTMLImageElement,
   {
     canvasX,
@@ -67,11 +67,11 @@ const getSpritePos = (gameState: GameState, direction: 'up' | 'down' | 'left' | 
 
   let spriteFrameEntries;
 
-  spriteFrameEntries = Object.entries(entity.sprite?.spriteFrames).filter(([frameName, frameValue]) => {
+  spriteFrameEntries = Object.entries(entity.sprite?.spriteFrames).filter(([_frameName, frameValue]) => {
     return frameValue.data.movement === entityState.moving && frameValue.data.direction === direction;
   });
 
-  const [spriteFrameName, spriteFrameValue] = spriteFrameEntries.find(([name, value], i) => {
+  const [spriteFrameName, spriteFrameValue] = spriteFrameEntries.find(([name, value]) => {
     if (!name) {
       throw new Error('Failed to load sprite sheet');
     }

@@ -16,8 +16,8 @@ const parseFrameData = (rawData: any) => {
   return data;
 };
 
-export const getSpriteFrames = (json: SpriteJSON) => Object.entries(json.frames).reduce((acc, [frameName, frameValue], frameIndex) => {
-  const [animationName, animationFrame] = frameName.split('--');
+export const getSpriteFrames = (json: SpriteJSON) => Object.entries(json.frames).reduce((acc, [frameName, frameValue], _frameIndex) => {
+  const [animationName, _animationFrame] = frameName.split('--');
 
   if (acc[animationName]) {
     acc[animationName].frames.push(frameValue);
