@@ -1,5 +1,7 @@
+import { ANIMATION_SPEED_MULTIPLIER } from './constants';
 import { PlayerEntity } from './entities';
 import { GameEntity, GameState } from './models';
+import { frameMatchesEntity, getSpriteScale } from './sprites';
 
 
 const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, background: CanvasFillStrokeStyles['fillStyle']) => {
@@ -13,7 +15,7 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
 const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle']) => {
   const gridWidth = canvas.width;
   const gridHeight = canvas.height;
-  const gridCellSize = gridWidth / 50;
+  const gridCellSize = getSpriteScale(canvas);
   for (let x = 0; x <= gridWidth; x += gridCellSize) {
     ctx.moveTo(0.5 + x + padding, padding);
     ctx.lineTo(0.5 + x + padding, gridHeight + padding);
@@ -67,9 +69,7 @@ const getSpritePos = (gameState: GameState, direction: 'up' | 'down' | 'left' | 
 
   let spriteFrameEntries;
 
-  spriteFrameEntries = Object.entries(entity.sprite?.spriteFrames).filter(([_frameName, frameValue]) => {
-    return frameValue.data.movement === entityState.moving && frameValue.data.direction === direction;
-  });
+  spriteFrameEntries = Object.entries(entity.sprite?.spriteFrames).filter(frameMatchesEntity(entityState, direction));
 
   const [spriteFrameName, spriteFrameValue] = spriteFrameEntries.find(([name, value]) => {
     if (!name) {
@@ -79,7 +79,7 @@ const getSpritePos = (gameState: GameState, direction: 'up' | 'down' | 'left' | 
     let found = null;
     if (entityState.currentAnimationName === name && entityState.animationToEnd && entityState.animationFrameX === 0) {
       entityState.lastAnimationName = name;
-      gameState.emitter.emit(`player.animationEnd`, { name });
+      gameState.emitter.emit(`animationEnd`, { entity, name });
       entityState.animationToEnd = false;
       found = false;
     }
@@ -103,7 +103,7 @@ const getSpritePos = (gameState: GameState, direction: 'up' | 'down' | 'left' | 
       if (entityState.animationFrameX >= value.frames.length) {
         entityState.animationFrameX = 0;
       }
-      if (timeSinceLastFrame > value.frames[entityState.animationFrameX]?.duration) {
+      if (timeSinceLastFrame > value.frames[entityState.animationFrameX]?.duration * ANIMATION_SPEED_MULTIPLIER) {
         entityState.animationFrameXStart = gameState.time.lastFrameTimeMs;
         entityState.animationFrameX++;
 
@@ -113,6 +113,7 @@ const getSpritePos = (gameState: GameState, direction: 'up' | 'down' | 'left' | 
 
       }
     }
+
     return found;
 
   }) || spriteFrameEntries[0];
@@ -139,16 +140,12 @@ const drawEntity = (
     return;
   }
 
-  const entityState = entity.state;
-  const facingUp = entityState.yDir < 0;
-  const facingDown = entityState.yDir > 0;
-  const facingRight = entityState.xDir > 0;
-  const facingLeft = entityState.xDir < 0;
+  if (!entity.state.visible) {
+    return;
+  }
 
-  const direction = facingUp ? 'up' :
-    facingDown ? 'down' :
-      facingRight ? 'right' :
-        facingLeft ? 'left' : 'down';
+  const entityState = entity.state;
+  const direction = entity.getDirection();
   const spriteFrame = getSpritePos(gameState, direction, entity);
 
   const spriteFrameWidth = spriteFrame.spriteSourceSize.w;
@@ -163,8 +160,8 @@ const drawEntity = (
   const spriteData = {
     canvasX,
     canvasY,
-    canvasWidth: (canvas.width / 50) * 4,
-    canvasHeight: (canvas.width / 50) * 4,
+    canvasWidth: getSpriteScale(canvas) * entityState.scaleX,
+    canvasHeight: getSpriteScale(canvas) * entityState.scaleY,
     spriteX: spriteX,
     spriteY: spriteY,
     spriteWidth: spriteFrameWidth,
@@ -212,6 +209,9 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   const entityCount = entities.length;
   for (let i = 0; i < entityCount; i++) {
     drawEntity(entities[i], ctx, canvas, gameState);
+    for (let j = 0; j < (entities[i]?.children?.length || 0); j++) {
+      drawEntity(entities[i]!.children![j], ctx, canvas, gameState);
+    }
   }
 
   if (gameState.settings.debugGameState && gameState.elements.gameStateContainer) {
@@ -230,5 +230,4 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   }
   gameState.emitter.emit('renderEnd');
 }
-
 

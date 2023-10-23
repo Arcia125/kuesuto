@@ -5,11 +5,16 @@ const keyMappings = {
   down: ['ArrowDown', 's'],
   left: ['ArrowLeft', 'a',],
   right: ['ArrowRight', 'd'],
+  attack: [' '],
   toggleDebugGameState: ['O'],
   debugPlayerSpriteSheet: ['P']
 };
 
 export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEvent) => {
+  if (keyMappings.attack.includes(event.key)) {
+    event.preventDefault();
+    gameState.controls.attack = true;
+  }
   if (keyMappings.up.includes(event.key)) {
     event.preventDefault();
     gameState.controls.up = true;

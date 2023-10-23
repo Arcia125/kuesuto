@@ -3,7 +3,8 @@ import { GameState } from './models';
 import './style.css'
 import { gameLoop } from "./gameLoop";
 import { EventEmitter } from './events';
-import { PlayerEntity } from './entities';
+import { PlayerEntity, SwordEntity } from './entities';
+import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from './constants';
 
 
 // document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -30,6 +31,7 @@ import { PlayerEntity } from './entities';
 let mainCanvas: HTMLCanvasElement;
 let mainCanvasContext: CanvasRenderingContext2D;
 let gameState: GameState;
+
 
 const init = () => {
   const emitter = new EventEmitter();
@@ -61,12 +63,15 @@ const init = () => {
     throw new Error('Game State Container not found');
   }
 
+  const mainGameFpsContainer = document.querySelector<HTMLParagraphElement>("#main-game-fps");
+  if (!mainGameFpsContainer) {
+    throw new Error('Main Game Fps Container not found');
+  }
 
   // emitter.on(EventEmitter.ALL, console.log);
   // emitter.on(EventEmitter.ALL, console.log);
   // emitter.on(EventEmitter.ALL, console.log);
 
-  emitter.on('fps', (_, msg) => console.log(msg));
 
   const gameState: GameState = {
     entities: [new PlayerEntity({
@@ -74,21 +79,42 @@ const init = () => {
       y: 0,
       xDir: 0,
       yDir: 0,
-      speedX: .25,
-      speedY: .25,
+      speedX: INIT_PLAYER_SPEED_X,
+      speedY: INIT_PLAYER_SPEED_Y,
+      scaleX: 1,
+      scaleY: 1,
+      visible: true,
       moving: false,
-      spriteSize: 16,
+      attacking: false,
       currentAnimationName: '',
       lastAnimationName: '',
       animationToEnd: false,
       animationFrameX: 0,
       animationFrameXStart: 0,
-    }, emitter)],
+    }, [new SwordEntity({
+      x: 0,
+      y: 0,
+      xDir: 0,
+      yDir: 0,
+      speedX: INIT_PLAYER_SPEED_X,
+      speedY: INIT_PLAYER_SPEED_Y,
+      scaleX: 1,
+      scaleY: 1,
+      visible: false,
+      moving: false,
+      attacking: false,
+      currentAnimationName: '',
+      lastAnimationName: '',
+      animationToEnd: false,
+      animationFrameX: 0,
+      animationFrameXStart: 0,
+    }, [], emitter)], emitter)],
     controls: {
       up: false,
       down: false,
       left: false,
       right: false,
+      attack: false,
     },
     world: {
       running: false,
@@ -97,6 +123,7 @@ const init = () => {
     settings: {
       debugGameState: false,
       debugPlayerSpriteSheet: false,
+      showFps: true,
     },
     time: {
       delta: 0,
@@ -113,26 +140,26 @@ const init = () => {
     elements: {
       mainCanvas,
       mainCanvasContext,
-      gameStateContainer
+      gameStateContainer,
+      mainGameFpsContainer,
     },
     emitter,
   };
 
+  emitter.on<{ fps: number }>('fps', (_, msg) => {
+    console.log(msg);
+    if (gameState.settings.showFps && msg?.fps) {
+      gameState.elements.mainGameFpsContainer.innerHTML = Math.round(msg.fps).toString();
+    }
+  });
   // gameState.emitter.on('player.animationEnd', console.log);
   // gameState.emitter.on('renderSprite', console.log);
   // gameState.emitter.on(EventEmitter.ALL, console.log);
 
 
-
   mainCanvasContext?.rect(0, 0, mainCanvas.width, mainCanvas.height);
   mainCanvasContext?.fill();
 
-  // let cursX: number, cursY: number;
-
-  // document.addEventListener("mousemove", (event) => {
-  //   cursX = event.clientX;
-  //   cursY = event.clientY;
-  // });
   return {
     mainCanvas,
     mainCanvasContext,
@@ -142,7 +169,6 @@ const init = () => {
 
 try {
   const initilization = init();
-  // ({ mainCanvas, mainCanvasContext, gameState } = init());
   mainCanvas = initilization.mainCanvas;
   mainCanvasContext = initilization.mainCanvasContext;
   gameState = initilization.gameState;
@@ -164,11 +190,11 @@ window.addEventListener("resize", () => {
   gameState.elements.mainCanvas.height = window.innerHeight;
 });
 
-// setInterval(() => {
-//   handleControlsUpdate(gameState);
-//   gameState.world.time = performance.now();
-//   console.log(gameState.world.time);
-// }, 16);
+document.addEventListener("visibilitychange", () => {
+  gameState.world.running = document.visibilityState === 'visible';
+  console.log({ running: gameState.world.running });
+});
+
 
 const start = () => {
   if (mainCanvasContext && mainCanvas && gameState) {

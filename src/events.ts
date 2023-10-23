@@ -1,4 +1,4 @@
-type EventListener<T = any> = (eventName: string, payload?: T) => void;
+export type EventListener<T = any> = (eventName: string, payload?: T) => void;
 
 class EventEmitter {
   public static ALL = 'all';
@@ -6,7 +6,7 @@ class EventEmitter {
     [EventEmitter.ALL]: [],
   };
 
-  on<T>(eventName: string, listener: EventListener<T>) {
+  on = <T>(eventName: string, listener: EventListener<T>) => {
     if (!this.listeners[eventName]) {
       this.listeners[eventName] = [];
     }
@@ -14,8 +14,15 @@ class EventEmitter {
     this.listeners[eventName].push(listener);
   }
 
+  once = <T>(eventName: string, listener: EventListener<T>) => {
+    let newListener = (name: string, payload: T | undefined) => {
+      listener(name, payload);
+      this.off(name, newListener);
+    }
+    this.on(eventName, newListener);
+  }
 
-  emit<T>(eventName: string, payload?: T) {
+  emit = <T>(eventName: string, payload?: T) => {
 
     const listeners = this.listeners[eventName];
 
@@ -34,7 +41,7 @@ class EventEmitter {
     }
   }
 
-  off<T>(eventName: string, listener: EventListener<T>) {
+  off = <T>(eventName: string, listener: EventListener<T>) => {
     const listeners = this.listeners[eventName];
 
     if (listeners) {

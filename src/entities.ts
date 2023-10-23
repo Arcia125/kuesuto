@@ -1,7 +1,8 @@
-import { GameEntityState, GameState, GameEntity, SpriteJSON, GameSprite } from './models';
-import { Sprite } from './sprites';
-import playerSpriteJSONRAW from './player.json';
-import { EventEmitter } from './events';
+import { GameEntityState, GameState, GameEntity, SpriteJSON, GameSprite, Direction } from './models';
+import { Sprite, getSpriteScale } from './sprites';
+import playerSpriteJSONRAW from './spriteJSON/kuesuto-player.json';
+import swordSpriteJSONRAW from './spriteJSON/kuesuto-sword.json';
+import { EventEmitter, EventListener } from './events';
 
 
 let id = 0;
@@ -9,17 +10,42 @@ let id = 0;
 export class Entity implements GameEntity {
   public id = id++;
   public sprite?: GameSprite;
-  public constructor(public state: GameEntityState, public name: string, public emitter: EventEmitter) {
+
+  public static getDirection(entityState: GameEntityState): Direction {
+    const facingUp = entityState.yDir < 0;
+    const facingDown = entityState.yDir > 0;
+    const facingRight = entityState.xDir > 0;
+    const facingLeft = entityState.xDir < 0;
+
+    const direction = facingUp ? 'up' :
+      facingDown ? 'down' :
+        facingRight ? 'right' :
+          facingLeft ? 'left' : 'down';
+    return direction;
+  }
+
+  public constructor(public state: GameEntityState, public name: string, public children: GameEntity[], public emitter: EventEmitter) {
 
   }
 
-  public update(_gameState: GameState, _timeStamp: number) {
+  public getDirection() {
+    return Entity.getDirection(this.state);
+  }
+
+  public update(gameState: GameState, timeStamp: number, _parent?: GameEntity) {
+    if (!this.children?.length) {
+      return;
+    }
+
+    for (let i = 0; i < this.children.length; i++) {
+      this.children[i].update(gameState, timeStamp, this);
+    }
   }
 }
 
 export class SpriteEntity extends Entity {
-  public constructor(public state: GameEntityState, public name: string, public emitter: EventEmitter, spriteJSON: SpriteJSON, imagePath: string) {
-    super(state, name, emitter);
+  public constructor(public state: GameEntityState, public name: string, public children: GameEntity[], public emitter: EventEmitter, spriteJSON: SpriteJSON, imagePath: string) {
+    super(state, name, children, emitter);
     this.sprite = new Sprite(spriteJSON, imagePath, emitter);
   }
 }
@@ -27,39 +53,33 @@ export class SpriteEntity extends Entity {
 export class PlayerEntity extends SpriteEntity {
   public static NAME = 'player';
 
-  public constructor(public state: GameEntityState, emitter: EventEmitter) {
-    super(state, PlayerEntity.NAME, emitter, playerSpriteJSONRAW as SpriteJSON, './player.png');
-    // this.spriteSheet = getImage(() => console.log('loaded player'), './player.png');
-    // this.spriteJSON = playerSpriteJSONRAW as SpriteJSON;
-    // this.spriteFrames = getSpriteFrames(this.spriteJSON);
+  public constructor(public state: GameEntityState, public children: GameEntity[], emitter: EventEmitter) {
+    super(state, PlayerEntity.NAME, children, emitter, playerSpriteJSONRAW as SpriteJSON, './kuesuto-player.png');
   }
 
-  public update = (gameState: GameState, _timeStamp: number) => {
+  public update = (gameState: GameState, _timeStamp: number, _parent?: GameEntity) => {
+    super.update(gameState, _timeStamp, _parent);
     let moving = false;
     let yDir = this.state.yDir;
     let xDir = this.state.xDir;
     let movedX = false;
     let movedY = false;
     if (gameState.controls.up) {
-      // this.state.y -= (this.state.speedY * gameState.time.delta);
       yDir = -1;
       moving = true;
       movedY = true;
     }
     if (gameState.controls.down) {
-      // this.state.y += (this.state.speedY * gameState.time.delta);
       yDir = 1;
       moving = true;
       movedY = true;
     }
     if (gameState.controls.left) {
-      // this.state.x -= (this.state.speedX * gameState.time.delta);
       xDir = -1;
       moving = true;
       movedX = true;
     }
     if (gameState.controls.right) {
-      // this.state.x += (this.state.speedX * gameState.time.delta);
       xDir = 1;
       moving = true;
       movedX = true;
@@ -81,5 +101,68 @@ export class PlayerEntity extends SpriteEntity {
     }
     this.state.yDir = yDir;
     this.state.xDir = xDir;
+
+    this.state.attacking = gameState.controls.attack;
+  }
+}
+
+export class WeaponEntity extends SpriteEntity {
+  public constructor(public state: GameEntityState, public name: string, public children: GameEntity[], emitter: EventEmitter, spriteJSONRAW: SpriteJSON, spritePath: string) {
+    super(state, name, children, emitter, spriteJSONRAW as SpriteJSON, spritePath);
+  }
+}
+
+export class SwordEntity extends WeaponEntity {
+  public static NAME = 'sword';
+  private attackListener: EventListener<any> | null = null;
+  public constructor(public state: GameEntityState, public children: GameEntity[], public emitter: EventEmitter) {
+    super(state, SwordEntity.NAME, children, emitter, swordSpriteJSONRAW as SpriteJSON, './kuesuto-sword.png');
+  }
+
+  public update = (gameState: GameState, _timeStamp: number, parent?: GameEntity) => {
+    super.update(gameState, _timeStamp, parent);
+    if (parent) {
+      this.state.xDir = parent.state.xDir;
+      this.state.yDir = parent.state.yDir;
+      const dir = parent.getDirection();
+      switch (dir) {
+        case 'up': {
+          this.state.x = parent.state.x;
+          this.state.y = parent.state.y - (getSpriteScale(gameState.elements.mainCanvas) * parent.state.scaleY);
+          break;
+        }
+        case 'down': {
+          this.state.x = parent.state.x;
+
+          this.state.y = parent.state.y + (getSpriteScale(gameState.elements.mainCanvas) * parent.state.scaleY);
+          break;
+        }
+        case 'right': {
+          this.state.x = parent.state.x + (getSpriteScale(gameState.elements.mainCanvas) * parent.state.scaleX);
+          this.state.y = parent.state.y;
+          break;
+        }
+        case 'left': {
+          this.state.x = parent.state.x - (getSpriteScale(gameState.elements.mainCanvas) * parent.state.scaleX);
+          this.state.y = parent.state.y;
+          break;
+        }
+      }
+    }
+    if (!this.attackListener) {
+      const animationListener: EventListener<any> = (_name, payload) => {
+        if (payload.entity === this) {
+          gameState.controls.attack = false;
+          this.state.attacking = false;
+          this.state.visible = false
+        }
+      };
+      this.emitter.on('animationEnd', animationListener);
+      this.attackListener = animationListener;
+    }
+    if (gameState.controls.attack && !this.state.attacking) {
+      this.state.attacking = true;
+      this.state.visible = true;
+    }
   }
 }

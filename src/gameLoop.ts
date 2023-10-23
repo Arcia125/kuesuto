@@ -20,36 +20,41 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
   }
 
   const __gameLoop = (timestamp: number) => {
-
     if (timestamp < gameState.time.lastFrameTimeMs + (1000 / gameState.time.maxFPS)) {
       gameState.time.stepID = window.requestAnimationFrame(__gameLoop);
       return;
     }
 
-    gameState.time.delta += timestamp - gameState.time.lastFrameTimeMs;
-    gameState.time.lastFrameTimeMs = timestamp;
+    if (gameState.world.running) {
 
-    if (timestamp > gameState.time.lastFpsUpdate + 1000) {
-      gameState.time.fps = 0.25 * gameState.time.framesThisSecond + 0.75 * gameState.time.fps;
 
-      gameState.time.lastFpsUpdate = timestamp;
-      gameState.time.framesThisSecond = 0;
-      gameState.emitter.emit('fps', { fps: gameState.time.fps });
-    }
 
-    gameState.time.framesThisSecond++;
+      gameState.time.delta += timestamp - gameState.time.lastFrameTimeMs;
+      gameState.time.lastFrameTimeMs = timestamp;
 
-    let numUpdateSteps = 0;
+      if (timestamp > gameState.time.lastFpsUpdate + 1000) {
+        gameState.time.fps = 0.25 * gameState.time.framesThisSecond + 0.75 * gameState.time.fps;
 
-    while (gameState.time.delta >= gameState.time.timeStep) {
-      update(gameState, timestamp);
-      gameState.time.delta -= gameState.time.timeStep;
+        gameState.time.lastFpsUpdate = timestamp;
+        gameState.time.framesThisSecond = 0;
+        gameState.emitter.emit('fps', { fps: gameState.time.fps });
+      }
 
-      if (++numUpdateSteps >= 240) {
-        resetDelta(gameState);
-        break;
+      gameState.time.framesThisSecond++;
+
+      let numUpdateSteps = 0;
+
+      while (gameState.time.delta >= gameState.time.timeStep) {
+        update(gameState, timestamp);
+        gameState.time.delta -= gameState.time.timeStep;
+
+        if (++numUpdateSteps >= 240) {
+          resetDelta(gameState);
+          break;
+        }
       }
     }
+
 
     gameState.time.frameID++;
     render(ctx, canvas, gameState);

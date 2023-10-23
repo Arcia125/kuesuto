@@ -1,5 +1,8 @@
 import { EventEmitter } from './events';
 
+
+export type Direction = "up" | "down" | "left" | "right";
+
 export type GameEntityState = {
   x: number;
   y: number;
@@ -7,8 +10,11 @@ export type GameEntityState = {
   yDir: number;
   speedX: number;
   speedY: number;
+  scaleX: number;
+  scaleY: number;
+  visible: boolean;
   moving: boolean;
-  spriteSize: number;
+  attacking: boolean;
   currentAnimationName: string;
   lastAnimationName: string;
   animationToEnd: boolean;
@@ -27,7 +33,9 @@ export interface GameEntity {
   name: string;
   state: GameEntityState;
   sprite?: GameSprite;
-  update: (gameState: GameState, timeStamp: number) => void;
+  children?: GameEntity[];
+  update: (gameState: GameState, timeStamp: number, parent?: GameEntity) => void;
+  getDirection: () => Direction;
 }
 
 export type Controls = {
@@ -35,6 +43,7 @@ export type Controls = {
   down: boolean;
   left: boolean;
   right: boolean;
+  attack: boolean;
 };
 
 export type World = {
@@ -58,20 +67,17 @@ export type Time = {
 export type Settings = {
   debugGameState: boolean;
   debugPlayerSpriteSheet: boolean;
+  showFps: boolean;
 };
 
 export type Elements = {
   mainCanvas: HTMLCanvasElement;
   mainCanvasContext: CanvasRenderingContext2D;
   gameStateContainer: HTMLPreElement;
+  mainGameFpsContainer: HTMLParagraphElement;
 };
 
 export type GameState = {
-  // player: {
-  //   id: number;
-  //   state: GameEntityState
-  //   update: (gameState: GameState, timeStamp: number) => void;
-  // };
   entities: GameEntity[];
   controls: Controls;
   world: World;
@@ -120,12 +126,14 @@ export type Meta = {
   frameTags: FrameTag[];
 };
 
+
 export type AnimationFrame = {
   frames: Frame[];
   data: {
-    direction: "up" | "down" | "left" | "right";
+    direction: Direction;
     blink: boolean;
     movement: boolean;
+    attack: boolean;
   };
 };
 

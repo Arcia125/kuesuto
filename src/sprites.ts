@@ -1,6 +1,6 @@
 import { EventEmitter } from './events';
 import { getImage } from './images';
-import { AnimationFrame, SpriteJSON, GameSprite } from './models';
+import { AnimationFrame, SpriteJSON, GameSprite, GameEntityState, GameState } from './models';
 
 const parseFrameData = (rawData: any) => {
   const dataItems = rawData.split(' ');
@@ -26,7 +26,6 @@ export const getSpriteFrames = (json: SpriteJSON) => Object.entries(json.frames)
 
     const data = parseFrameData(rawData);
 
-
     acc[animationName] = {
       frames: [frameValue],
       data
@@ -50,3 +49,13 @@ export class Sprite implements GameSprite {
     this.spriteFrames = getSpriteFrames(this.spriteJSON);
   }
 }
+
+export function frameMatchesEntity(entityState: GameEntityState, direction: string): (value: [string, AnimationFrame], index: number, array: [string, AnimationFrame][]) => unknown {
+  return ([_frameName, frameValue]) => {
+    return frameValue.data.direction === direction && (!!frameValue.data.movement === !!entityState.moving || entityState.attacking) && !!entityState.attacking === !!frameValue.data.attack;
+  };
+}
+
+export const getSpriteScale = (mainCanvas: HTMLCanvasElement) => {
+  return mainCanvas.width / 20;
+};
