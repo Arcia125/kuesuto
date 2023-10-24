@@ -1,5 +1,6 @@
 import { ANIMATION_SPEED_MULTIPLIER } from './constants';
 import { PlayerEntity } from './entities';
+import { EVENTS } from './events';
 import { GameEntity, GameState } from './models';
 import { frameMatchesEntity, getSpriteScale } from './sprites';
 
@@ -79,7 +80,7 @@ const getSpritePos = (gameState: GameState, direction: 'up' | 'down' | 'left' | 
     let found = null;
     if (entityState.currentAnimationName === name && entityState.animationToEnd && entityState.animationFrameX === 0) {
       entityState.lastAnimationName = name;
-      gameState.emitter.emit(`animationEnd`, { entity, name });
+      gameState.emitter.emit(EVENTS.ANIMATION_END, { entity, name });
       entityState.animationToEnd = false;
       found = false;
     }
@@ -168,7 +169,7 @@ const drawEntity = (
     spriteHeight: spriteFrameHeight,
   };
 
-  gameState.emitter.emit('renderSprite', { spriteData, entity });
+  gameState.emitter.emit(EVENTS.RENDER_SPRITE, { spriteData, entity });
 
   const spriteSheet = entity.sprite.spriteSheet;
   drawSprite(ctx, canvas, spriteSheet, spriteData);
@@ -200,7 +201,7 @@ const drawEntity = (
 };
 
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
-  gameState.emitter.emit('renderStart');
+  gameState.emitter.emit(EVENTS.RENDER_START, null);
 
   resetContext(ctx, canvas, "#fff");
   drawGrid(ctx, canvas, 0, "#000");
@@ -228,6 +229,6 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
       world: gameState.world,
     }, null, 2);
   }
-  gameState.emitter.emit('renderEnd');
+  gameState.emitter.emit(EVENTS.RENDER_END, null);
 }
 

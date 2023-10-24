@@ -2,7 +2,7 @@ import { GameEntityState, GameState, GameEntity, SpriteJSON, GameSprite, Directi
 import { Sprite, getSpriteScale } from './sprites';
 import playerSpriteJSONRAW from './spriteJSON/kuesuto-player.json';
 import swordSpriteJSONRAW from './spriteJSON/kuesuto-sword.json';
-import { EventEmitter, EventListener } from './events';
+import { EventEmitter, EventListener, EVENTS } from './events';
 
 
 let id = 0;
@@ -150,14 +150,14 @@ export class SwordEntity extends WeaponEntity {
       }
     }
     if (!this.attackListener) {
-      const animationListener: EventListener<any> = (_name, payload) => {
+      const animationListener: EventListener<typeof EVENTS.ANIMATION_END> = (_name, payload) => {
         if (payload.entity === this) {
           gameState.controls.attack = false;
           this.state.attacking = false;
           this.state.visible = false
         }
       };
-      this.emitter.on('animationEnd', animationListener);
+      this.emitter.on(EVENTS.ANIMATION_END, animationListener);
       this.attackListener = animationListener;
     }
     if (gameState.controls.attack && !this.state.attacking) {

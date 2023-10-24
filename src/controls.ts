@@ -1,3 +1,4 @@
+import { EVENTS } from './events';
 import { GameState } from './models';
 
 const keyMappings = {
@@ -14,6 +15,7 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
   if (keyMappings.attack.includes(event.key)) {
     event.preventDefault();
     gameState.controls.attack = true;
+    gameState.emitter.emit(EVENTS.ATTACK_COMMAND, null);
   }
   if (keyMappings.up.includes(event.key)) {
     event.preventDefault();

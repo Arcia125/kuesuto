@@ -2,7 +2,7 @@ import { createKeyDownHandler, createKeyUpHandler } from './controls';
 import { GameState } from './models';
 import './style.css'
 import { gameLoop } from "./gameLoop";
-import { EventEmitter } from './events';
+import { EventEmitter, EVENTS } from './events';
 import { PlayerEntity, SwordEntity } from './entities';
 import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from './constants';
 
@@ -53,7 +53,7 @@ const init = () => {
     throw new Error('Main canvas context not found');
   }
 
-  emitter.emit('init', {
+  emitter.emit(EVENTS.INIT, {
     mainCanvas,
     mainCanvasContext
   });
@@ -146,7 +146,7 @@ const init = () => {
     emitter,
   };
 
-  emitter.on<{ fps: number }>('fps', (_, msg) => {
+  emitter.on(EVENTS.FPS, (_, msg) => {
     console.log(msg);
     if (gameState.settings.showFps && msg?.fps) {
       gameState.elements.mainGameFpsContainer.innerHTML = Math.round(msg.fps).toString();

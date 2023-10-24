@@ -1,3 +1,4 @@
+import { EVENTS } from './events';
 import { GameState } from './models';
 import { render } from './rendering';
 
@@ -37,7 +38,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
 
         gameState.time.lastFpsUpdate = timestamp;
         gameState.time.framesThisSecond = 0;
-        gameState.emitter.emit('fps', { fps: gameState.time.fps });
+        gameState.emitter.emit(EVENTS.FPS, { fps: gameState.time.fps });
       }
 
       gameState.time.framesThisSecond++;

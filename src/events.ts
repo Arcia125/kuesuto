@@ -1,28 +1,74 @@
-export type EventListener<T = any> = (eventName: string, payload?: T) => void;
+import { GameEntity } from './models';
+export const EVENTS = {
+  ALL: 'all',
+  FPS: 'fps',
+  INIT: 'init',
+  RENDER_START: 'renderStart',
+  RENDER_END: 'renderEnd',
+  IMAGE_LOADED: 'imageLoaded',
+  RENDER_SPRITE: 'renderSprite',
+  ANIMATION_END: 'animationEnd',
+  ATTACK: 'attack',
+  ATTACK_COMMAND: 'attackCommand',
+} as const;
+
+export type EVENT_KEY = keyof typeof EVENTS;
+export type EVENT_NAME = typeof EVENTS[EVENT_KEY];
+
+export type EVENT_MAPPING = {
+  [EVENTS.ALL]: any;
+  [EVENTS.FPS]: { fps: number; };
+  [EVENTS.INIT]: {
+    mainCanvas: HTMLCanvasElement;
+    mainCanvasContext: CanvasRenderingContext2D;
+  };
+  [EVENTS.RENDER_START]: null;
+  [EVENTS.RENDER_END]: null;
+  [EVENTS.IMAGE_LOADED]: { imagePath: string; };
+  [EVENTS.RENDER_SPRITE]: {
+    spriteData: {
+      canvasX: number;
+      canvasY: number;
+      canvasWidth: number;
+      canvasHeight: number;
+      spriteX: number;
+      spriteY: number;
+      spriteWidth: number;
+      spriteHeight: number;
+    };
+    entity: GameEntity;
+  }
+  [EVENTS.ANIMATION_END]: { entity: GameEntity; name: string };
+  [EVENTS.ATTACK]: null;
+  [EVENTS.ATTACK_COMMAND]: null,
+}
+
+export type EventListener<T extends EVENT_NAME> = (eventName: T, payload: EVENT_MAPPING[T]) => void;
+
 
 class EventEmitter {
-  public static ALL = 'all';
-  private listeners: Record<string, EventListener[]> = {
-    [EventEmitter.ALL]: [],
+  public static ALL = EVENTS.ALL;
+  private listeners: { [k in EVENT_NAME]?: EventListener<k>[] } = {
+    [EventEmitter.ALL]: [] as EventListener<typeof EVENTS.ALL>[],
   };
 
-  on = <T>(eventName: string, listener: EventListener<T>) => {
+  on = <T extends EVENT_NAME>(eventName: T, listener: EventListener<T>) => {
     if (!this.listeners[eventName]) {
       this.listeners[eventName] = [];
     }
 
-    this.listeners[eventName].push(listener);
+    this.listeners[eventName]!.push(listener);
   }
 
-  once = <T>(eventName: string, listener: EventListener<T>) => {
-    let newListener = (name: string, payload: T | undefined) => {
+  once = <T extends EVENT_NAME>(eventName: T, listener: EventListener<T>) => {
+    let newListener: EventListener<T> = (name, payload) => {
       listener(name, payload);
       this.off(name, newListener);
     }
     this.on(eventName, newListener);
   }
 
-  emit = <T>(eventName: string, payload?: T) => {
+  emit = <T extends EVENT_NAME>(eventName: T, payload: EVENT_MAPPING[T]) => {
 
     const listeners = this.listeners[eventName];
 
@@ -36,16 +82,16 @@ class EventEmitter {
     if (allListeners) {
       const allListenerLen = allListeners.length;
       for (let i = 0; i < allListenerLen; i++) {
-        allListeners[i](eventName, payload);
+        allListeners[i](eventName as any, payload);
       }
     }
   }
 
-  off = <T>(eventName: string, listener: EventListener<T>) => {
+  off = <T extends EVENT_NAME>(eventName: T, listener: EventListener<T>) => {
     const listeners = this.listeners[eventName];
 
     if (listeners) {
-      this.listeners[eventName] = listeners.filter(l => l !== listener);
+      this.listeners[eventName] = listeners.filter(l => l !== listener) as any;
     }
   }
 }

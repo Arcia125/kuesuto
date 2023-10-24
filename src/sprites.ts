@@ -1,6 +1,6 @@
-import { EventEmitter } from './events';
+import { EventEmitter, EVENTS } from './events';
 import { getImage } from './images';
-import { AnimationFrame, SpriteJSON, GameSprite, GameEntityState, GameState } from './models';
+import { AnimationFrame, SpriteJSON, GameSprite, GameEntityState } from './models';
 
 const parseFrameData = (rawData: any) => {
   const dataItems = rawData.split(' ');
@@ -43,7 +43,7 @@ export class Sprite implements GameSprite {
   public constructor(public spriteJSON: SpriteJSON, imagePath: string, private emitter: EventEmitter, private onLoad?: () => void) {
     this.spriteSheet = getImage(() => {
       this.onLoad?.();
-      this.emitter.emit('imageLoaded', { imagePath })
+      this.emitter.emit(EVENTS.IMAGE_LOADED, { imagePath })
     }, imagePath);
     this.spriteJSON = spriteJSON;
     this.spriteFrames = getSpriteFrames(this.spriteJSON);
