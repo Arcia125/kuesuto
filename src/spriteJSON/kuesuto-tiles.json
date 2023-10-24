@@ -1,0 +1,60 @@
+{ "frames": {
+   "Tall Grass": {
+    "frame": { "x": 2, "y": 2, "w": 16, "h": 16 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 16 },
+    "sourceSize": { "w": 16, "h": 16 },
+    "duration": 100
+   },
+   "Tall Grass and Flowers": {
+    "frame": { "x": 2, "y": 20, "w": 16, "h": 16 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 16 },
+    "sourceSize": { "w": 16, "h": 16 },
+    "duration": 100
+   },
+   "Grass": {
+    "frame": { "x": 2, "y": 38, "w": 16, "h": 16 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 16 },
+    "sourceSize": { "w": 16, "h": 16 },
+    "duration": 100
+   },
+   "Grass Path Left": {
+    "frame": { "x": 2, "y": 56, "w": 16, "h": 16 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 16 },
+    "sourceSize": { "w": 16, "h": 16 },
+    "duration": 100
+   },
+   "Gras Path Right": {
+    "frame": { "x": 2, "y": 74, "w": 16, "h": 16 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 16 },
+    "sourceSize": { "w": 16, "h": 16 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3-rc6-x64",
+  "image": "kuesuto-tiles.png",
+  "format": "RGBA8888",
+  "size": { "w": 20, "h": 92 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Tall Grass", "opacity": 255, "blendMode": "normal" },
+   { "name": "Tall Grass and Flowers", "opacity": 255, "blendMode": "normal" },
+   { "name": "Grass", "opacity": 255, "blendMode": "normal" },
+   { "name": "Grass Path Left", "opacity": 255, "blendMode": "normal" },
+   { "name": "Gras Path Right", "opacity": 255, "blendMode": "normal" }
+  ]
+ }
+}

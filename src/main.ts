@@ -5,6 +5,7 @@ import { gameLoop } from "./gameLoop";
 import { EventEmitter, EVENTS } from './events';
 import { PlayerEntity, SwordEntity } from './entities';
 import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from './constants';
+import { RenderableMap } from './map';
 
 
 // document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -109,6 +110,10 @@ const init = () => {
       animationFrameX: 0,
       animationFrameXStart: 0,
     }, [], emitter)], emitter)],
+    map: new RenderableMap({
+      scaleX: 1,
+      scaleY: 1,
+    }, emitter),
     controls: {
       up: false,
       down: false,

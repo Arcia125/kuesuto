@@ -61,8 +61,8 @@ h1 {
   right: 1.25vw;
   z-index: 999;
   color: gold;
-  font-size: 30px;
+  font-size: 40px;
   font-family: 'Inter';
-  font-weight: 400;
+  font-weight: 600;
   -webkit-text-stroke: 1px black;
 }

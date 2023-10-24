@@ -38,6 +38,17 @@ export interface GameEntity {
   getDirection: () => Direction;
 }
 
+export interface GameMapState {
+  scaleX: number;
+  scaleY: number;
+};
+
+export interface GameMap {
+  tiles: GameSprite;
+  state: GameMapState;
+  emitter: EventEmitter;
+}
+
 export type Controls = {
   up: boolean;
   down: boolean;
@@ -79,6 +90,7 @@ export type Elements = {
 
 export type GameState = {
   entities: GameEntity[];
+  map: ;
   controls: Controls;
   world: World;
   time: Time;
@@ -123,7 +135,7 @@ export type Meta = {
   format: string;
   size: Dimensions;
   scale: string;
-  frameTags: FrameTag[];
+  frameTags?: FrameTag[];
 };
 
 

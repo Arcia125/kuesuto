@@ -21,7 +21,7 @@ export const getSpriteFrames = (json: SpriteJSON) => Object.entries(json.frames)
 
   if (acc[animationName]) {
     acc[animationName].frames.push(frameValue);
-  } else {
+  } else if (json.meta.frameTags) {
     const rawData = json.meta.frameTags.find(({ name }: { name: string }) => animationName === name)?.data || "";
 
     const data = parseFrameData(rawData);
@@ -58,4 +58,37 @@ export function frameMatchesEntity(entityState: GameEntityState, direction: stri
 
 export const getSpriteScale = (mainCanvas: HTMLCanvasElement) => {
   return mainCanvas.width / 20;
+};
+
+export const drawSprite = (
+  ctx: CanvasRenderingContext2D,
+  _canvas: HTMLCanvasElement,
+  spriteSheet: HTMLImageElement,
+  {
+    canvasX,
+    canvasY,
+    canvasWidth,
+    canvasHeight,
+    spriteX,
+    spriteY,
+    spriteWidth,
+    spriteHeight,
+  }: {
+    /** x position on the canvas */
+    canvasX: number,
+    /** y Position on the canvas */
+    canvasY: number,
+    canvasWidth: number,
+    canvasHeight: number,
+    /** x Position on the spritesheet */
+    spriteX: number,
+    /** y Position on the spritesheet */
+    spriteY: number,
+    /** width of the sprite on the spritesheet */
+    spriteWidth: number,
+    /** height of the sprite on the spritesheet */
+    spriteHeight: number
+  }) => {
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(spriteSheet, spriteX, spriteY, spriteWidth, spriteHeight, canvasX, canvasY, canvasWidth, canvasHeight);
 };

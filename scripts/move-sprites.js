@@ -21,6 +21,7 @@ const destinationDirectory = path.join(
 const filesToMove = [
   { name: 'kuesuto-player.png', metadata: 'kuesuto-player.json' },
   { name: 'kuesuto-sword.png', metadata: 'kuesuto-sword.json' },
+  { name: 'kuesuto-tiles.png', metadata: 'kuesuto-tiles.json' },
 ];
 
 // Function to move files

@@ -2,7 +2,7 @@ import { ANIMATION_SPEED_MULTIPLIER } from './constants';
 import { PlayerEntity } from './entities';
 import { EVENTS } from './events';
 import { GameEntity, GameState } from './models';
-import { frameMatchesEntity, getSpriteScale } from './sprites';
+import { drawSprite, frameMatchesEntity, getSpriteScale } from './sprites';
 
 
 const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, background: CanvasFillStrokeStyles['fillStyle']) => {
@@ -30,38 +30,7 @@ const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padd
   ctx.stroke();
 };
 
-const drawSprite = (
-  ctx: CanvasRenderingContext2D,
-  _canvas: HTMLCanvasElement,
-  spriteSheet: HTMLImageElement,
-  {
-    canvasX,
-    canvasY,
-    canvasWidth,
-    canvasHeight,
-    spriteX,
-    spriteY,
-    spriteWidth,
-    spriteHeight,
-  }: {
-    /** x position on the canvas */
-    canvasX: number,
-    /** y Position on the canvas */
-    canvasY: number,
-    canvasWidth: number,
-    canvasHeight: number,
-    /** x Position on the spritesheet */
-    spriteX: number,
-    /** y Position on the spritesheet */
-    spriteY: number,
-    /** width of the sprite on the spritesheet */
-    spriteWidth: number,
-    /** height of the sprite on the spritesheet */
-    spriteHeight: number
-  }) => {
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(spriteSheet, spriteX, spriteY, spriteWidth, spriteHeight, canvasX, canvasY, canvasWidth, canvasHeight);
-};
+
 
 const getSpritePos = (gameState: GameState, direction: 'up' | 'down' | 'left' | 'right', entity: GameEntity) => {
   if (!entity.sprite) throw new Error("No sprite on entity");
@@ -204,7 +173,8 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   gameState.emitter.emit(EVENTS.RENDER_START, null);
 
   resetContext(ctx, canvas, "#fff");
-  drawGrid(ctx, canvas, 0, "#000");
+  // drawGrid(ctx, canvas, 0, "#000");
+  gameState.map.draw(ctx, canvas, gameState);
 
   const entities = gameState.entities;
   const entityCount = entities.length;
