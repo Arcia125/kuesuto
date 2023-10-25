@@ -129,6 +129,7 @@ const init = () => {
       debugGameState: false,
       debugPlayerSpriteSheet: false,
       showFps: true,
+      showGrid: true,
     },
     time: {
       delta: 0,

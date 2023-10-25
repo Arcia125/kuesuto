@@ -13,22 +13,22 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   ctx.closePath();
 };
 
-// const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle']) => {
-//   const gridWidth = canvas.width;
-//   const gridHeight = canvas.height;
-//   const gridCellSize = getSpriteScale(canvas);
-//   for (let x = 0; x <= gridWidth; x += gridCellSize) {
-//     ctx.moveTo(0.5 + x + padding, padding);
-//     ctx.lineTo(0.5 + x + padding, gridHeight + padding);
-//   }
+const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle']) => {
+  const gridWidth = canvas.width;
+  const gridHeight = canvas.height;
+  const gridCellSize = Math.ceil(getSpriteScale(canvas));
+  for (let x = 0; x <= gridWidth; x += gridCellSize) {
+    ctx.moveTo(0.5 + x + padding, padding);
+    ctx.lineTo(0.5 + x + padding, gridHeight + padding);
+  }
 
-//   for (var x = 0; x <= gridHeight; x += gridCellSize) {
-//     ctx.moveTo(padding, 0.5 + x + padding);
-//     ctx.lineTo(gridWidth + padding, 0.5 + x + padding);
-//   }
-//   ctx.strokeStyle = strokeStyle;
-//   ctx.stroke();
-// };
+  for (var x = 0; x <= gridHeight; x += gridCellSize) {
+    ctx.moveTo(padding, 0.5 + x + padding);
+    ctx.lineTo(gridWidth + padding, 0.5 + x + padding);
+  }
+  ctx.strokeStyle = strokeStyle;
+  ctx.stroke();
+};
 
 
 
@@ -109,8 +109,10 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   gameState.emitter.emit(EVENTS.RENDER_START, null);
 
   resetContext(ctx, canvas, "#fff");
-  // drawGrid(ctx, canvas, 0, "#000");
   gameState.map.render(ctx, canvas, gameState);
+  if (gameState.settings.showGrid) {
+    drawGrid(ctx, canvas, 0, "teal");
+  }
 
   const entities = gameState.entities;
   const entityCount = entities.length;

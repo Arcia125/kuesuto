@@ -132,6 +132,7 @@ export type Settings = {
   debugGameState: boolean;
   debugPlayerSpriteSheet: boolean;
   showFps: boolean;
+  showGrid: boolean;
 };
 
 export type Elements = {
