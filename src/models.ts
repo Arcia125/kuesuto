@@ -52,6 +52,25 @@ export interface Parent<T> {
 
 export interface ParentableParent<T> extends Parentable<T>, Parent<T> {}
 
+export type Frame = {
+  frame: Rect;
+  rotated: boolean;
+  trimmed: boolean;
+  spriteSourceSize: Rect;
+  sourceSize: Dimensions;
+  duration: number;
+};
+
+export type AnimationFrame = {
+  frames: Frame[];
+  data: {
+    direction: Direction;
+    blink: boolean;
+    movement: boolean;
+    attack: boolean;
+  };
+};
+
 export interface GameSprite {
   spriteFrames: Record<string, AnimationFrame>;
   spriteSheet: HTMLImageElement;
@@ -69,6 +88,7 @@ export interface GameEntity extends BaseEntity, Updateable, ParentableParent<Gam
   sprite?: GameSprite;
   children?: GameEntity[];
   getDirection: () => Direction;
+  getSpritePos: (gameState: GameState) => Frame;
 }
 
 export interface GameMapState {
@@ -132,18 +152,6 @@ export type GameState = {
   emitter: EventEmitter;
 };
 
-
-
-
-export type Frame = {
-  frame: Rect;
-  rotated: boolean;
-  trimmed: boolean;
-  spriteSourceSize: Rect;
-  sourceSize: Dimensions;
-  duration: number;
-};
-
 type FrameTag = {
   name: string;
   from: number;
@@ -160,17 +168,6 @@ export type SpriteJSONMeta = {
   size: Dimensions;
   scale: string;
   frameTags?: FrameTag[];
-};
-
-
-export type AnimationFrame = {
-  frames: Frame[];
-  data: {
-    direction: Direction;
-    blink: boolean;
-    movement: boolean;
-    attack: boolean;
-  };
 };
 
 export type SpriteJSON = {

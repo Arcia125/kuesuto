@@ -2,7 +2,7 @@ import { ANIMATION_SPEED_MULTIPLIER } from './constants';
 import { PlayerEntity } from './entities';
 import { EVENTS } from './events';
 import { GameEntity, GameState } from './models';
-import { drawSprite, frameMatchesEntity, getSpriteScale } from './sprites';
+import { drawSprite, getSpriteScale } from './sprites';
 
 
 const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, background: CanvasFillStrokeStyles['fillStyle']) => {
@@ -32,73 +32,7 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
 
 
 
-const getSpritePos = (gameState: GameState, direction: 'up' | 'down' | 'left' | 'right', entity: GameEntity) => {
-  if (!entity.sprite) throw new Error("No sprite on entity");
 
-  const entityState = entity.state;
-
-  let spriteFrameEntries;
-
-  spriteFrameEntries = Object.entries(entity.sprite?.spriteFrames).filter(frameMatchesEntity(entityState, direction));
-
-  const [spriteFrameName, spriteFrameValue] = spriteFrameEntries.find(([name, value]) => {
-    if (!name) {
-      throw new Error('Failed to load sprite sheet');
-    }
-
-    let found = null;
-    if (entityState.currentAnimationName === name && entityState.animationToEnd && entityState.animationFrameX === 0) {
-      entityState.lastAnimationName = name;
-      gameState.emitter.emit(EVENTS.ANIMATION_END, { entity, name });
-      entityState.animationToEnd = false;
-      found = false;
-    }
-    if (entityState.lastAnimationName === name && spriteFrameEntries.length > 1) {
-      found = false;
-    }
-    if (entityState.animationFrameX >= (value.frames.length - 1)) {
-      entityState.animationToEnd = true;
-      if (found !== false) {
-        found = true;
-      }
-    } else {
-      if (found !== false) {
-        found = true;
-      }
-    }
-
-    if (found) {
-      const timeSinceLastFrame = gameState.time.lastFrameTimeMs - entityState.animationFrameXStart;
-
-      if (entityState.animationFrameX >= value.frames.length) {
-        entityState.animationFrameX = 0;
-      }
-      if (timeSinceLastFrame > value.frames[entityState.animationFrameX]?.duration * ANIMATION_SPEED_MULTIPLIER) {
-        entityState.animationFrameXStart = gameState.time.lastFrameTimeMs;
-        entityState.animationFrameX++;
-
-        if (entityState.animationFrameX >= value.frames.length) {
-          entityState.animationFrameX = 0;
-        }
-
-      }
-    }
-
-    return found;
-
-  }) || spriteFrameEntries[0];
-  if (spriteFrameName === '') {
-    throw new Error('Sprite frame name not found');
-  }
-
-  if (!spriteFrameValue) {
-    throw new Error('Sprite frame value not found');
-  }
-
-  entityState.currentAnimationName = spriteFrameName;
-
-  return spriteFrameValue.frames[entityState.animationFrameX];
-};
 
 const drawEntity = (
   entity: GameEntity,
@@ -115,8 +49,10 @@ const drawEntity = (
   }
 
   const entityState = entity.state;
-  const direction = entity.getDirection();
-  const spriteFrame = getSpritePos(gameState, direction, entity);
+  const spriteFrame = entity.getSpritePos(gameState);
+  // const direction = entity.getDirection();
+
+  // const spriteFrame = getSpritePos(gameState, direction, entity);
 
   const spriteFrameWidth = spriteFrame.spriteSourceSize.w;
   const spriteFrameHeight = spriteFrame.spriteSourceSize.h;
