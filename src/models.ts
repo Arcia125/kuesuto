@@ -3,9 +3,19 @@ import { EventEmitter } from './events';
 
 export type Direction = "up" | "down" | "left" | "right";
 
-export type GameEntityState = {
+export interface Position {
   x: number;
   y: number;
+};
+
+export interface Dimensions {
+  w: number;
+  h: number;
+};
+
+export type Rect = Position & Dimensions;
+
+export interface GameEntityState extends Position {
   xDir: number;
   yDir: number;
   speedX: number;
@@ -36,9 +46,13 @@ export interface GameSprite {
   spriteJSON: SpriteJSON;
 }
 
-export interface GameEntity extends Updateable<GameEntity> {
+export interface BaseEntity {
   id: number;
   name: string;
+}
+
+
+export interface GameEntity extends BaseEntity, Updateable<GameEntity> {
   state: GameEntityState;
   sprite?: GameSprite;
   children?: GameEntity[];
@@ -106,17 +120,8 @@ export type GameState = {
   emitter: EventEmitter;
 };
 
-export type Position = {
-  x: number;
-  y: number;
-};
 
-export type Dimensions = {
-  w: number;
-  h: number;
-};
 
-export type Rect = Position & Dimensions;
 
 export type Frame = {
   frame: Rect;
@@ -135,7 +140,7 @@ type FrameTag = {
   data: string;
 };
 
-export type Meta = {
+export type SpriteJSONMeta = {
   app: string;
   version: string;
   image: string;
@@ -158,5 +163,5 @@ export type AnimationFrame = {
 
 export type SpriteJSON = {
   frames: Record<string, Frame>;
-  meta: Meta;
+  meta: SpriteJSONMeta;
 };
