@@ -13,22 +13,22 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   ctx.closePath();
 };
 
-const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle']) => {
-  const gridWidth = canvas.width;
-  const gridHeight = canvas.height;
-  const gridCellSize = getSpriteScale(canvas);
-  for (let x = 0; x <= gridWidth; x += gridCellSize) {
-    ctx.moveTo(0.5 + x + padding, padding);
-    ctx.lineTo(0.5 + x + padding, gridHeight + padding);
-  }
+// const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle']) => {
+//   const gridWidth = canvas.width;
+//   const gridHeight = canvas.height;
+//   const gridCellSize = getSpriteScale(canvas);
+//   for (let x = 0; x <= gridWidth; x += gridCellSize) {
+//     ctx.moveTo(0.5 + x + padding, padding);
+//     ctx.lineTo(0.5 + x + padding, gridHeight + padding);
+//   }
 
-  for (var x = 0; x <= gridHeight; x += gridCellSize) {
-    ctx.moveTo(padding, 0.5 + x + padding);
-    ctx.lineTo(gridWidth + padding, 0.5 + x + padding);
-  }
-  ctx.strokeStyle = strokeStyle;
-  ctx.stroke();
-};
+//   for (var x = 0; x <= gridHeight; x += gridCellSize) {
+//     ctx.moveTo(padding, 0.5 + x + padding);
+//     ctx.lineTo(gridWidth + padding, 0.5 + x + padding);
+//   }
+//   ctx.strokeStyle = strokeStyle;
+//   ctx.stroke();
+// };
 
 
 

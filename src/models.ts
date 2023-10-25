@@ -47,7 +47,8 @@ export interface GameMap {
   tiles: GameSprite;
   state: GameMapState;
   emitter: EventEmitter;
-}
+  draw: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => void;
+};
 
 export type Controls = {
   up: boolean;
@@ -90,7 +91,7 @@ export type Elements = {
 
 export type GameState = {
   entities: GameEntity[];
-  map: ;
+  map: GameMap;
   controls: Controls;
   world: World;
   time: Time;
