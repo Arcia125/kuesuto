@@ -36,9 +36,21 @@ export interface Renderable {
   render: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => void;
 }
 
-export interface Updateable<T> {
-  update: (gameState: GameState, timeStamp: number, parent?: T) => void;
+export interface Updateable {
+  update: (gameState: GameState, timeStamp: number) => void;
 }
+
+export interface Parentable<T> {
+  parent?: T;
+  setParent: (parent: T) => void;
+}
+
+export interface Parent<T> {
+  children?: T[];
+  setChild: (child: T) => void;
+}
+
+export interface ParentableParent<T> extends Parentable<T>, Parent<T> {}
 
 export interface GameSprite {
   spriteFrames: Record<string, AnimationFrame>;
@@ -52,7 +64,7 @@ export interface BaseEntity {
 }
 
 
-export interface GameEntity extends BaseEntity, Updateable<GameEntity> {
+export interface GameEntity extends BaseEntity, Updateable, ParentableParent<GameEntity> {
   state: GameEntityState;
   sprite?: GameSprite;
   children?: GameEntity[];

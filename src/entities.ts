@@ -10,6 +10,7 @@ let id = 0;
 export class Entity implements GameEntity {
   public id = id++;
   public sprite?: GameSprite;
+  public parent?: GameEntity | undefined;
 
   public static getDirection(entityState: GameEntityState): Direction {
     const facingUp = entityState.yDir < 0;
@@ -25,20 +26,31 @@ export class Entity implements GameEntity {
   }
 
   public constructor(public state: GameEntityState, public name: string, public children: GameEntity[], public emitter: EventEmitter) {
+    this.children.forEach(child => {
+      child.setParent(this);
+    });
+  }
 
+  public setChild = (child: GameEntity) => {
+    this.children.push(child);
+    child.setParent(this);
+  }
+
+  public setParent = (parent: GameEntity) => {
+    this.parent = parent;
   }
 
   public getDirection() {
     return Entity.getDirection(this.state);
   }
 
-  public update(gameState: GameState, timeStamp: number, _parent?: GameEntity) {
+  public update(gameState: GameState, timeStamp: number) {
     if (!this.children?.length) {
       return;
     }
 
     for (let i = 0; i < this.children.length; i++) {
-      this.children[i].update(gameState, timeStamp, this);
+      this.children[i].update(gameState, timeStamp);
     }
   }
 }
@@ -57,8 +69,8 @@ export class PlayerEntity extends SpriteEntity {
     super(state, PlayerEntity.NAME, children, emitter, playerSpriteJSONRAW as SpriteJSON, './kuesuto-player.png');
   }
 
-  public update = (gameState: GameState, _timeStamp: number, _parent?: GameEntity) => {
-    super.update(gameState, _timeStamp, _parent);
+  public update = (gameState: GameState, _timeStamp: number) => {
+    super.update(gameState, _timeStamp);
     let moving = false;
     let yDir = this.state.yDir;
     let xDir = this.state.xDir;
@@ -119,32 +131,32 @@ export class SwordEntity extends WeaponEntity {
     super(state, SwordEntity.NAME, children, emitter, swordSpriteJSONRAW as SpriteJSON, './kuesuto-sword.png');
   }
 
-  public update = (gameState: GameState, _timeStamp: number, parent?: GameEntity) => {
-    super.update(gameState, _timeStamp, parent);
-    if (parent) {
-      this.state.xDir = parent.state.xDir;
-      this.state.yDir = parent.state.yDir;
-      const dir = parent.getDirection();
+  public update = (gameState: GameState, _timeStamp: number) => {
+    super.update(gameState, _timeStamp);
+    if (this.parent) {
+      this.state.xDir = this.parent.state.xDir;
+      this.state.yDir = this.parent.state.yDir;
+      const dir = this.parent.getDirection();
       switch (dir) {
         case 'up': {
-          this.state.x = parent.state.x;
-          this.state.y = parent.state.y - (getSpriteScale(gameState.elements.mainCanvas) * parent.state.scaleY);
+          this.state.x = this.parent.state.x;
+          this.state.y = this.parent.state.y - (getSpriteScale(gameState.elements.mainCanvas) * this.parent.state.scaleY);
           break;
         }
         case 'down': {
-          this.state.x = parent.state.x;
+          this.state.x = this.parent.state.x;
 
-          this.state.y = parent.state.y + (getSpriteScale(gameState.elements.mainCanvas) * parent.state.scaleY);
+          this.state.y = this.parent.state.y + (getSpriteScale(gameState.elements.mainCanvas) * this.parent.state.scaleY);
           break;
         }
         case 'right': {
-          this.state.x = parent.state.x + (getSpriteScale(gameState.elements.mainCanvas) * parent.state.scaleX);
-          this.state.y = parent.state.y;
+          this.state.x = this.parent.state.x + (getSpriteScale(gameState.elements.mainCanvas) * this.parent.state.scaleX);
+          this.state.y = this.parent.state.y;
           break;
         }
         case 'left': {
-          this.state.x = parent.state.x - (getSpriteScale(gameState.elements.mainCanvas) * parent.state.scaleX);
-          this.state.y = parent.state.y;
+          this.state.x = this.parent.state.x - (getSpriteScale(gameState.elements.mainCanvas) * this.parent.state.scaleX);
+          this.state.y = this.parent.state.y;
           break;
         }
       }
