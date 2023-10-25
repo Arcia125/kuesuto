@@ -22,6 +22,10 @@ export type GameEntityState = {
   animationFrameXStart: number;
 };
 
+export interface Renderable {
+  render: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => void;
+}
+
 export interface GameSprite {
   spriteFrames: Record<string, AnimationFrame>;
   spriteSheet: HTMLImageElement;
@@ -43,11 +47,10 @@ export interface GameMapState {
   scaleY: number;
 };
 
-export interface GameMap {
+export interface GameMap extends Renderable{
   tiles: GameSprite;
   state: GameMapState;
   emitter: EventEmitter;
-  render: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => void;
 };
 
 export type Controls = {
