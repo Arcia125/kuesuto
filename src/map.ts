@@ -12,11 +12,11 @@ export class RenderableMap implements GameMap {
   public render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _gameState: GameState) => {
     const gridWidth = canvas.width;
     const gridHeight = canvas.height;
-    const gridCellSize = getSpriteScale(canvas);
+    const gridCellSize = Math.ceil(getSpriteScale(canvas));
     const grassFrame = tileJSONRaw.frames['Grass'];
+    const canvasWidth = Math.ceil(getSpriteScale(canvas) * this.state.scaleX);
+    const canvasHeight = Math.ceil(getSpriteScale(canvas) * this.state.scaleY);
 
-    // for (let x = 0; x <= gridWidth; x += (gridCellSize * 0.9)) {
-    //   for (let y = 0; y <= gridHeight; y += (gridCellSize * 0.9)) {
     for (let x = 0; x <= gridWidth; x += gridCellSize) {
       for (let y = 0; y <= gridHeight; y += gridCellSize) {
         drawSprite(
@@ -30,8 +30,8 @@ export class RenderableMap implements GameMap {
             spriteHeight: grassFrame.frame.h,
             canvasX: x,
             canvasY: y,
-            canvasWidth: getSpriteScale(canvas) * this.state.scaleX,
-            canvasHeight: getSpriteScale(canvas) * this.state.scaleY,
+            canvasWidth,
+            canvasHeight,
           }
         );
       }
