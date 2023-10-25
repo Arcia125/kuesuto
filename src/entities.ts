@@ -1,5 +1,5 @@
 import { ANIMATION_SPEED_MULTIPLIER } from './constants';
-import { GameEntityState, GameState, GameEntity, SpriteJSON, GameSprite, Direction } from './models';
+import { GameEntityState, GameState, GameEntity, SpriteJSON, GameSprite, Direction, Frame } from './models';
 import { Sprite, getSpriteScale, frameMatchesEntity } from './sprites';
 import playerSpriteJSONRAW from './spriteJSON/kuesuto-player.json';
 import swordSpriteJSONRAW from './spriteJSON/kuesuto-sword.json';
@@ -113,7 +113,7 @@ export class Entity implements GameEntity {
     return Entity.getDirection(this.state);
   }
 
-  public getSpritePos = (gameState: GameState) => {
+  public getSpritePos = (gameState: GameState): Frame => {
     return Entity.getSpritePos(gameState, this.getDirection(), this);
   }
 
