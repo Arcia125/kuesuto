@@ -15,8 +15,10 @@ export class RenderableMap implements GameMap {
     const gridCellSize = getSpriteScale(canvas);
     const grassFrame = tileJSONRaw.frames['Grass'];
 
-    for (let x = 0; x <= gridWidth; x += (gridCellSize * 0.9)) {
-      for (let y = 0; y <= gridHeight; y += (gridCellSize * 0.9)) {
+    // for (let x = 0; x <= gridWidth; x += (gridCellSize * 0.9)) {
+    //   for (let y = 0; y <= gridHeight; y += (gridCellSize * 0.9)) {
+    for (let x = 0; x <= gridWidth; x += gridCellSize) {
+      for (let y = 0; y <= gridHeight; y += gridCellSize) {
         drawSprite(
           ctx,
           canvas,
