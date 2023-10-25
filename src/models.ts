@@ -26,19 +26,22 @@ export interface Renderable {
   render: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => void;
 }
 
+export interface Updateable<T> {
+  update: (gameState: GameState, timeStamp: number, parent?: T) => void;
+}
+
 export interface GameSprite {
   spriteFrames: Record<string, AnimationFrame>;
   spriteSheet: HTMLImageElement;
   spriteJSON: SpriteJSON;
 }
 
-export interface GameEntity {
+export interface GameEntity extends Updateable<GameEntity> {
   id: number;
   name: string;
   state: GameEntityState;
   sprite?: GameSprite;
   children?: GameEntity[];
-  update: (gameState: GameState, timeStamp: number, parent?: GameEntity) => void;
   getDirection: () => Direction;
 }
 
