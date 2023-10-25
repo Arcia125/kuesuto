@@ -47,7 +47,7 @@ export interface GameMap {
   tiles: GameSprite;
   state: GameMapState;
   emitter: EventEmitter;
-  draw: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => void;
+  render: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => void;
 };
 
 export type Controls = {

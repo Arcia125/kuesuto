@@ -9,7 +9,7 @@ export class RenderableMap implements GameMap {
     this.tiles = new Sprite(tileJSONRaw, './kuesuto-tiles.png', emitter);
   }
 
-  public draw = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _gameState: GameState) => {
+  public render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _gameState: GameState) => {
     const gridWidth = canvas.width;
     const gridHeight = canvas.height;
     const gridCellSize = getSpriteScale(canvas);

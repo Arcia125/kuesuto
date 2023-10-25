@@ -174,7 +174,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
 
   resetContext(ctx, canvas, "#fff");
   // drawGrid(ctx, canvas, 0, "#000");
-  gameState.map.draw(ctx, canvas, gameState);
+  gameState.map.render(ctx, canvas, gameState);
 
   const entities = gameState.entities;
   const entityCount = entities.length;
