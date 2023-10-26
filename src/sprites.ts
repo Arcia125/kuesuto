@@ -1,3 +1,4 @@
+import { RENDERING_SCALE } from './constants';
 import { EventEmitter, EVENTS } from './events';
 import { getImage } from './images';
 import { AnimationFrame, SpriteJSON, GameSprite, GameEntityState } from './models';
@@ -57,7 +58,8 @@ export function frameMatchesEntity(entityState: GameEntityState, direction: stri
 }
 
 export const getSpriteScale = (mainCanvas: HTMLCanvasElement) => {
-  return mainCanvas.width / 20;
+  // return mainCanvas.width / 20;
+  return 16 * RENDERING_SCALE;
 };
 
 export const drawSprite = (

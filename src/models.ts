@@ -135,6 +135,12 @@ export type Settings = {
   showGrid: boolean;
 };
 
+export interface Camera extends Dimensions {
+  canvasWidth: number;
+  canvasHeight: number;
+  aspectRatio: number;
+}
+
 export type Elements = {
   mainCanvas: HTMLCanvasElement;
   mainCanvasContext: CanvasRenderingContext2D;
@@ -146,6 +152,7 @@ export type GameState = {
   entities: GameEntity[];
   map: GameMap;
   controls: Controls;
+  camera: Camera;
   world: World;
   time: Time;
   settings: Settings;

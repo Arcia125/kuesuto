@@ -6,6 +6,7 @@ import { EventEmitter, EVENTS } from './events';
 import { PlayerEntity, SwordEntity } from './entities';
 import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from './constants';
 import { RenderableMap } from './map';
+import { GameCamera } from './camera';
 
 
 // document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -33,8 +34,29 @@ let mainCanvas: HTMLCanvasElement;
 let mainCanvasContext: CanvasRenderingContext2D;
 let gameState: GameState;
 
+const resize = () => {
+  gameState.elements.mainCanvas.width = gameState.camera.w;
+  gameState.elements.mainCanvas.height = gameState.camera.h;
+
+  gameState.camera.canvasWidth = window.innerWidth;
+  gameState.camera.canvasHeight = window.innerHeight;
+
+  if (gameState.camera.canvasHeight < gameState.camera.canvasWidth / gameState.camera.aspectRatio) {
+    // gameState.elements.mainCanvas.style.setProperty('width', `${window.innerHeight * gameState.camera.aspectRatio}px`);
+    // gameState.elements.mainCanvas.style.setProperty('height', `${window.innerHeight}px`);
+    gameState.camera.canvasWidth = gameState.camera.canvasHeight * gameState.camera.aspectRatio;
+  } else {
+    gameState.camera.canvasHeight = gameState.camera.canvasWidth / gameState.camera.aspectRatio;
+  }
+  gameState.elements.mainCanvas.style.setProperty('width', `${gameState.camera.canvasWidth}px`);
+  gameState.elements.mainCanvas.style.setProperty('height', `${gameState.camera.canvasHeight}px`);
+  (gameState.elements.mainCanvasContext as any).msImageSmoothingEnabled = false;
+  (gameState.elements.mainCanvasContext as any).mozImageSmoothingEnabled = false;
+  gameState.elements.mainCanvasContext.imageSmoothingEnabled = false;
+};
 
 const init = () => {
+
   const emitter = new EventEmitter();
 
   // emitter.on(EventEmitter.ALL, console.log);
@@ -58,6 +80,8 @@ const init = () => {
     mainCanvas,
     mainCanvasContext
   });
+
+
 
   const gameStateContainer = document.querySelector<HTMLPreElement>("#game-state");
   if (!gameStateContainer) {
@@ -121,6 +145,7 @@ const init = () => {
       right: false,
       attack: false,
     },
+    camera: new GameCamera(1920, 1080),
     world: {
       running: false,
       started: false,
@@ -152,6 +177,8 @@ const init = () => {
     emitter,
   };
 
+
+
   emitter.on(EVENTS.FPS, (_, msg) => {
     console.log(msg);
     if (gameState.settings.showFps && msg?.fps) {
@@ -175,9 +202,11 @@ const init = () => {
 
 try {
   const initilization = init();
+
   mainCanvas = initilization.mainCanvas;
   mainCanvasContext = initilization.mainCanvasContext;
   gameState = initilization.gameState;
+  resize();
 
 } catch (error) {
   console.error('Failed to initialize' + error);
@@ -191,9 +220,11 @@ document.addEventListener("keyup", (event) => {
   createKeyUpHandler(gameState)(event);
 });
 
+
+
+
 window.addEventListener("resize", () => {
-  gameState.elements.mainCanvas.width = window.innerWidth;
-  gameState.elements.mainCanvas.height = window.innerHeight;
+  resize();
 });
 
 document.addEventListener("visibilitychange", () => {

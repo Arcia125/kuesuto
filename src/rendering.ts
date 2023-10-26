@@ -31,9 +31,6 @@ const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padd
 };
 
 
-
-
-
 const drawEntity = (
   entity: GameEntity,
   ctx: CanvasRenderingContext2D,
@@ -126,6 +123,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   if (gameState.settings.debugGameState && gameState.elements.gameStateContainer) {
     gameState.elements.gameStateContainer.innerHTML = JSON.stringify({
       controls: gameState.controls,
+      camera: gameState.camera,
       emitter: gameState.emitter,
       entities: gameState.entities.map(entity => ({
         id: entity.id,
