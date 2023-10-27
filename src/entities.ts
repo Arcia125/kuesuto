@@ -1,8 +1,8 @@
 import { ANIMATION_SPEED_MULTIPLIER } from './constants';
 import { GameEntityState, GameState, GameEntity, SpriteJSON, GameSprite, Direction, Frame } from './models';
 import { Sprite, getSpriteScale, frameMatchesEntity } from './sprites';
-import playerSpriteJSONRAW from './spriteJSON/kuesuto-player.json';
-import swordSpriteJSONRAW from './spriteJSON/kuesuto-sword.json';
+import playerSpriteJSONRAW from './data/spriteJSON/kuesuto-player.json';
+import swordSpriteJSONRAW from './data/spriteJSON/kuesuto-sword.json';
 import { EventEmitter, EventListener, EVENTS } from './events';
 
 

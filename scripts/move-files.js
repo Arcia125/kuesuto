@@ -19,10 +19,12 @@ const destinationDirectory = path.join(
 
 // Define the list of sprites and their corresponding metadata files
 const filesToMove = [
-  { name: 'kuesuto-player.png', metadata: 'kuesuto-player.json' },
-  { name: 'kuesuto-sword.png', metadata: 'kuesuto-sword.json' },
-  { name: 'kuesuto-tiles.png', metadata: 'kuesuto-tiles.json' },
-  { name: 'kuesuto-tilemap.png', metadata: 'kuesuto-tilemap.json' },
+  { type: 'sprite', name: 'kuesuto-player.png', metadata: 'kuesuto-player.json' },
+  { type: 'sprite', name: 'kuesuto-sword.png', metadata: 'kuesuto-sword.json' },
+  { type: 'sprite', name: 'kuesuto-tiles.png', metadata: 'kuesuto-tiles.json' },
+  { type: 'sprite', name: 'kuesuto-tilemap.png', metadata: 'kuesuto-tilemap.json' },
+  { type: 'sprite', name: 'collision.png', metadata: 'collision.json' },
+  { type: 'map', name: 'kuesuto-world.json' }
 ];
 
 // Function to move files
@@ -45,14 +47,23 @@ function moveFile(src, dest, fileName) {
 
 // Loop through the files and move them
 filesToMove.forEach((file) => {
-  moveFile(
-    sourceDirectory,
-    path.join(destinationDirectory, 'public'),
-    file.name
-  );
-  moveFile(
-    sourceDirectory,
-    path.join(destinationDirectory, 'src', 'spriteJSON'),
-    file.metadata
-  );
+  if (file.type === 'sprite') {
+    moveFile(
+      sourceDirectory,
+      path.join(destinationDirectory, 'public'),
+      file.name
+    );
+    moveFile(
+      sourceDirectory,
+      path.join(destinationDirectory, 'src', 'data', 'spriteJSON'),
+      file.metadata
+    );
+  }
+  if (file.type === 'map') {
+    moveFile(
+      sourceDirectory,
+      path.join(destinationDirectory, 'src', 'data', 'maps'),
+      file.name
+    );
+  }
 });

@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc --outDir ./docs && vite build --outDir ./docs",
     "preview": "vite preview",
-    "move:sprites": "node ./scripts/move-sprites.js"
+    "move:files": "node ./scripts/move-files.js"
   },
   "devDependencies": {
     "typescript": "^5.0.2",

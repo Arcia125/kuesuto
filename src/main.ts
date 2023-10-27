@@ -117,6 +117,7 @@ const init = () => {
   // gameState.emitter.on('renderSprite', console.log);
   // gameState.emitter.on(EventEmitter.ALL, console.log);
 
+  gameState.emitter.on('imageLoaded', console.log);
 
   mainCanvasContext?.rect(0, 0, mainCanvas.width, mainCanvas.height);
   mainCanvasContext?.fill();

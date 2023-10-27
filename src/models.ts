@@ -8,12 +8,17 @@ export interface Position {
   y: number;
 };
 
-export interface Dimensions {
+export interface ShortDimensions {
   w: number;
   h: number;
 };
 
-export type Rect = Position & Dimensions;
+export interface Dimensions {
+  width: number;
+  height: number;
+}
+
+export type Rect = Position & ShortDimensions;
 
 export interface GameEntityState extends Position {
   xDir: number;
@@ -57,7 +62,7 @@ export type Frame = {
   rotated: boolean;
   trimmed: boolean;
   spriteSourceSize: Rect;
-  sourceSize: Dimensions;
+  sourceSize: ShortDimensions;
   duration: number;
 };
 
@@ -82,7 +87,6 @@ export interface BaseEntity {
   name: string;
 }
 
-
 export interface GameEntity extends BaseEntity, Updateable, ParentableParent<GameEntity> {
   state: GameEntityState;
   sprite?: GameSprite;
@@ -96,8 +100,8 @@ export interface GameMapState {
   scaleY: number;
 };
 
-export interface GameMap extends Renderable{
-  tiles: GameSprite;
+export interface GameMap extends Renderable {
+  tileMaps: Record<string, TileMap>;
   state: GameMapState;
   emitter: EventEmitter;
 };
@@ -135,7 +139,7 @@ export type Settings = {
   showGrid: boolean;
 };
 
-export interface Camera extends Dimensions {
+export interface Camera extends ShortDimensions {
   canvasWidth: number;
   canvasHeight: number;
   aspectRatio: number;
@@ -174,7 +178,7 @@ export type SpriteJSONMeta = {
   version: string;
   image: string;
   format: string;
-  size: Dimensions;
+  size: ShortDimensions;
   scale: string;
   frameTags?: FrameTag[];
 };
@@ -183,3 +187,69 @@ export type SpriteJSON = {
   frames: Record<string, Frame>;
   meta: SpriteJSONMeta;
 };
+
+export type TileMapFrame = Frame & {
+  filename: string;
+}
+
+export type TileMapJSON = {
+  frames: TileMapFrame[];
+  meta: SpriteJSONMeta & { layers: never[], slices: never[] };
+}
+
+export type TileLayer = {
+  data: number[];
+  height: number;
+  width: number;
+  id: number;
+  name: string;
+  opacity: number;
+  type: 'tilelayer';
+  visible: boolean;
+  x: number;
+  y: number;
+};
+
+export type ObjectGroupLayer = Position & {
+  drawOrder: 'topdown';
+  id: number;
+  name: string;
+  objects: (Dimensions & Position & {
+    id: number;
+    name: string;
+    point: boolean;
+    rotation: number;
+    type: string;
+    visible: boolean;
+  })[];
+  opacity: number;
+  type: 'objectlayer';
+  visible: true;
+};
+
+export type WorldMap = Dimensions & {
+  compressionlevel: number;
+  infinite: boolean;
+  layers: (TileLayer | ObjectGroupLayer)[]
+  nextlayerid: number;
+  nextobjectid: number;
+  orientation: 'orthogonal';
+  renderorder: 'right-down';
+  tiledversion: string;
+  tileheight: number;
+  tilesets: {
+    firstgid: number;
+    source: string;
+  }[];
+  tilewidth: number;
+  type: 'map';
+  version: string;
+  width: number;
+};
+
+export interface TileMap {
+  tileMapJSON: TileMapJSON;
+  tileSets: Record<string, HTMLImageElement>;
+  worldMaps: Record<string, WorldMap>;
+  sourceMap: Record<string, TileMapJSON>;
+}
