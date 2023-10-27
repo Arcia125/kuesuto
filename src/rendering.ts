@@ -1,4 +1,3 @@
-import { ANIMATION_SPEED_MULTIPLIER } from './constants';
 import { PlayerEntity } from './entities';
 import { EVENTS } from './events';
 import { GameEntity, GameState } from './models';

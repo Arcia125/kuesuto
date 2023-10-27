@@ -80,8 +80,8 @@ const init = () => {
     settings: {
       debugGameState: false,
       debugPlayerSpriteSheet: false,
-      showFps: true,
-      showGrid: true,
+      showFps: false,
+      showGrid: false,
     },
     time: {
       delta: 0,

@@ -82,7 +82,7 @@ export class RenderableMap implements GameMap {
             canvasY: y,
             canvasWidth,
             canvasHeight,
-          })
+          });
         }
         // drawSprite(
         //   ctx,
