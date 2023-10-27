@@ -146,6 +146,7 @@ export type Elements = {
   mainCanvasContext: CanvasRenderingContext2D;
   gameStateContainer: HTMLPreElement;
   mainGameFpsContainer: HTMLParagraphElement;
+  resize: (gameState: GameState) => void;
 };
 
 export type GameState = {

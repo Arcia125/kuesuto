@@ -7,52 +7,16 @@ import { PlayerEntity, SwordEntity } from './entities';
 import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from './constants';
 import { RenderableMap } from './map';
 import { GameCamera } from './camera';
-
-
-// document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-//   <div>
-//     <a href="https://vitejs.dev" target="_blank">
-//       <img src="${viteLogo}" class="logo" alt="Vite logo" />
-//     </a>
-//     <a href="https://www.typescriptlang.org/" target="_blank">
-//       <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-//     </a>
-//     <h1>Vite + TypeScript</h1>
-//     <div class="card">
-//       <button id="counter" type="button"></button>
-//     </div>
-//     <p class="read-the-docs">
-//       Click on the Vite and TypeScript logos to learn more
-//     </p>
-//   </div>
-// `
-
-// setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+import { BrowserElements } from './browserElements';
 
 
 let mainCanvas: HTMLCanvasElement;
 let mainCanvasContext: CanvasRenderingContext2D;
 let gameState: GameState;
 
+
 const resize = () => {
-  gameState.elements.mainCanvas.width = gameState.camera.w;
-  gameState.elements.mainCanvas.height = gameState.camera.h;
-
-  gameState.camera.canvasWidth = window.innerWidth;
-  gameState.camera.canvasHeight = window.innerHeight;
-
-  if (gameState.camera.canvasHeight < gameState.camera.canvasWidth / gameState.camera.aspectRatio) {
-    // gameState.elements.mainCanvas.style.setProperty('width', `${window.innerHeight * gameState.camera.aspectRatio}px`);
-    // gameState.elements.mainCanvas.style.setProperty('height', `${window.innerHeight}px`);
-    gameState.camera.canvasWidth = gameState.camera.canvasHeight * gameState.camera.aspectRatio;
-  } else {
-    gameState.camera.canvasHeight = gameState.camera.canvasWidth / gameState.camera.aspectRatio;
-  }
-  gameState.elements.mainCanvas.style.setProperty('width', `${gameState.camera.canvasWidth}px`);
-  gameState.elements.mainCanvas.style.setProperty('height', `${gameState.camera.canvasHeight}px`);
-  (gameState.elements.mainCanvasContext as any).msImageSmoothingEnabled = false;
-  (gameState.elements.mainCanvasContext as any).mozImageSmoothingEnabled = false;
-  gameState.elements.mainCanvasContext.imageSmoothingEnabled = false;
+  gameState.elements.resize(gameState);
 };
 
 const init = () => {
@@ -60,43 +24,6 @@ const init = () => {
   const emitter = new EventEmitter();
 
   // emitter.on(EventEmitter.ALL, console.log);
-
-
-  const mainCanvas = document.querySelector<HTMLCanvasElement>('#main-game-canvas');
-
-  if (!mainCanvas) {
-    throw new Error('Main canvas not found');
-  }
-
-
-  mainCanvas.width = window.innerWidth;
-  mainCanvas.height = window.innerHeight;
-  const mainCanvasContext = mainCanvas?.getContext('2d');
-  if (!mainCanvasContext) {
-    throw new Error('Main canvas context not found');
-  }
-
-  emitter.emit(EVENTS.INIT, {
-    mainCanvas,
-    mainCanvasContext
-  });
-
-
-
-  const gameStateContainer = document.querySelector<HTMLPreElement>("#game-state");
-  if (!gameStateContainer) {
-    throw new Error('Game State Container not found');
-  }
-
-  const mainGameFpsContainer = document.querySelector<HTMLParagraphElement>("#main-game-fps");
-  if (!mainGameFpsContainer) {
-    throw new Error('Main Game Fps Container not found');
-  }
-
-  // emitter.on(EventEmitter.ALL, console.log);
-  // emitter.on(EventEmitter.ALL, console.log);
-  // emitter.on(EventEmitter.ALL, console.log);
-
 
   const gameState: GameState = {
     entities: [new PlayerEntity({
@@ -168,16 +95,17 @@ const init = () => {
       frameID: 0,
       resetDeltaCount: 0,
     },
-    elements: {
-      mainCanvas,
-      mainCanvasContext,
-      gameStateContainer,
-      mainGameFpsContainer,
-    },
+    elements: new BrowserElements(),
     emitter,
   };
 
+  mainCanvas = gameState.elements.mainCanvas;
+  mainCanvasContext = gameState.elements.mainCanvasContext;
 
+  emitter.emit(EVENTS.INIT, {
+    mainCanvas,
+    mainCanvasContext
+  });
 
   emitter.on(EVENTS.FPS, (_, msg) => {
     console.log(msg);
@@ -219,9 +147,6 @@ document.addEventListener("keydown", (event) => {
 document.addEventListener("keyup", (event) => {
   createKeyUpHandler(gameState)(event);
 });
-
-
-
 
 window.addEventListener("resize", () => {
   resize();
