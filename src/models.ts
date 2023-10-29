@@ -20,6 +20,15 @@ export interface Dimensions {
 
 export type Rect = Position & ShortDimensions;
 
+export type Origin = 'top-left' | 'center';
+
+export type BoundingRect = Rect & {
+  top: number;
+  left: number;
+  right: number;
+  bottom: number;
+};
+
 export interface GameEntityState extends Position {
   xDir: number;
   yDir: number;
@@ -95,6 +104,11 @@ export interface GameEntity extends BaseEntity, Updateable, ParentableParent<Gam
   getSpritePos: (gameState: GameState) => Frame;
 }
 
+export interface Follower extends Position {
+  following?: GameEntity;
+  follow: (gameEntity: GameEntity) => void;
+}
+
 export interface GameMapState {
   scaleX: number;
   scaleY: number;
@@ -137,9 +151,10 @@ export type Settings = {
   debugPlayerSpriteSheet: boolean;
   showFps: boolean;
   showGrid: boolean;
+  activateDebugger: boolean;
 };
 
-export interface Camera extends ShortDimensions {
+export interface Camera extends ShortDimensions, Updateable, Follower {
   canvasWidth: number;
   canvasHeight: number;
   aspectRatio: number;

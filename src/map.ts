@@ -5,6 +5,7 @@ import forrestWorldMap from './data/maps/kuesuto-world.json';
 import { EventEmitter } from './events';
 import { GameMap, GameMapState, GameState, Position, TileMap, TileMapJSON, WorldMap, TileLayer } from './models';
 import { positionIndexFromArray } from './array';
+import { getBoundingRect } from './rectangle';
 
 export class GameTileMap implements TileMap {
   public constructor(public tileMapJSON: TileMapJSON, public tileSets: Record<string, HTMLImageElement>, public worldMaps: Record<string, WorldMap>, public sourceMap: Record<string, TileMapJSON>) {
@@ -43,20 +44,24 @@ export class RenderableMap implements GameMap {
     }
   }
 
-  public render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _gameState: GameState) => {
+  public render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
     const gridWidth = canvas.width;
     const gridHeight = canvas.height;
     const gridCellSize = Math.ceil(getSpriteScale(canvas));
-    // const grassFrame = tileMapJSONRaw.frames['Grass'];
     const canvasWidth = Math.ceil(getSpriteScale(canvas) * this.state.scaleX);
     const canvasHeight = Math.ceil(getSpriteScale(canvas) * this.state.scaleY);
-    // console.log
 
+    const cameraBox = getBoundingRect(gameState.camera, 'center');
+    const renderXOffset = Math.max(cameraBox.left, 0);
+    const renderYOffset = Math.max(cameraBox.top, 0);
+
+
+    let i = 0;
     // Rows
-    for (let x = 0; x <= gridWidth; x += gridCellSize) {
+    for (let x = Math.max(renderXOffset - gridCellSize, 0); x <= gridWidth + renderXOffset + gridCellSize; x += gridCellSize) {
 
       // Columns
-      for (let y = 0; y <= gridHeight; y += gridCellSize) {
+      for (let y = Math.max(renderYOffset - gridCellSize, 0); y <= gridHeight + renderYOffset + gridCellSize; y += gridCellSize) {
         // will need to offset x and y by the camera offset once camera has moved
         const tiles = this.tileMaps.forrest.getTilesAt('forrest', { x: Math.ceil(x / gridCellSize), y: Math.ceil(y / gridCellSize) });
 
@@ -65,11 +70,25 @@ export class RenderableMap implements GameMap {
           if (tiles[tI].layer.name === 'Collision' || tiles[tI].tile === 0) {
             continue;
           }
+          // if (i === 0) {
+          //   console.log({
+          //     canvasX: Math.ceil(x - renderXOffset - renderXOffset % gridCellSize),
+          //     canvasY: Math.ceil(y - renderYOffset - renderYOffset % gridCellSize),
+          //     x,
+          //     y,
+          //     renderXOffset,
+          //     renderYOffset,
+          //     cameraBox
+          //   });
+          // }
+          i++;
 
           const tileset = this.tileMaps.forrest.worldMaps.forrest.tilesets.find(ts => ts.firstgid <= tiles[tI].tile);
           if (!tileset) {
-            throw new Error('tileset not found');
+            console.error('tileset not found');
+            continue;
           }
+
 
           const tilemapJSON = this.tileMaps.forrest.sourceMap[tileset.source];
           const frame = tilemapJSON.frames[tiles[tI].tile - 1];
@@ -78,8 +97,10 @@ export class RenderableMap implements GameMap {
             spriteY: frame.frame.y,
             spriteWidth: frame.frame.w,
             spriteHeight: frame.frame.h,
-            canvasX: x,
-            canvasY: y,
+            // rounded to prevent gaps between tiles
+            canvasX: Math.round(x - renderXOffset - renderXOffset % gridCellSize),
+            // rounded to prevent gaps between tiles
+            canvasY: Math.round(y - renderYOffset - renderYOffset % gridCellSize),
             canvasWidth,
             canvasHeight,
           });

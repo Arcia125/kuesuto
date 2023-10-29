@@ -2,49 +2,66 @@ import { EVENTS } from './events';
 import { GameState } from './models';
 
 const keyMappings = {
-  up: ['ArrowUp', 'w'],
-  down: ['ArrowDown', 's'],
-  left: ['ArrowLeft', 'a',],
-  right: ['ArrowRight', 'd'],
+  up: ['ArrowUp', 'w', 'W'],
+  down: ['ArrowDown', 's', 'S'],
+  left: ['ArrowLeft', 'a', 'A'],
+  right: ['ArrowRight', 'd', 'D'],
   attack: [' '],
   toggleDebugGameState: ['O'],
-  debugPlayerSpriteSheet: ['P']
+  debugPlayerSpriteSheet: ['P'],
+  showGrid: ['G'],
+  activateDebugger: ['<']
 };
 
+const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | KeyboardEvent['key']) => {
+  const eventKey = typeof eventOrKey === 'string' ? eventOrKey : eventOrKey.key;
+  return keyMappings[key].includes(eventKey);
+}
+
 export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEvent) => {
-  if (keyMappings.attack.includes(event.key)) {
+  if (keyPressed('attack', event)) {
     event.preventDefault();
     gameState.controls.attack = true;
     gameState.emitter.emit(EVENTS.ATTACK_COMMAND, null);
   }
-  if (keyMappings.up.includes(event.key)) {
+  if (keyPressed('up', event)) {
     event.preventDefault();
     gameState.controls.up = true;
   }
-  if (keyMappings.down.includes(event.key)) {
+  if (keyPressed('down', event)) {
     event.preventDefault();
 
     gameState.controls.down = true;
   }
-  if (keyMappings.left.includes(event.key)) {
+  if (keyPressed('left', event)) {
     event.preventDefault();
 
     gameState.controls.left = true;
   }
-  if (keyMappings.right.includes(event.key)) {
+  if (keyPressed('right', event)) {
     event.preventDefault();
 
     gameState.controls.right = true;
   }
-  if (keyMappings.toggleDebugGameState.includes(event.key)) {
+
+  if (keyPressed('showGrid', event)) {
+    event.preventDefault();
+
+    gameState.settings.showGrid = !gameState.settings.showGrid;
+  }
+  if (keyPressed('toggleDebugGameState', event)) {
     event.preventDefault();
     gameState.settings.debugGameState = !gameState.settings.debugGameState;
     gameState.elements.gameStateContainer.style.display = gameState.settings.debugGameState ? 'block' : 'none';
   }
-  if (keyMappings.debugPlayerSpriteSheet.includes(event.key)) {
+  if (keyPressed('debugPlayerSpriteSheet', event)) {
     event.preventDefault();
     gameState.settings.debugPlayerSpriteSheet = !gameState.settings.debugPlayerSpriteSheet;
   };
+  if (keyPressed('activateDebugger', event)) {
+    event.preventDefault();
+    gameState.settings.activateDebugger = !gameState.settings.activateDebugger;
+  }
 };
 
 export const createKeyUpHandler = (gameState: GameState) => (event: KeyboardEvent) => {

@@ -8,6 +8,8 @@ const update = (gameState: GameState, timestamp: number) => {
   for (let i = 0; i < entityCount; i++) {
     entities[i].update(gameState, timestamp);
   }
+
+  gameState.camera.update(gameState, timestamp);
 };
 
 const resetDelta = (gameState: GameState) => {

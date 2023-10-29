@@ -1,5 +1,5 @@
 import { createKeyDownHandler, createKeyUpHandler } from './controls';
-import { GameState } from './models';
+import { GameState, GameEntity } from './models';
 import './style.css'
 import { gameLoop } from "./gameLoop";
 import { EventEmitter, EVENTS } from './events';
@@ -27,8 +27,8 @@ const init = () => {
 
   const gameState: GameState = {
     entities: [new PlayerEntity({
-      x: 0,
-      y: 0,
+      x: 400,
+      y: 400,
       xDir: 0,
       yDir: 0,
       speedX: INIT_PLAYER_SPEED_X,
@@ -80,8 +80,9 @@ const init = () => {
     settings: {
       debugGameState: false,
       debugPlayerSpriteSheet: false,
-      showFps: false,
+      showFps: true,
       showGrid: false,
+      activateDebugger: false,
     },
     time: {
       delta: 0,
@@ -118,6 +119,8 @@ const init = () => {
   // gameState.emitter.on(EventEmitter.ALL, console.log);
 
   gameState.emitter.on('imageLoaded', console.log);
+
+  gameState.camera.follow(gameState.entities.find(entity => entity.name === PlayerEntity.NAME) as GameEntity);
 
   mainCanvasContext?.rect(0, 0, mainCanvas.width, mainCanvas.height);
   mainCanvasContext?.fill();

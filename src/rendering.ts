@@ -1,6 +1,7 @@
 import { PlayerEntity } from './entities';
 import { EVENTS } from './events';
 import { GameEntity, GameState } from './models';
+import { getBoundingRect } from './rectangle';
 import { drawSprite, getSpriteScale } from './sprites';
 
 
@@ -12,18 +13,22 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   ctx.closePath();
 };
 
-const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle']) => {
+const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle'], gameState: GameState) => {
   const gridWidth = canvas.width;
   const gridHeight = canvas.height;
   const gridCellSize = Math.ceil(getSpriteScale(canvas));
+  const cameraBox = getBoundingRect(gameState.camera, 'center');
+  const cameraOffsetX = Math.max(cameraBox.left, 0);
+  const cameraOffsetY = Math.max(cameraBox.top, 0);
+  // ctx.lineWidth = 5;
   for (let x = 0; x <= gridWidth; x += gridCellSize) {
-    ctx.moveTo(0.5 + x + padding, padding);
-    ctx.lineTo(0.5 + x + padding, gridHeight + padding);
+    ctx.moveTo(0.5 + x + padding - cameraOffsetX % gridCellSize, padding);
+    ctx.lineTo(0.5 + x + padding - cameraOffsetX % gridCellSize, gridHeight + padding);
   }
 
-  for (var x = 0; x <= gridHeight; x += gridCellSize) {
-    ctx.moveTo(padding, 0.5 + x + padding);
-    ctx.lineTo(gridWidth + padding, 0.5 + x + padding);
+  for (var y = 0; y <= gridHeight; y += gridCellSize) {
+    ctx.moveTo(padding, 0.5 + y + padding - cameraOffsetY % gridCellSize);
+    ctx.lineTo(gridWidth + padding, 0.5 + y + padding - cameraOffsetY % gridCellSize);
   }
   ctx.strokeStyle = strokeStyle;
   ctx.stroke();
@@ -56,8 +61,9 @@ const drawEntity = (
   const spriteY = spriteFrame.frame.y;
 
 
-  const canvasX = entityState.x;
-  const canvasY = entityState.y;
+  const cameraBox = getBoundingRect(gameState.camera, 'center');
+  const canvasX = entityState.x - cameraBox.left;
+  const canvasY = entityState.y - cameraBox.top;
 
   const spriteData = {
     canvasX,
@@ -107,7 +113,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   resetContext(ctx, canvas, "#fff");
   gameState.map.render(ctx, canvas, gameState);
   if (gameState.settings.showGrid) {
-    drawGrid(ctx, canvas, 0, "teal");
+    drawGrid(ctx, canvas, 0, "teal", gameState);
   }
 
   const entities = gameState.entities;
@@ -122,7 +128,10 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   if (gameState.settings.debugGameState && gameState.elements.gameStateContainer) {
     gameState.elements.gameStateContainer.innerHTML = JSON.stringify({
       controls: gameState.controls,
-      camera: gameState.camera,
+      camera: {
+        ...gameState.camera,
+        following: gameState.camera.following?.name
+      },
       emitter: gameState.emitter,
       entities: gameState.entities.map(entity => ({
         id: entity.id,
