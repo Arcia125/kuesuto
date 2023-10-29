@@ -51,9 +51,6 @@ const drawEntity = (
 
   const entityState = entity.state;
   const spriteFrame = entity.getSpritePos(gameState);
-  // const direction = entity.getDirection();
-
-  // const spriteFrame = getSpritePos(gameState, direction, entity);
 
   const spriteFrameWidth = spriteFrame.spriteSourceSize.w;
   const spriteFrameHeight = spriteFrame.spriteSourceSize.h;
@@ -62,8 +59,8 @@ const drawEntity = (
 
 
   const cameraBox = getBoundingRect(gameState.camera, 'center');
-  const canvasX = entityState.x - cameraBox.left;
-  const canvasY = entityState.y - cameraBox.top;
+  const canvasX = entityState.x - Math.max(cameraBox.left, 0);
+  const canvasY = entityState.y - Math.max(cameraBox.top, 0);
 
   const spriteData = {
     canvasX,
