@@ -1,4 +1,4 @@
-import { PlayerEntity } from './entities';
+import { PlayerEntity } from "./entities/playerEntity";
 import { EVENTS } from './events';
 import { GameEntity, GameState } from './models';
 import { getBoundingRect } from './rectangle';
@@ -20,7 +20,7 @@ const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padd
   const cameraBox = getBoundingRect(gameState.camera, 'center');
   const cameraOffsetX = Math.max(cameraBox.left, 0);
   const cameraOffsetY = Math.max(cameraBox.top, 0);
-  // ctx.lineWidth = 5;
+  ctx.lineWidth = 5;
   for (let x = 0; x <= gridWidth; x += gridCellSize) {
     ctx.moveTo(0.5 + x + padding - cameraOffsetX % gridCellSize, padding);
     ctx.lineTo(0.5 + x + padding - cameraOffsetX % gridCellSize, gridHeight + padding);

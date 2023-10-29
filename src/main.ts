@@ -3,7 +3,8 @@ import { GameState, GameEntity } from './models';
 import './style.css'
 import { gameLoop } from "./gameLoop";
 import { EventEmitter, EVENTS } from './events';
-import { PlayerEntity, SwordEntity } from './entities';
+import { SwordEntity } from "./entities/swordEntity";
+import { PlayerEntity } from "./entities/playerEntity";
 import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from './constants';
 import { RenderableMap } from './map';
 import { GameCamera } from './camera';

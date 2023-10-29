@@ -66,6 +66,10 @@ export interface Parent<T> {
 
 export interface ParentableParent<T> extends Parentable<T>, Parent<T> {}
 
+export interface Capability extends Updateable {
+  entity: GameEntity;
+}
+
 export type Frame = {
   frame: Rect;
   rotated: boolean;

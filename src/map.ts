@@ -56,7 +56,7 @@ export class RenderableMap implements GameMap {
     const renderYOffset = Math.max(cameraBox.top, 0);
 
 
-    let i = 0;
+    // let i = 0;
     // Rows
     for (let x = Math.max(renderXOffset - gridCellSize, 0); x <= gridWidth + renderXOffset + gridCellSize; x += gridCellSize) {
 
@@ -81,7 +81,7 @@ export class RenderableMap implements GameMap {
           //     cameraBox
           //   });
           // }
-          i++;
+          // i++;
 
           const tileset = this.tileMaps.forrest.worldMaps.forrest.tilesets.find(ts => ts.firstgid <= tiles[tI].tile);
           if (!tileset) {
