@@ -1,5 +1,4 @@
 import { getSpriteScale } from './sprites';
-import { RENDERING_SCALE } from './constants';
 import { Camera, GameEntity, GameState } from './models';
 
 export class GameCamera implements Camera {
