@@ -21,6 +21,7 @@ const destinationDirectory = path.join(
 const filesToMove = [
   { type: 'sprite', name: 'kuesuto-player.png', metadata: 'kuesuto-player.json' },
   { type: 'sprite', name: 'kuesuto-sword.png', metadata: 'kuesuto-sword.json' },
+  { type: 'sprite', name: 'ks-dark-wizard.png', metadata: 'ks-dark-wizard.json' },
   { type: 'sprite', name: 'kuesuto-tiles.png', metadata: 'kuesuto-tiles.json' },
   { type: 'sprite', name: 'kuesuto-tilemap.png', metadata: 'kuesuto-tilemap.json' },
   { type: 'sprite', name: 'collision.png', metadata: 'collision.json' },

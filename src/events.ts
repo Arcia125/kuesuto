@@ -42,7 +42,7 @@ export type EVENT_MAPPING = {
   [EVENTS.ANIMATION_END]: { entity: GameEntity; name: string };
   [EVENTS.ATTACK]: null;
   [EVENTS.ATTACK_COMMAND]: null;
-  [EVENTS.COLLISION]: { entity: GameEntity; collidedCorners: Corners[keyof Corners][] };
+  [EVENTS.COLLISION]: { entity: GameEntity; collidedCorners: Corners[keyof Corners][]; entities: GameEntity[]; };
 }
 
 export type EventListener<T extends EVENT_NAME> = (eventName: T, payload: EVENT_MAPPING[T]) => void;

@@ -146,7 +146,8 @@ export interface GameMap extends Renderable {
   getTilesAt: (position: Position) => {
     layer: TileLayer;
     tile: number;
-  }[]
+  }[];
+  getObjectStartLocation: (objectName: string) => ObjectGroupLayer['objects'][0];
 };
 
 export type Controls = {
@@ -268,7 +269,7 @@ export type ObjectGroupLayer = Position & {
     visible: boolean;
   })[];
   opacity: number;
-  type: 'objectlayer';
+  type: 'objectgroup';
   visible: true;
 };
 
@@ -300,5 +301,5 @@ export interface TileMap {
   getTilesAt: (mapName: string, position: Position) => {
     layer: TileLayer;
     tile: number;
-  }[]
+  }[];
 }

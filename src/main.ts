@@ -6,10 +6,12 @@ import { gameLoop } from "./gameLoop";
 import { EventEmitter, EVENTS } from './events';
 import { SwordEntity } from "./entities/swordEntity";
 import { PlayerEntity } from "./entities/playerEntity";
-import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from './constants';
+import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y, RENDERING_SCALE } from './constants';
 import { RenderableMap } from './map';
 import { GameCamera } from './camera';
 import { BrowserElements } from './browserElements';
+import { getSpriteScale } from './sprites';
+import { DarkWizardEntity } from './entities/darkWizardEntity';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -29,8 +31,8 @@ const init = () => {
 
   const gameState: GameState = {
     entities: [new PlayerEntity({
-      x: 1400,
-      y: 1400,
+      x: 0,
+      y: 0,
       xDir: 0,
       yDir: 0,
       speedX: INIT_PLAYER_SPEED_X,
@@ -62,7 +64,26 @@ const init = () => {
       animationToEnd: false,
       animationFrameX: 0,
       animationFrameXStart: 0,
-    }, [], emitter)], emitter)],
+    }, [], emitter)], emitter),
+    new DarkWizardEntity({
+      x: 0,
+      y: 0,
+      xDir: 0,
+      yDir: 0,
+      speedX: INIT_PLAYER_SPEED_X,
+      speedY: INIT_PLAYER_SPEED_Y,
+      scaleX: 1,
+      scaleY: 1,
+      visible: true,
+      moving: false,
+      attacking: false,
+      currentAnimationName: '',
+      lastAnimationName: '',
+      animationToEnd: false,
+      animationFrameX: 0,
+      animationFrameXStart: 0,
+    }, [], emitter)
+  ],
     map: new RenderableMap({
       scaleX: 1,
       scaleY: 1,
@@ -85,7 +106,7 @@ const init = () => {
       showFps: true,
       showGrid: false,
       activateDebugger: false,
-      drawEntityHitboxes: true,
+      drawEntityHitboxes: false,
     },
     time: {
       delta: 0,
@@ -124,6 +145,27 @@ const init = () => {
   gameState.emitter.on('imageLoaded', console.log);
 
   gameState.camera.follow(gameState.entities.find(entity => entity.name === PlayerEntity.NAME) as GameEntity);
+
+  const playerStartLocationObject = gameState.map.getObjectStartLocation('Player Start Location');
+
+  const playerEntity = gameState.entities.find(entity => entity.name === PlayerEntity.NAME);
+  if (!playerEntity) {
+    throw new TypeError('Missing player entity');
+  }
+  playerEntity.state.x = playerStartLocationObject.x * RENDERING_SCALE;
+  playerEntity.state.y = playerStartLocationObject.y * RENDERING_SCALE;
+
+
+
+  const darkWizardStartLocationObject = gameState.map.getObjectStartLocation('Dark Wizard');
+
+  const darkWizardEntity = gameState.entities.find(entity => entity.name === DarkWizardEntity.NAME);
+  if (!darkWizardEntity) {
+    throw new TypeError('Missing dark wizard entity');
+  }
+  darkWizardEntity.state.x = darkWizardStartLocationObject.x * RENDERING_SCALE;
+  darkWizardEntity.state.y = darkWizardStartLocationObject.y * RENDERING_SCALE;
+
 
   mainCanvasContext?.rect(0, 0, mainCanvas.width, mainCanvas.height);
   mainCanvasContext?.fill();

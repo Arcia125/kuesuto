@@ -57,6 +57,20 @@ export class RenderableMap implements GameMap {
     return this.activeMap.tileMap.getTilesAt(this.activeMap.name, position);
   };
 
+  private getObjectLayer = () => this.activeMap.worldMap.layers.find(layer => layer.type === 'objectgroup');
+
+  public getObjectStartLocation = (objectName: string) => {
+    const objectLayer = this.getObjectLayer();
+    if (objectLayer?.type !== 'objectgroup') {
+      throw new Error('missing object layer');
+    }
+    const objectStartLocation = objectLayer.objects.find(object => object.name === objectName);
+    if (!objectStartLocation) {
+      throw new Error('missing object start location');
+    }
+    return objectStartLocation;
+  };
+
   public render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
     const gridWidth = canvas.width;
     const gridHeight = canvas.height;
@@ -121,6 +135,8 @@ export class RenderableMap implements GameMap {
           // const tileset = this.tileMaps.forrest.worldMaps.forrest.tilesets.find(ts => ts.firstgid <= tiles[tI].tile);
           const tileset = this.activeMap.worldMap.tilesets.find(ts => ts.firstgid <= tiles[tI].tile);
           if (!tileset) {
+
+            // TODO: fix out of bounds for the bottom and right edges of the map (maybe let camera go past edge, but render black or some fallback)
             console.error('tileset not found');
             continue;
           }
