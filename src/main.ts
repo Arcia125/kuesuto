@@ -10,7 +10,6 @@ import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y, RENDERING_SCALE } from './con
 import { RenderableMap } from './map';
 import { GameCamera } from './camera';
 import { BrowserElements } from './browserElements';
-import { getSpriteScale } from './sprites';
 import { DarkWizardEntity } from './entities/darkWizardEntity';
 
 
