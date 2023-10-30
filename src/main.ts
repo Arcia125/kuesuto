@@ -1,3 +1,4 @@
+import { cameraToWorld } from './position';
 import { createKeyDownHandler, createKeyUpHandler } from './controls';
 import { GameState, GameEntity } from './models';
 import './style.css'
@@ -28,8 +29,8 @@ const init = () => {
 
   const gameState: GameState = {
     entities: [new PlayerEntity({
-      x: 400,
-      y: 400,
+      x: 1400,
+      y: 1400,
       xDir: 0,
       yDir: 0,
       speedX: INIT_PLAYER_SPEED_X,
@@ -78,12 +79,13 @@ const init = () => {
       running: false,
       started: false,
     },
-    settings: {
+    debugSettings: {
       debugGameState: false,
       debugPlayerSpriteSheet: false,
       showFps: true,
       showGrid: false,
       activateDebugger: false,
+      drawEntityHitboxes: true,
     },
     time: {
       delta: 0,
@@ -111,13 +113,13 @@ const init = () => {
 
   emitter.on(EVENTS.FPS, (_, msg) => {
     console.log(msg);
-    if (gameState.settings.showFps && msg?.fps) {
+    if (gameState.debugSettings.showFps && msg?.fps) {
       gameState.elements.mainGameFpsContainer.innerHTML = Math.round(msg.fps).toString();
     }
   });
   // gameState.emitter.on('player.animationEnd', console.log);
   // gameState.emitter.on('renderSprite', console.log);
-  // gameState.emitter.on(EventEmitter.ALL, console.log);
+  gameState.emitter.on(EVENTS.COLLISION, console.log);
 
   gameState.emitter.on('imageLoaded', console.log);
 
@@ -160,6 +162,13 @@ window.addEventListener("resize", () => {
 document.addEventListener("visibilitychange", () => {
   gameState.world.running = document.visibilityState === 'visible';
   console.log({ running: gameState.world.running });
+});
+
+document.addEventListener('mousedown', (event) => {
+  console.log(cameraToWorld({
+    x: event.x,
+    y: event.y
+  }, gameState.camera));
 });
 
 

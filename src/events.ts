@@ -1,4 +1,4 @@
-import { GameEntity } from './models';
+import { Corners, GameEntity } from './models';
 export const EVENTS = {
   ALL: 'all',
   FPS: 'fps',
@@ -10,6 +10,7 @@ export const EVENTS = {
   ANIMATION_END: 'animationEnd',
   ATTACK: 'attack',
   ATTACK_COMMAND: 'attackCommand',
+  COLLISION: 'collision',
 } as const;
 
 export type EVENT_KEY = keyof typeof EVENTS;
@@ -40,7 +41,8 @@ export type EVENT_MAPPING = {
   }
   [EVENTS.ANIMATION_END]: { entity: GameEntity; name: string };
   [EVENTS.ATTACK]: null;
-  [EVENTS.ATTACK_COMMAND]: null,
+  [EVENTS.ATTACK_COMMAND]: null;
+  [EVENTS.COLLISION]: { entity: GameEntity; collidedCorners: Corners[keyof Corners][] };
 }
 
 export type EventListener<T extends EVENT_NAME> = (eventName: T, payload: EVENT_MAPPING[T]) => void;

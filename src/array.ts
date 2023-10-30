@@ -8,6 +8,6 @@ import { Position } from './models';
  */
 export const positionIndexFromArray = (arrayLength: number, rowLength: number, pos: Position) => {
   if (pos.x > rowLength) return -1;
-  const index = pos.x + (pos.y * rowLength);
+  const index = Math.round(pos.x) + (Math.round(pos.y) * rowLength);
   return index > arrayLength ? -1 : index;
 };

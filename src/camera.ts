@@ -1,4 +1,3 @@
-import { getSpriteScale } from './sprites';
 import { Camera, GameEntity, GameState } from './models';
 
 export class GameCamera implements Camera {
@@ -22,7 +21,11 @@ export class GameCamera implements Camera {
     }
     // this.x = Math.max(this.following.state.x, 0 + this.w);
     // this.y = Math.max(this.following.state.y, 0 + this.y);
-    this.x = Math.max(this.following.state.x + (getSpriteScale(_gameState.elements.mainCanvas)) / 2, 0);
-    this.y = Math.max(this.following.state.y + (getSpriteScale(_gameState.elements.mainCanvas)) / 2, 0);
+    // this.x = Math.max(this.following.state.x - (getSpriteScale(_gameState.elements.mainCanvas)) / 2, 0);
+    // this.y = Math.max(this.following.state.y - (getSpriteScale(_gameState.elements.mainCanvas)) / 2, 0);
+    // this.x = Math.max(this.following.state.x + (getSpriteScale(_gameState.elements.mainCanvas)) / 2, 0);
+    // this.y = Math.max(this.following.state.y + (getSpriteScale(_gameState.elements.mainCanvas)) / 2, 0);
+    this.x = Math.max(this.following.state.x, 0);
+    this.y = Math.max(this.following.state.y, 0);
   }
 }

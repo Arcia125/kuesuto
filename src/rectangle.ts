@@ -1,4 +1,4 @@
-import { BoundingRect, Origin, Rect } from './models';
+import { BoundingRect, Origin, Rect, Corners } from './models';
 
 
 const origins = ['top-left', 'center'];
@@ -44,6 +44,7 @@ export const getBoundingRect = (rect: Rect, origin: Origin = 'top-left'): Boundi
       right: rect.x + rect.w / 2,
       bottom: rect.y + rect.h / 2,
       left: rect.x - rect.w / 2,
+      origin,
     }
   }
   return {
@@ -55,5 +56,20 @@ export const getBoundingRect = (rect: Rect, origin: Origin = 'top-left'): Boundi
     right: rect.x + rect.w,
     bottom: rect.y + rect.h,
     left: rect.x,
+    origin,
   };
+};
+
+export const getBoundingRectCorners = (boundingRect: BoundingRect): Corners => {
+  return [
+    { x: boundingRect.left, y: boundingRect.top, type: 'top-left' },
+    { x: boundingRect.right, y: boundingRect.top, type: 'top-right' },
+    { x: boundingRect.right, y: boundingRect.bottom, type: 'bottom-right' },
+    { x: boundingRect.left, y: boundingRect.bottom, type: 'bottom-left' },
+  ];
+};
+
+export const getRectCorners = (rect: Rect, origin: Origin = 'top-left'): Corners => {
+  const boundingRect = getBoundingRect(rect, origin);
+  return getBoundingRectCorners(boundingRect);
 };

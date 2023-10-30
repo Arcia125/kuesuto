@@ -27,7 +27,23 @@ export type BoundingRect = Rect & {
   left: number;
   right: number;
   bottom: number;
+  origin: Origin;
 };
+
+export type Corners = [
+  Position & {
+    type: 'top-left';
+  },
+  Position & {
+    type: 'top-right'
+  },
+  Position & {
+    type: 'bottom-right'
+  },
+  Position & {
+    type: 'bottom-left'
+  }
+]
 
 export interface GameEntityState extends Position {
   xDir: number;
@@ -120,8 +136,17 @@ export interface GameMapState {
 
 export interface GameMap extends Renderable {
   tileMaps: Record<string, TileMap>;
+  activeMap: {
+    name: string;
+    tileMap: TileMap;
+    worldMap: WorldMap;
+  };
   state: GameMapState;
   emitter: EventEmitter;
+  getTilesAt: (position: Position) => {
+    layer: TileLayer;
+    tile: number;
+  }[]
 };
 
 export type Controls = {
@@ -150,12 +175,13 @@ export type Time = {
   resetDeltaCount: number;
 };
 
-export type Settings = {
+export type DebugSettings = {
   debugGameState: boolean;
   debugPlayerSpriteSheet: boolean;
   showFps: boolean;
   showGrid: boolean;
   activateDebugger: boolean;
+  drawEntityHitboxes: boolean;
 };
 
 export interface Camera extends ShortDimensions, Updateable, Follower {
@@ -179,7 +205,7 @@ export type GameState = {
   camera: Camera;
   world: World;
   time: Time;
-  settings: Settings;
+  debugSettings: DebugSettings;
   elements: Elements;
   emitter: EventEmitter;
 };
@@ -271,4 +297,8 @@ export interface TileMap {
   tileSets: Record<string, HTMLImageElement>;
   worldMaps: Record<string, WorldMap>;
   sourceMap: Record<string, TileMapJSON>;
+  getTilesAt: (mapName: string, position: Position) => {
+    layer: TileLayer;
+    tile: number;
+  }[]
 }

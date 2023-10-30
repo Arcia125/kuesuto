@@ -1,3 +1,4 @@
+import { worldToCamera } from './position';
 import { getImage } from './images';
 import { getSpriteScale, drawSprite } from './sprites';
 import tileMapJSONRaw from './data/spriteJSON/kuesuto-tilemap.json';
@@ -6,6 +7,7 @@ import { EventEmitter } from './events';
 import { GameMap, GameMapState, GameState, Position, TileMap, TileMapJSON, WorldMap, TileLayer } from './models';
 import { positionIndexFromArray } from './array';
 import { getBoundingRect } from './rectangle';
+import { Collision } from './capabilities/collision';
 
 export class GameTileMap implements TileMap {
   public constructor(public tileMapJSON: TileMapJSON, public tileSets: Record<string, HTMLImageElement>, public worldMaps: Record<string, WorldMap>, public sourceMap: Record<string, TileMapJSON>) {
@@ -27,6 +29,7 @@ export class GameTileMap implements TileMap {
 
 export class RenderableMap implements GameMap {
   public tileMaps: Record<string, GameTileMap>;
+  public activeMap: { name: string; tileMap: TileMap; worldMap: WorldMap; };
   public constructor(public state: GameMapState, public emitter: EventEmitter) {
     const forrestTileMapPath = './kuesuto-tilemap.png';
     this.tileMaps = {
@@ -42,7 +45,17 @@ export class RenderableMap implements GameMap {
         'ks-tilemap.tsx': tileMapJSONRaw
       }),
     }
+
+    this.activeMap = {
+      name: 'forrest',
+      tileMap: this.tileMaps.forrest,
+      worldMap: this.tileMaps.forrest.worldMaps.forrest,
+    };
   }
+
+  public getTilesAt = (position: Position) => {
+    return this.activeMap.tileMap.getTilesAt(this.activeMap.name, position);
+  };
 
   public render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
     const gridWidth = canvas.width;
@@ -63,11 +76,33 @@ export class RenderableMap implements GameMap {
       // Columns
       for (let y = Math.max(renderYOffset - gridCellSize, 0); y <= gridHeight + renderYOffset + gridCellSize; y += gridCellSize) {
         // will need to offset x and y by the camera offset once camera has moved
-        const tiles = this.tileMaps.forrest.getTilesAt('forrest', { x: Math.ceil(x / gridCellSize), y: Math.ceil(y / gridCellSize) });
+        // const tiles = this.tileMaps.forrest.getTilesAt('forrest', { x: Math.ceil(x / gridCellSize), y: Math.ceil(y / gridCellSize) });
+        // const tiles = this.activeMap.tileMap.getTilesAt(this.activeMap.name, { x: Math.ceil(x / gridCellSize), y: Math.ceil(y / gridCellSize) });
+        const tiles = this.getTilesAt({ x: Math.ceil(x / gridCellSize), y: Math.ceil(y / gridCellSize) });
 
         // Tiles[Row,Column]
         for (let tI = 0; tI < tiles.length; tI++) {
-          if (tiles[tI].layer.name === 'Collision' || tiles[tI].tile === 0) {
+          if (tiles[tI].layer.name === Collision.NAME || tiles[tI].tile === 0) {
+            // drawSprite(ctx, canvas, this.tileMaps.forrest.tileSets.forrest, {
+            //   spriteX: frame.frame.x,
+            //   spriteY: frame.frame.y,
+            //   spriteWidth: frame.frame.w,
+            //   spriteHeight: frame.frame.h,
+            //   // rounded to prevent gaps between tiles
+            //   canvasX: Math.round(cameraPos.x - renderXOffset % gridCellSize),
+            //   // rounded to prevent gaps between tiles
+            //   canvasY: Math.round(cameraPos.y - renderYOffset % gridCellSize),
+            //   canvasWidth,
+            //   canvasHeight,
+            // });
+            if (gameState.debugSettings.drawEntityHitboxes && tiles[tI].tile !== 0) {
+              const cameraPos = worldToCamera({ x, y }, gameState.camera);
+              ctx.beginPath();
+              ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+              ctx.rect(Math.round(cameraPos.x - renderXOffset % gridCellSize), Math.round(cameraPos.y - renderYOffset % gridCellSize), canvasWidth, canvasHeight);
+              ctx.fill();
+              ctx.closePath();
+            }
             continue;
           }
           // if (i === 0) {
@@ -83,24 +118,27 @@ export class RenderableMap implements GameMap {
           // }
           // i++;
 
-          const tileset = this.tileMaps.forrest.worldMaps.forrest.tilesets.find(ts => ts.firstgid <= tiles[tI].tile);
+          // const tileset = this.tileMaps.forrest.worldMaps.forrest.tilesets.find(ts => ts.firstgid <= tiles[tI].tile);
+          const tileset = this.activeMap.worldMap.tilesets.find(ts => ts.firstgid <= tiles[tI].tile);
           if (!tileset) {
             console.error('tileset not found');
             continue;
           }
 
 
-          const tilemapJSON = this.tileMaps.forrest.sourceMap[tileset.source];
+          // const tilemapJSON = this.tileMaps.forrest.sourceMap[tileset.source];
+          const tilemapJSON = this.activeMap.tileMap.sourceMap[tileset.source];
           const frame = tilemapJSON.frames[tiles[tI].tile - 1];
+          const cameraPos = worldToCamera({ x, y }, gameState.camera);
           drawSprite(ctx, canvas, this.tileMaps.forrest.tileSets.forrest, {
             spriteX: frame.frame.x,
             spriteY: frame.frame.y,
             spriteWidth: frame.frame.w,
             spriteHeight: frame.frame.h,
             // rounded to prevent gaps between tiles
-            canvasX: Math.round(x - renderXOffset - renderXOffset % gridCellSize),
+            canvasX: Math.round(cameraPos.x - renderXOffset % gridCellSize),
             // rounded to prevent gaps between tiles
-            canvasY: Math.round(y - renderYOffset - renderYOffset % gridCellSize),
+            canvasY: Math.round(cameraPos.y - renderYOffset % gridCellSize),
             canvasWidth,
             canvasHeight,
           });

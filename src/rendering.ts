@@ -1,6 +1,7 @@
 import { PlayerEntity } from "./entities/playerEntity";
 import { EVENTS } from './events';
 import { GameEntity, GameState } from './models';
+import { worldToCamera } from './position';
 import { getBoundingRect } from './rectangle';
 import { drawSprite, getSpriteScale } from './sprites';
 
@@ -58,15 +59,21 @@ const drawEntity = (
   const spriteY = spriteFrame.frame.y;
 
 
-  const cameraBox = getBoundingRect(gameState.camera, 'center');
-  const canvasX = entityState.x - Math.max(cameraBox.left, 0);
-  const canvasY = entityState.y - Math.max(cameraBox.top, 0);
+  const canvasWidth = getSpriteScale(canvas) * entityState.scaleX;
+  const canvasHeight = getSpriteScale(canvas) * entityState.scaleX;
+  // const canvasX =  - Math.max(cameraBox.left, 0);
+  // const canvasY =  - Math.max(cameraBox.top, 0);
+  const canvasPos = worldToCamera({
+    x: entityState.x - canvasWidth / 2,
+    y: entityState.y - canvasHeight / 2
+  }, gameState.camera);
+
 
   const spriteData = {
-    canvasX,
-    canvasY,
-    canvasWidth: getSpriteScale(canvas) * entityState.scaleX,
-    canvasHeight: getSpriteScale(canvas) * entityState.scaleY,
+    canvasX: canvasPos.x,
+    canvasY: canvasPos.y,
+    canvasWidth,
+    canvasHeight,
     spriteX: spriteX,
     spriteY: spriteY,
     spriteWidth: spriteFrameWidth,
@@ -79,7 +86,21 @@ const drawEntity = (
   drawSprite(ctx, canvas, spriteSheet, spriteData);
 
 
-  if (gameState.settings.debugPlayerSpriteSheet && entity.name === PlayerEntity.NAME) {
+  const entityBox = getBoundingRect({ x: canvasPos.x, y: canvasPos.y, h: spriteData.canvasHeight, w: spriteData.canvasWidth });
+  // console.log(entityBox);
+
+  if (gameState.debugSettings.drawEntityHitboxes) {
+    ctx.beginPath();
+    ctx.strokeStyle = 'teal';
+    const tempLineWidth = ctx.lineWidth;
+    ctx.lineWidth = 6;
+    ctx.rect(entityBox.left, entityBox.top, spriteData.canvasWidth, spriteData.canvasHeight);
+    ctx.stroke();
+    ctx.lineWidth = tempLineWidth;
+    ctx.closePath();
+  }
+
+  if (gameState.debugSettings.debugPlayerSpriteSheet && entity.name === PlayerEntity.NAME) {
     const sheetScale = 4;
     const spriteOffset = 250;
     drawSprite(ctx, canvas, spriteSheet, {
@@ -109,7 +130,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
 
   resetContext(ctx, canvas, "#fff");
   gameState.map.render(ctx, canvas, gameState);
-  if (gameState.settings.showGrid) {
+  if (gameState.debugSettings.showGrid) {
     drawGrid(ctx, canvas, 0, "teal", gameState);
   }
 
@@ -122,7 +143,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
     }
   }
 
-  if (gameState.settings.debugGameState && gameState.elements.gameStateContainer) {
+  if (gameState.debugSettings.debugGameState && gameState.elements.gameStateContainer) {
     gameState.elements.gameStateContainer.innerHTML = JSON.stringify({
       controls: gameState.controls,
       camera: {
@@ -135,11 +156,13 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
         name: entity.name,
         state: entity.state,
       })),
-      settings: gameState.settings,
+      settings: gameState.debugSettings,
       time: gameState.time,
       world: gameState.world,
     }, null, 2);
   }
+
+  // window.defferedRender();
   gameState.emitter.emit(EVENTS.RENDER_END, null);
 }
 

@@ -47,20 +47,20 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
   if (keyPressed('showGrid', event)) {
     event.preventDefault();
 
-    gameState.settings.showGrid = !gameState.settings.showGrid;
+    gameState.debugSettings.showGrid = !gameState.debugSettings.showGrid;
   }
   if (keyPressed('toggleDebugGameState', event)) {
     event.preventDefault();
-    gameState.settings.debugGameState = !gameState.settings.debugGameState;
-    gameState.elements.gameStateContainer.style.display = gameState.settings.debugGameState ? 'block' : 'none';
+    gameState.debugSettings.debugGameState = !gameState.debugSettings.debugGameState;
+    gameState.elements.gameStateContainer.style.display = gameState.debugSettings.debugGameState ? 'block' : 'none';
   }
   if (keyPressed('debugPlayerSpriteSheet', event)) {
     event.preventDefault();
-    gameState.settings.debugPlayerSpriteSheet = !gameState.settings.debugPlayerSpriteSheet;
+    gameState.debugSettings.debugPlayerSpriteSheet = !gameState.debugSettings.debugPlayerSpriteSheet;
   };
   if (keyPressed('activateDebugger', event)) {
     event.preventDefault();
-    gameState.settings.activateDebugger = !gameState.settings.activateDebugger;
+    gameState.debugSettings.activateDebugger = !gameState.debugSettings.activateDebugger;
   }
 };
 
