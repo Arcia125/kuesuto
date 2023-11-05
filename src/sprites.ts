@@ -54,8 +54,13 @@ export class Sprite implements GameSprite {
 export function frameMatchesEntity(entity: GameEntity, direction: string): (value: [string, AnimationFrame], index: number, array: [string, AnimationFrame][]) => unknown {
   const entityState = entity.state;
   return ([_frameName, frameValue]) => {
-
-    return frameValue.data.direction === direction && (!!frameValue.data.movement === !!entityState.moving || entityState.attacking) && !!entityState.attacking === !!frameValue.data.attack && !!entity.status.dead === !!frameValue.data.dead
+    // if (entity.name === 'slime') {
+    //   debugger;
+    // }
+    if (entity.status.dead && frameValue.data.dead) {
+      return true;
+    }
+    return frameValue.data.direction === direction && (!!frameValue.data.movement === !!entityState.moving || entityState.attacking) && !!entityState.attacking === !!frameValue.data.attack && !!entity.status.dead === !!frameValue.data.dead;
   };
 }
 

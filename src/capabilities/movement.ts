@@ -7,6 +7,9 @@ export class Movement implements Capability {
   public constructor(public entity: GameEntity) { }
 
   public update = (gameState: GameState, _timeStamp: number) => {
+    if (this.entity.status.dead) {
+      return;
+    }
     const initialStateX = this.entity.state.x;
     const initialStateY = this.entity.state.y;
     this.action = new Action(() => {

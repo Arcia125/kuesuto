@@ -41,6 +41,9 @@ export class Collision implements Capability {
         continue;
       }
       const foreignEntity = gameState.entities[i];
+      if (foreignEntity.status.dead) {
+        continue
+      }
       const foreignEntityCorners = getRectCorners({ x: foreignEntity.state.x, y: foreignEntity.state.y, h: tileSize, w: tileSize });
       // top-left corner collides foreign entity
       if (corners[0].x > foreignEntityCorners[0].x && corners[0].x < foreignEntityCorners[1].x && corners[0].y > foreignEntityCorners[0].y && corners[0].y < foreignEntityCorners[2].y) {
