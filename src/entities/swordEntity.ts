@@ -1,3 +1,4 @@
+import { DAMAGE_TYPES } from './../damage';
 import { GameEntityState, GameState, GameEntity, SpriteJSON } from '../models';
 import { getSpriteScale } from '../sprites';
 import swordSpriteJSONRAW from '../data/spriteJSON/kuesuto-sword.json';
@@ -8,6 +9,14 @@ import { WeaponEntity } from './weaponEntity';
 export class SwordEntity extends WeaponEntity {
   public static NAME = 'sword';
   private attackListener: EventListener<any> | null = null;
+  public stats = {
+    damages: [
+      {
+        type: DAMAGE_TYPES.PHYSICAL,
+        power: 10
+      }
+    ]
+  }
   public constructor(public state: GameEntityState, public children: GameEntity[], public emitter: EventEmitter) {
     super(state, SwordEntity.NAME, children, emitter, swordSpriteJSONRAW as SpriteJSON, './kuesuto-sword.png');
   }

@@ -22,10 +22,10 @@ const filesToMove = [
   { type: 'sprite', name: 'kuesuto-player.png', metadata: 'kuesuto-player.json' },
   { type: 'sprite', name: 'kuesuto-sword.png', metadata: 'kuesuto-sword.json' },
   { type: 'sprite', name: 'ks-dark-wizard.png', metadata: 'ks-dark-wizard.json' },
-  { type: 'sprite', name: 'kuesuto-tiles.png', metadata: 'kuesuto-tiles.json' },
-  { type: 'sprite', name: 'kuesuto-tilemap.png', metadata: 'kuesuto-tilemap.json' },
-  { type: 'sprite', name: 'collision.png', metadata: 'collision.json' },
-  { type: 'map', name: 'kuesuto-world.json' }
+  { type: 'sprite', name: 'ks-slime2.png', metadata: 'ks-slime2.json' },
+  { type: 'tilemap', name: 'collision.png', metadata: 'collision.json', tilesetData: 'collision.json' },
+  { type: 'tilemap', name: 'kuesuto-tilemap.png', metadata: 'kuesuto-tilemap.json', tilesetData: 'ks-forrest-tileset.json' },
+  { type: 'map', name: 'kuesuto-world.json' },
 ];
 
 // Function to move files
@@ -58,6 +58,23 @@ filesToMove.forEach((file) => {
       sourceDirectory,
       path.join(destinationDirectory, 'src', 'data', 'spriteJSON'),
       file.metadata
+    );
+  }
+  if (file.type === 'tilemap') {
+    moveFile(
+      sourceDirectory,
+      path.join(destinationDirectory, 'public'),
+      file.name
+    );
+    moveFile(
+      sourceDirectory,
+      path.join(destinationDirectory, 'src', 'data', 'spriteJSON'),
+      file.metadata
+    );
+    moveFile(
+      sourceDirectory,
+      path.join(destinationDirectory, 'src', 'data', 'tilesets'),
+      file.tilesetData
     );
   }
   if (file.type === 'map') {

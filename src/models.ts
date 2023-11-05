@@ -45,6 +45,12 @@ export type Corners = [
   }
 ]
 
+export interface Status {
+  health: number;
+  immortal?: boolean;
+  dead?: boolean;
+}
+
 export interface GameEntityState extends Position {
   xDir: number;
   yDir: number;
@@ -80,7 +86,7 @@ export interface Parent<T> {
   setChild: (child: T) => void;
 }
 
-export interface ParentableParent<T> extends Parentable<T>, Parent<T> {}
+export interface ParentableParent<T> extends Parentable<T>, Parent<T> { }
 
 export interface Capability extends Updateable {
   entity: GameEntity;
@@ -102,6 +108,7 @@ export type AnimationFrame = {
     blink: boolean;
     movement: boolean;
     attack: boolean;
+    dead: boolean;
   };
 };
 
@@ -118,6 +125,7 @@ export interface BaseEntity {
 
 export interface GameEntity extends BaseEntity, Updateable, ParentableParent<GameEntity> {
   state: GameEntityState;
+  status: Status;
   sprite?: GameSprite;
   children?: GameEntity[];
   getDirection: () => Direction;
@@ -199,6 +207,17 @@ export type Elements = {
   resize: (gameState: GameState) => void;
 };
 
+
+export interface IDamageSystem {
+  handleAttack: (attack: { attacker: GameEntity; target: GameEntity }) => void;
+  dealDamage: (attacker: GameEntity, damages: Damage[], target: GameEntity) => void;
+}
+
+export interface IDeathSystem {
+  kill: (entity: GameEntity, killer: GameEntity) => void;
+  checkDeath: (entity: GameEntity) => boolean;
+}
+
 export type GameState = {
   entities: GameEntity[];
   map: GameMap;
@@ -209,6 +228,10 @@ export type GameState = {
   debugSettings: DebugSettings;
   elements: Elements;
   emitter: EventEmitter;
+  systems: {
+    damage: IDamageSystem;
+    death: IDeathSystem;
+  }
 };
 
 type FrameTag = {
@@ -241,6 +264,43 @@ export type TileMapFrame = Frame & {
 export type TileMapJSON = {
   frames: TileMapFrame[];
   meta: SpriteJSONMeta & { layers: never[], slices: never[] };
+}
+
+export type TileSetJSON = {
+  columns: number;
+  image: string;
+  imageheight: number;
+  imagewidth: number;
+  margin: number;
+  name: string;
+  spacing: number;
+  tilecount: number;
+  tiledversion: string;
+  tileheight: number;
+  tiles: {
+    id: number;
+    objectgroup?: {
+      draworder: string;
+      id: number;
+      name: string;
+      objects?: {
+        height: number;
+        id: number;
+        name: string;
+        rotation: number;
+        type: string;
+        visible: boolean;
+        width: number;
+        x: number;
+        y: number;
+      }[];
+      opacity: number;
+      type: string;
+      visible: boolean;
+      x: number;
+      y: number;
+    }[]
+  }[]
 }
 
 export type TileLayer = {
@@ -297,9 +357,23 @@ export interface TileMap {
   tileMapJSON: TileMapJSON;
   tileSets: Record<string, HTMLImageElement>;
   worldMaps: Record<string, WorldMap>;
-  sourceMap: Record<string, TileMapJSON>;
+  sourceMap: Record<string, {
+    tileMapJSON: TileMapJSON;
+    tileSetJSON: TileSetJSON;
+  }>;
   getTilesAt: (mapName: string, position: Position) => {
     layer: TileLayer;
     tile: number;
   }[];
+}
+
+export type DamageType = 'physical';
+
+export interface Damage {
+  power: number;
+  type: DamageType;
+}
+
+export interface ItemStats {
+  damages: Damage[];
 }

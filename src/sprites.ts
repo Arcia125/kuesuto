@@ -1,7 +1,7 @@
 import { RENDERING_SCALE } from './constants';
 import { EventEmitter, EVENTS } from './events';
 import { getImage } from './images';
-import { AnimationFrame, SpriteJSON, GameSprite, GameEntityState } from './models';
+import { AnimationFrame, SpriteJSON, GameSprite, GameEntity } from './models';
 
 const parseFrameData = (rawData: any) => {
   const dataItems = rawData.split(' ');
@@ -19,8 +19,6 @@ const parseFrameData = (rawData: any) => {
 
 export const getSpriteFrames = (json: SpriteJSON) => Object.entries(json.frames).reduce((acc, [frameName, frameValue], _frameIndex) => {
   const [animationName, _animationFrame] = frameName.split('--');
-
-  console.log(animationName, _animationFrame);
 
   if (acc[animationName]) {
     acc[animationName].frames.push(frameValue);
@@ -53,9 +51,11 @@ export class Sprite implements GameSprite {
   }
 }
 
-export function frameMatchesEntity(entityState: GameEntityState, direction: string): (value: [string, AnimationFrame], index: number, array: [string, AnimationFrame][]) => unknown {
+export function frameMatchesEntity(entity: GameEntity, direction: string): (value: [string, AnimationFrame], index: number, array: [string, AnimationFrame][]) => unknown {
+  const entityState = entity.state;
   return ([_frameName, frameValue]) => {
-    return frameValue.data.direction === direction && (!!frameValue.data.movement === !!entityState.moving || entityState.attacking) && !!entityState.attacking === !!frameValue.data.attack;
+
+    return frameValue.data.direction === direction && (!!frameValue.data.movement === !!entityState.moving || entityState.attacking) && !!entityState.attacking === !!frameValue.data.attack && !!entity.status.dead === !!frameValue.data.dead
   };
 }
 

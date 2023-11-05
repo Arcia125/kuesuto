@@ -28,6 +28,8 @@ export class Collision implements Capability {
     return collidedCorners;
   };
 
+  // public static checkTiles(gameState: GameState, entity: GameEntity): Corners[keyof Corners][] {
+
   public static checkEntityCollision(gameState: GameState, entity: GameEntity): { collidedCorners: Corners[keyof Corners][], entities: GameEntity[] } {
     const entityCount = gameState.entities.length;
     const tileSize = getSpriteScale(gameState.elements.mainCanvas);

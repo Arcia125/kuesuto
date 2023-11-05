@@ -1,5 +1,5 @@
 import { ANIMATION_SPEED_MULTIPLIER } from '../constants';
-import { GameEntityState, GameState, GameEntity, GameSprite, Direction, Frame } from '../models';
+import { GameEntityState, GameState, GameEntity, GameSprite, Direction, Frame, Status } from '../models';
 import { frameMatchesEntity } from '../sprites';
 import { EventEmitter, EVENTS } from '../events';
 
@@ -10,6 +10,9 @@ export class Entity implements GameEntity {
   public id = id++;
   public sprite?: GameSprite;
   public parent?: GameEntity | undefined;
+  public status: Status = {
+    health: 0,
+  };
 
   public static getDirection(entityState: GameEntityState): Direction {
     const facingUp = entityState.yDir < 0;
@@ -31,7 +34,7 @@ export class Entity implements GameEntity {
 
     let spriteFrameEntries;
 
-    spriteFrameEntries = Object.entries(entity.sprite?.spriteFrames).filter(frameMatchesEntity(entityState, direction));
+    spriteFrameEntries = Object.entries(entity.sprite?.spriteFrames).filter(frameMatchesEntity(entity, direction));
 
     const [spriteFrameName, spriteFrameValue] = spriteFrameEntries.find(([name, value]) => {
       if (!name) {

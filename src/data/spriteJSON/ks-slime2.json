@@ -1,0 +1,31 @@
+{ "frames": {
+   "Bounce Down--0": {
+    "frame": { "x": 2, "y": 2, "w": 16, "h": 16 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 16 },
+    "sourceSize": { "w": 16, "h": 16 },
+    "duration": 100
+   },
+   "Dead--0": {
+    "frame": { "x": 20, "y": 2, "w": 16, "h": 16 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 16, "h": 16 },
+    "sourceSize": { "w": 16, "h": 16 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "https://www.aseprite.org/",
+  "version": "1.3-rc6-x64",
+  "image": "ks-slime2.png",
+  "format": "RGBA8888",
+  "size": { "w": 38, "h": 20 },
+  "scale": "1",
+  "frameTags": [
+   { "name": "Bounce Down", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff", "data": "direction=down movement=false blink=false attack=false dead=false" },
+   { "name": "Dead", "from": 1, "to": 1, "direction": "forward", "color": "#000000ff", "data": "direction=down dead=true" }
+  ]
+ }
+}

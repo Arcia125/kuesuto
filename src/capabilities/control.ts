@@ -4,7 +4,7 @@ export class Control implements Capability {
   public constructor(public entity: GameEntity) {}
 
   public update = (gameState: GameState, _timeStamp: number) => {
-      let moving = false;
+    let moving = false;
     let yDir = this.entity.state.yDir;
     let xDir = this.entity.state.xDir;
     let movedX = false;
@@ -39,5 +39,7 @@ export class Control implements Capability {
     }
     this.entity.state.yDir = yDir;
     this.entity.state.xDir = xDir;
+
+    this.entity.state.attacking = gameState.controls.attack;
   }
 }

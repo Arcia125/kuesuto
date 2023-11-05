@@ -1,3 +1,4 @@
+import { DamageSystem } from './systems/damageSystem';
 import { cameraToWorld } from './position';
 import { createKeyDownHandler, createKeyUpHandler } from './controls';
 import { GameState, GameEntity } from './models';
@@ -11,6 +12,8 @@ import { RenderableMap } from './map';
 import { GameCamera } from './camera';
 import { BrowserElements } from './browserElements';
 import { DarkWizardEntity } from './entities/darkWizardEntity';
+import { DeathSystem } from './systems/deathSystem';
+import { SlimeEntity } from './entities/slimeEntity';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -29,60 +32,81 @@ const init = () => {
   // emitter.on(EventEmitter.ALL, console.log);
 
   const gameState: GameState = {
-    entities: [new PlayerEntity({
-      x: 0,
-      y: 0,
-      xDir: 0,
-      yDir: 0,
-      speedX: INIT_PLAYER_SPEED_X,
-      speedY: INIT_PLAYER_SPEED_Y,
-      scaleX: 1,
-      scaleY: 1,
-      visible: true,
-      moving: false,
-      attacking: false,
-      currentAnimationName: '',
-      lastAnimationName: '',
-      animationToEnd: false,
-      animationFrameX: 0,
-      animationFrameXStart: 0,
-    }, [new SwordEntity({
-      x: 0,
-      y: 0,
-      xDir: 0,
-      yDir: 0,
-      speedX: INIT_PLAYER_SPEED_X,
-      speedY: INIT_PLAYER_SPEED_Y,
-      scaleX: 1,
-      scaleY: 1,
-      visible: false,
-      moving: false,
-      attacking: false,
-      currentAnimationName: '',
-      lastAnimationName: '',
-      animationToEnd: false,
-      animationFrameX: 0,
-      animationFrameXStart: 0,
-    }, [], emitter)], emitter),
-    new DarkWizardEntity({
-      x: 0,
-      y: 0,
-      xDir: 0,
-      yDir: 0,
-      speedX: INIT_PLAYER_SPEED_X,
-      speedY: INIT_PLAYER_SPEED_Y,
-      scaleX: 1,
-      scaleY: 1,
-      visible: true,
-      moving: false,
-      attacking: false,
-      currentAnimationName: '',
-      lastAnimationName: '',
-      animationToEnd: false,
-      animationFrameX: 0,
-      animationFrameXStart: 0,
-    }, [], emitter)
-  ],
+    entities: [
+      new PlayerEntity({
+        x: 0,
+        y: 0,
+        xDir: 0,
+        yDir: 0,
+        speedX: INIT_PLAYER_SPEED_X,
+        speedY: INIT_PLAYER_SPEED_Y,
+        scaleX: 1,
+        scaleY: 1,
+        visible: true,
+        moving: false,
+        attacking: false,
+        currentAnimationName: '',
+        lastAnimationName: '',
+        animationToEnd: false,
+        animationFrameX: 0,
+        animationFrameXStart: 0,
+      }, [
+        new SwordEntity({
+          x: 0,
+          y: 0,
+          xDir: 0,
+          yDir: 0,
+          speedX: INIT_PLAYER_SPEED_X,
+          speedY: INIT_PLAYER_SPEED_Y,
+          scaleX: 1,
+          scaleY: 1,
+          visible: false,
+          moving: false,
+          attacking: false,
+          currentAnimationName: '',
+          lastAnimationName: '',
+          animationToEnd: false,
+          animationFrameX: 0,
+          animationFrameXStart: 0,
+        }, [], emitter)
+      ], emitter),
+      new DarkWizardEntity({
+        x: 0,
+        y: 0,
+        xDir: 0,
+        yDir: 0,
+        speedX: INIT_PLAYER_SPEED_X,
+        speedY: INIT_PLAYER_SPEED_Y,
+        scaleX: 1,
+        scaleY: 1,
+        visible: true,
+        moving: false,
+        attacking: false,
+        currentAnimationName: '',
+        lastAnimationName: '',
+        animationToEnd: false,
+        animationFrameX: 0,
+        animationFrameXStart: 0,
+      }, [], emitter),
+      new SlimeEntity({
+        x: 0,
+        y: 0,
+        xDir: 0,
+        yDir: 0,
+        speedX: INIT_PLAYER_SPEED_X,
+        speedY: INIT_PLAYER_SPEED_Y,
+        scaleX: 1,
+        scaleY: 1,
+        visible: true,
+        moving: false,
+        attacking: false,
+        currentAnimationName: '',
+        lastAnimationName: '',
+        animationToEnd: false,
+        animationFrameX: 0,
+        animationFrameXStart: 0,
+      }, emitter),
+    ],
     map: new RenderableMap({
       scaleX: 1,
       scaleY: 1,
@@ -94,7 +118,7 @@ const init = () => {
       right: false,
       attack: false,
     },
-    camera: new GameCamera(1920, 1080),
+    camera: new GameCamera(2560, 1307),
     world: {
       running: false,
       started: false,
@@ -121,7 +145,12 @@ const init = () => {
     },
     elements: new BrowserElements(),
     emitter,
+    systems: {
+      damage: new DamageSystem(emitter),
+      death: new DeathSystem(emitter)
+    }
   };
+
 
   mainCanvas = gameState.elements.mainCanvas;
   mainCanvasContext = gameState.elements.mainCanvasContext;
@@ -140,6 +169,7 @@ const init = () => {
   // gameState.emitter.on('player.animationEnd', console.log);
   // gameState.emitter.on('renderSprite', console.log);
   gameState.emitter.on(EVENTS.COLLISION, console.log);
+  gameState.emitter.on(EVENTS.ATTACK, console.log);
 
   gameState.emitter.on('imageLoaded', console.log);
 
@@ -164,6 +194,16 @@ const init = () => {
   }
   darkWizardEntity.state.x = darkWizardStartLocationObject.x * RENDERING_SCALE;
   darkWizardEntity.state.y = darkWizardStartLocationObject.y * RENDERING_SCALE;
+
+
+  const enemyStartLocationObject = gameState.map.getObjectStartLocation('Enemy');
+
+  const slimeEntity = gameState.entities.find(entity => entity.name === SlimeEntity.NAME);
+  if (!slimeEntity) {
+    throw new TypeError('Missing enemy entity');
+  }
+  slimeEntity.state.x = enemyStartLocationObject.x * RENDERING_SCALE;
+  slimeEntity.state.y = enemyStartLocationObject.y * RENDERING_SCALE;
 
 
   mainCanvasContext?.rect(0, 0, mainCanvas.width, mainCanvas.height);

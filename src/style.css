@@ -38,6 +38,8 @@ h1 {
 }
 
 #app {
+  margin: auto;
+  position: relative;
 }
 
 #main-game-canvas {

@@ -3,14 +3,15 @@ import { getImage } from './images';
 import { getSpriteScale, drawSprite } from './sprites';
 import tileMapJSONRaw from './data/spriteJSON/kuesuto-tilemap.json';
 import forrestWorldMap from './data/maps/kuesuto-world.json';
+import forrestTileset from './data/tilesets/ks-forrest-tileset.json';
 import { EventEmitter } from './events';
-import { GameMap, GameMapState, GameState, Position, TileMap, TileMapJSON, WorldMap, TileLayer } from './models';
+import { GameMap, GameMapState, GameState, Position, TileMap, TileMapJSON, WorldMap, TileLayer, TileSetJSON } from './models';
 import { positionIndexFromArray } from './array';
 import { getBoundingRect } from './rectangle';
 import { Collision } from './capabilities/collision';
 
 export class GameTileMap implements TileMap {
-  public constructor(public tileMapJSON: TileMapJSON, public tileSets: Record<string, HTMLImageElement>, public worldMaps: Record<string, WorldMap>, public sourceMap: Record<string, TileMapJSON>) {
+  public constructor(public tileMapJSON: TileMapJSON, public tileSets: Record<string, HTMLImageElement>, public worldMaps: Record<string, WorldMap>, public sourceMap: TileMap['sourceMap']) {
 
   }
 
@@ -42,7 +43,10 @@ export class RenderableMap implements GameMap {
       }, {
         forrest: forrestWorldMap as WorldMap
       }, {
-        'ks-tilemap.tsx': tileMapJSONRaw
+        'ks-forrest-tileset.tsx': {
+          tileMapJSON: tileMapJSONRaw,
+          tileSetJSON: forrestTileset as unknown as TileSetJSON,
+        }
       }),
     }
 
@@ -81,7 +85,6 @@ export class RenderableMap implements GameMap {
     const cameraBox = getBoundingRect(gameState.camera, 'center');
     const renderXOffset = Math.max(cameraBox.left, 0);
     const renderYOffset = Math.max(cameraBox.top, 0);
-
 
     // let i = 0;
     // Rows
@@ -142,9 +145,18 @@ export class RenderableMap implements GameMap {
           }
 
 
-          // const tilemapJSON = this.tileMaps.forrest.sourceMap[tileset.source];
-          const tilemapJSON = this.activeMap.tileMap.sourceMap[tileset.source];
-          const frame = tilemapJSON.frames[tiles[tI].tile - 1];
+          if (!this.activeMap.tileMap.sourceMap[tileset.source]) {
+            debugger;
+          }
+          const tileMapJSON = this.activeMap.tileMap.sourceMap[tileset.source].tileMapJSON;
+          // const tileSetJSON = this.activeMap.tileMap.sourceMap[tileset.source].tileSetJSON;
+          const tileIndex = tiles[tI].tile - 1;
+
+
+          const frame = tileMapJSON.frames[tileIndex];
+          if (!frame) {
+            debugger;
+          }
           const cameraPos = worldToCamera({ x, y }, gameState.camera);
           drawSprite(ctx, canvas, this.tileMaps.forrest.tileSets.forrest, {
             spriteX: frame.frame.x,
@@ -158,6 +170,12 @@ export class RenderableMap implements GameMap {
             canvasWidth,
             canvasHeight,
           });
+
+          // if (tiles[tI].layer.name === 'Things' || tiles.find(tile => tile.layer.name === 'Things' && tile.tile === 0)) {
+          //   ctx.font = '30px Inter';
+          //   ctx.fillStyle = 'black';
+          //   ctx.fillText("" + tileIndex, Math.round(gridCellSize / 2 + cameraPos.x - renderXOffset % gridCellSize), Math.round(gridCellSize / 2 + cameraPos.y - renderYOffset % gridCellSize));
+          // }
         }
         // drawSprite(
         //   ctx,

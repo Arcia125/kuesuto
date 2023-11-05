@@ -4,14 +4,12 @@ import { NPCEntity } from './npcEntity';
 import darkWizardSpriteJSONRaw from '../data/spriteJSON/ks-dark-wizard.json';
 import { Collision } from '../capabilities/collision';
 
-export class DarkWizardEntity extends NPCEntity {
-  public static NAME = 'dark wizard';
+export class EnemyEntity extends NPCEntity {
+  public static NAME = 'enemy';
   public collisionCapability = new Collision(this);
 
-  public constructor(public state: GameEntityState, public children: GameEntity[], public emitter: EventEmitter) {
-    super(state, DarkWizardEntity.NAME, [], emitter, darkWizardSpriteJSONRaw as unknown as SpriteJSON, './ks-dark-wizard.png');
-    this.status.immortal = true;
-    this.status.health = 99999;
+  public constructor(public state: GameEntityState, public children: GameEntity[], public emitter: EventEmitter, public npcSpriteJSONRaw: SpriteJSON, public spriteSheetPath: string,public name: string) {
+    super(state, name || EnemyEntity.NAME, children || [], emitter, npcSpriteJSONRaw || (darkWizardSpriteJSONRaw as unknown as SpriteJSON), spriteSheetPath);
   }
 
   public update(gameState: GameState, _timeStamp: number) {
