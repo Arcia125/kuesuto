@@ -93,8 +93,8 @@ const init = () => {
         y: 0,
         xDir: 0,
         yDir: 0,
-        speedX: INIT_PLAYER_SPEED_X,
-        speedY: INIT_PLAYER_SPEED_Y,
+        speedX: INIT_PLAYER_SPEED_X * 0.8,
+        speedY: INIT_PLAYER_SPEED_Y * 0.8,
         scaleX: 1,
         scaleY: 1,
         visible: true,
@@ -246,6 +246,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 document.addEventListener('mousedown', (event) => {
+  // TODO find and highlight the tile at this position for debugging
   console.log(cameraToWorld({
     x: event.x,
     y: event.y

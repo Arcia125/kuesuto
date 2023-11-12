@@ -61,6 +61,42 @@ export class RenderableMap implements GameMap {
     return this.activeMap.tileMap.getTilesAt(this.activeMap.name, position);
   };
 
+  // public getCollisionShapesAt = (position: Position) => {
+  //   const tiles = this.getTilesAt(position);
+  //   const collisionShapes = [];
+
+  //   tiles.forEach(tile => {
+  //     // console.log(tile);
+  //     const tileset = this.activeMap.worldMap.tilesets.find(ts => ts.firstgid <= tile.tile);
+  //     // if (!tileset) {
+
+  //     //   // TODO: fix out of bounds for the bottom and right edges of the map (maybe let camera go past edge, but render black or some fallback)
+  //     //   console.error('tileset not found');
+  //     //   continue;
+  //     // }
+  //     if (!tileset) {
+  //       return;
+  //     }
+  //     const tileSetJSON = this.activeMap.tileMap.sourceMap[tileset!.source].tileSetJSON
+  //     if (!tileSetJSON) {
+  //       return;
+  //     }
+  //     const tileJSON = tileSetJSON.tiles[tile.tile];
+  //     if (!tileJSON) {
+  //       return;
+  //     }
+  //     if (tileJSON?.objectgroup?.objects) {
+  //       collisionShapes.push(tileJSON.objectgroup.objects)
+  //     }
+  //   });
+  //   // if (collisionShapes.length) {
+  //   //   debugger;
+  //   // }
+  //   return collisionShapes;
+  // };
+
+  public isTileOutOfBounds = (position: Position) => position.x < 0 || position.y < 0 || position.x > this.activeMap.worldMap.width || position.y > this.activeMap.worldMap.height;
+
   private getObjectLayer = () => this.activeMap.worldMap.layers.find(layer => layer.type === 'objectgroup');
 
   public getObjectStartLocation = (objectName: string) => {
@@ -78,9 +114,9 @@ export class RenderableMap implements GameMap {
   public render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
     const gridWidth = canvas.width;
     const gridHeight = canvas.height;
-    const gridCellSize = Math.ceil(getSpriteScale(canvas));
-    const canvasWidth = Math.ceil(getSpriteScale(canvas) * this.state.scaleX);
-    const canvasHeight = Math.ceil(getSpriteScale(canvas) * this.state.scaleY);
+    const gridCellSize = Math.ceil(getSpriteScale());
+    const canvasWidth = Math.ceil(getSpriteScale() * this.state.scaleX);
+    const canvasHeight = Math.ceil(getSpriteScale() * this.state.scaleY);
 
     const cameraBox = getBoundingRect(gameState.camera, 'center');
     const renderXOffset = Math.max(cameraBox.left, 0);

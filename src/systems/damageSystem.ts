@@ -25,6 +25,9 @@ export class DamageSystem implements IDamageSystem {
   };
 
   public dealDamage = (attacker: GameEntity, damages: Damage[], target: GameEntity) => {
+    if (target.status.immortal) {
+      return;
+    }
     damages.forEach(damage => {
       target.status.health -= damage.power;
     });

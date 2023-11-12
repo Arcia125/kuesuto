@@ -30,22 +30,22 @@ export class SwordEntity extends WeaponEntity {
       switch (dir) {
         case 'up': {
           this.state.x = this.parent.state.x;
-          this.state.y = this.parent.state.y - (getSpriteScale(gameState.elements.mainCanvas) * this.parent.state.scaleY);
+          this.state.y = this.parent.state.y - (getSpriteScale() * this.parent.state.scaleY);
           break;
         }
         case 'down': {
           this.state.x = this.parent.state.x;
 
-          this.state.y = this.parent.state.y + (getSpriteScale(gameState.elements.mainCanvas) * this.parent.state.scaleY);
+          this.state.y = this.parent.state.y + (getSpriteScale() * this.parent.state.scaleY);
           break;
         }
         case 'right': {
-          this.state.x = this.parent.state.x + (getSpriteScale(gameState.elements.mainCanvas) * this.parent.state.scaleX);
+          this.state.x = this.parent.state.x + (getSpriteScale() * this.parent.state.scaleX);
           this.state.y = this.parent.state.y;
           break;
         }
         case 'left': {
-          this.state.x = this.parent.state.x - (getSpriteScale(gameState.elements.mainCanvas) * this.parent.state.scaleX);
+          this.state.x = this.parent.state.x - (getSpriteScale() * this.parent.state.scaleX);
           this.state.y = this.parent.state.y;
           break;
         }

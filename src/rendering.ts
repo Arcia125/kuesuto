@@ -17,7 +17,7 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
 const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle'], gameState: GameState) => {
   const gridWidth = canvas.width;
   const gridHeight = canvas.height;
-  const gridCellSize = Math.ceil(getSpriteScale(canvas));
+  const gridCellSize = Math.ceil(getSpriteScale());
   const cameraBox = getBoundingRect(gameState.camera, 'center');
   const cameraOffsetX = Math.max(cameraBox.left, 0);
   const cameraOffsetY = Math.max(cameraBox.top, 0);
@@ -59,8 +59,8 @@ const drawEntity = (
   const spriteY = spriteFrame.frame.y;
 
 
-  const canvasWidth = getSpriteScale(canvas) * entityState.scaleX;
-  const canvasHeight = getSpriteScale(canvas) * entityState.scaleX;
+  const canvasWidth = getSpriteScale() * entityState.scaleX;
+  const canvasHeight = getSpriteScale() * entityState.scaleX;
   // const canvasX =  - Math.max(cameraBox.left, 0);
   // const canvasY =  - Math.max(cameraBox.top, 0);
   const canvasPos = worldToCamera({

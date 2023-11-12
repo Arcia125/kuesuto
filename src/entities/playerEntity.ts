@@ -15,6 +15,14 @@ export class PlayerEntity extends SpriteEntity {
   public collisionCapability = new Collision(this, this.movementCapability);
   public attackCapability = new Attack(this);
 
+  public static find(gameState: GameState) {
+    const player = gameState.entities.find(entity => entity.name === PlayerEntity.NAME);
+    if (!player) {
+      throw new Error('Could not find player');
+    }
+    return player;
+  }
+
   public constructor(public state: GameEntityState, public children: GameEntity[], emitter: EventEmitter) {
     super(state, PlayerEntity.NAME, children, emitter, playerSpriteJSONRAW as SpriteJSON, './kuesuto-player.png');
     this.status.health = 200;

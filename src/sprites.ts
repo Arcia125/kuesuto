@@ -64,7 +64,7 @@ export function frameMatchesEntity(entity: GameEntity, direction: string): (valu
   };
 }
 
-export const getSpriteScale = (_mainCanvas: HTMLCanvasElement) => {
+export const getSpriteScale = () => {
   // return mainCanvas.width / 20;
   return 16 * RENDERING_SCALE;
 };

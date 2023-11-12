@@ -155,6 +155,10 @@ export interface GameMap extends Renderable {
     layer: TileLayer;
     tile: number;
   }[];
+  // getCollisionShapesAt: (position: Position) => {
+
+  // };
+  isTileOutOfBounds: (position: Position) => boolean;
   getObjectStartLocation: (objectName: string) => ObjectGroupLayer['objects'][0];
 };
 
