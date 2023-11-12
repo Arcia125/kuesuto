@@ -12,6 +12,7 @@ export class Entity implements GameEntity {
   public parent?: GameEntity | undefined;
   public status: Status = {
     health: 0,
+    experience: 0,
   };
 
   public static getDirection(entityState: GameEntityState): Direction {

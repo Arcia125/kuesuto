@@ -1,3 +1,4 @@
+import { ExperienceSystem } from './systems/experienceSystem';
 import { DamageSystem } from './systems/damageSystem';
 import { cameraToWorld } from './position';
 import { createKeyDownHandler, createKeyUpHandler } from './controls';
@@ -147,7 +148,8 @@ const init = () => {
     emitter,
     systems: {
       damage: new DamageSystem(emitter),
-      death: new DeathSystem(emitter)
+      death: new DeathSystem(emitter),
+      experience: new ExperienceSystem(emitter),
     }
   };
 

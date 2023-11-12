@@ -49,6 +49,7 @@ export interface Status {
   health: number;
   immortal?: boolean;
   dead?: boolean;
+  experience: number;
 }
 
 export interface GameEntityState extends Position {
@@ -222,6 +223,10 @@ export interface IDeathSystem {
   checkDeath: (entity: GameEntity) => boolean;
 }
 
+export interface IExperienceSystem {
+  grantExp: (entity: GameEntity, amount: number) => void;
+}
+
 export type GameState = {
   entities: GameEntity[];
   map: GameMap;
@@ -235,6 +240,7 @@ export type GameState = {
   systems: {
     damage: IDamageSystem;
     death: IDeathSystem;
+    experience: IExperienceSystem;
   }
 };
 
