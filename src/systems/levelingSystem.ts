@@ -7,7 +7,6 @@ export class LevelingSystem implements ILevelingSystem {
       const initialLevel = payload.entity.status.level;
       const newLevel = this.calculateLevel(payload.entity);
       const levelsGained = newLevel - initialLevel;
-      console.log(levelsGained);
       if (levelsGained > 0) {
         for (let i = 0; i < levelsGained; i++) {
           this.levelUp(payload.entity);
