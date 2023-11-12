@@ -14,6 +14,7 @@ export const EVENTS = {
   DEATH: 'death',
   DAMAGE: 'damage',
   EXP_GAIN: 'expGain',
+  LEVEL_UP: 'levelUp',
 } as const;
 
 export type EVENT_KEY = keyof typeof EVENTS;
@@ -52,6 +53,7 @@ export type EVENT_MAPPING = {
   [EVENTS.DEATH]: { entity: GameEntity; killer?: GameEntity };
   [EVENTS.DAMAGE]: { attacker: GameEntity; target: GameEntity; damages: Damage[] };
   [EVENTS.EXP_GAIN]: { entity: GameEntity; experience: number };
+  [EVENTS.LEVEL_UP]: { entity: GameEntity };
 }
 
 export type EventListener<T extends EVENT_NAME> = (eventName: T, payload: EVENT_MAPPING[T]) => void;

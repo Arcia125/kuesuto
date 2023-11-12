@@ -15,6 +15,7 @@ import { BrowserElements } from './browserElements';
 import { DarkWizardEntity } from './entities/darkWizardEntity';
 import { DeathSystem } from './systems/deathSystem';
 import { SlimeEntity } from './entities/slimeEntity';
+import { LevelingSystem } from './systems/levelingSystem';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -150,6 +151,7 @@ const init = () => {
       damage: new DamageSystem(emitter),
       death: new DeathSystem(emitter),
       experience: new ExperienceSystem(emitter),
+      leveling: new LevelingSystem(emitter),
     }
   };
 
