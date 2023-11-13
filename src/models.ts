@@ -111,7 +111,8 @@ export type AnimationFrame = {
     movement: boolean;
     attack: boolean;
     dead: boolean;
-  };
+    levelup?: boolean;
+  }
 };
 
 export interface GameSprite {

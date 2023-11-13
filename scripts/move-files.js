@@ -23,6 +23,7 @@ const filesToMove = [
   { type: 'sprite', name: 'kuesuto-sword.png', metadata: 'kuesuto-sword.json' },
   { type: 'sprite', name: 'ks-dark-wizard.png', metadata: 'ks-dark-wizard.json' },
   { type: 'sprite', name: 'ks-slime2.png', metadata: 'ks-slime2.json' },
+  { type: 'sprite', name: 'ks-level-up-animation.png', metadata: 'ks-level-up-animation.json' },
   { type: 'tilemap', name: 'collision.png', metadata: 'collision.json', tilesetData: 'collision.json' },
   { type: 'tilemap', name: 'kuesuto-tilemap.png', metadata: 'kuesuto-tilemap.json', tilesetData: 'ks-forrest-tileset.json' },
   { type: 'map', name: 'kuesuto-world.json' },

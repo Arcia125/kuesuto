@@ -46,6 +46,7 @@ export class Entity implements GameEntity {
       let found = null;
       if (entityState.currentAnimationName === name && entityState.animationToEnd && entityState.animationFrameX === 0) {
         entityState.lastAnimationName = name;
+        // TODO investigate delayed animation ending
         gameState.emitter.emit(EVENTS.ANIMATION_END, { entity, name });
         entityState.animationToEnd = false;
         found = false;

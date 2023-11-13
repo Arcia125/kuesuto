@@ -16,6 +16,7 @@ import { DarkWizardEntity } from './entities/darkWizardEntity';
 import { DeathSystem } from './systems/deathSystem';
 import { SlimeEntity } from './entities/slimeEntity';
 import { LevelingSystem } from './systems/levelingSystem';
+import { LevelUpEntity } from './entities/levelUpEntity';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -70,7 +71,25 @@ const init = () => {
           animationToEnd: false,
           animationFrameX: 0,
           animationFrameXStart: 0,
-        }, [], emitter)
+        }, [], emitter),
+        new LevelUpEntity({
+          x: 0,
+          y: 0,
+          xDir: 0,
+          yDir: 0,
+          speedX: INIT_PLAYER_SPEED_X,
+          speedY: INIT_PLAYER_SPEED_Y,
+          scaleX: 1,
+          scaleY: 1,
+          visible: false,
+          moving: false,
+          attacking: false,
+          currentAnimationName: '',
+          lastAnimationName: '',
+          animationToEnd: false,
+          animationFrameX: 0,
+          animationFrameXStart: 0,
+        }, emitter)
       ], emitter),
       new DarkWizardEntity({
         x: 0,
