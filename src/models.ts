@@ -76,6 +76,7 @@ export interface GameEntityState extends Vector2 {
   animationToEnd: boolean;
   animationFrameX: number;
   animationFrameXStart: number;
+  flashing?: boolean;
 };
 
 export interface Renderable {
@@ -223,7 +224,7 @@ export type Elements = {
 };
 
 
-export interface IDamageSystem {
+export interface IDamageSystem extends Updateable {
   handleAttack: (attack: { attacker: GameEntity; target: GameEntity }) => void;
   dealDamage: (attacker: GameEntity, damages: Damage[], target: GameEntity) => void;
 }

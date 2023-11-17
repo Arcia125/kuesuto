@@ -15,7 +15,7 @@ export class PhysicsSystem implements IPhysicsSystem {
   private handleAttack = ({ attacker, target }: EVENT_MAPPING[typeof EVENTS.ATTACK]) => {
     this.applyForce(target, {
       direction: directionVectorBetween(attacker.state, target.state),
-      magnitude: 1000
+      magnitude: 700
     });
   };
 
@@ -53,7 +53,6 @@ export class PhysicsSystem implements IPhysicsSystem {
       }
       entity.state.x = newX;
       entity.state.y = newY;
-      console.log({ xForce, yForce, angle, force });
       force.magnitude -= Math.abs(xForce) + Math.abs(yForce);
       if (force.magnitude <= 10) {
         this.forceEntries.splice(i, 1);
