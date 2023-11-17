@@ -3,7 +3,7 @@ import { EventEmitter } from './events';
 
 export type Direction = "up" | "down" | "left" | "right";
 
-export interface Position {
+export interface Vector2 {
   x: number;
   y: number;
 };
@@ -18,7 +18,7 @@ export interface Dimensions {
   height: number;
 }
 
-export type Rect = Position & ShortDimensions;
+export type Rect = Vector2 & ShortDimensions;
 
 export type Origin = 'top-left' | 'center';
 
@@ -31,19 +31,26 @@ export type BoundingRect = Rect & {
 };
 
 export type Corners = [
-  Position & {
+  Vector2 & {
     type: 'top-left';
   },
-  Position & {
+  Vector2 & {
     type: 'top-right'
   },
-  Position & {
+  Vector2 & {
     type: 'bottom-right'
   },
-  Position & {
+  Vector2 & {
     type: 'bottom-left'
   }
-]
+];
+
+export interface Force {
+  direction: Vector2;
+  magnitude: number;
+}
+
+export type ForceEntry = { entity: GameEntity; force: Force };
 
 export interface Status {
   health: number;
@@ -53,13 +60,14 @@ export interface Status {
   level: number;
 }
 
-export interface GameEntityState extends Position {
+export interface GameEntityState extends Vector2 {
   xDir: number;
   yDir: number;
   speedX: number;
   speedY: number;
   scaleX: number;
   scaleY: number;
+  mass: number;
   visible: boolean;
   moving: boolean;
   attacking: boolean;
@@ -135,7 +143,7 @@ export interface GameEntity extends BaseEntity, Updateable, ParentableParent<Gam
   getSpritePos: (gameState: GameState) => Frame;
 }
 
-export interface Follower extends Position {
+export interface Follower extends Vector2 {
   following?: GameEntity;
   follow: (gameEntity: GameEntity) => void;
 }
@@ -154,14 +162,14 @@ export interface GameMap extends Renderable {
   };
   state: GameMapState;
   emitter: EventEmitter;
-  getTilesAt: (position: Position) => {
+  getTilesAt: (position: Vector2) => {
     layer: TileLayer;
     tile: number;
   }[];
   // getCollisionShapesAt: (position: Position) => {
 
   // };
-  isTileOutOfBounds: (position: Position) => boolean;
+  isTileOutOfBounds: (position: Vector2) => boolean;
   getObjectStartLocation: (objectName: string) => ObjectGroupLayer['objects'][0];
 };
 
@@ -233,6 +241,10 @@ export interface ILevelingSystem {
   levelUp: (entity: GameEntity) => void;
 }
 
+export interface IPhysicsSystem extends Updateable {
+  applyForce: (entity: GameEntity, force: Force) => void;
+}
+
 export type GameState = {
   entities: GameEntity[];
   map: GameMap;
@@ -248,6 +260,7 @@ export type GameState = {
     death: IDeathSystem;
     experience: IExperienceSystem;
     leveling: ILevelingSystem;
+    physics: IPhysicsSystem;
   }
 };
 
@@ -333,11 +346,11 @@ export type TileLayer = {
   y: number;
 };
 
-export type ObjectGroupLayer = Position & {
+export type ObjectGroupLayer = Vector2 & {
   drawOrder: 'topdown';
   id: number;
   name: string;
-  objects: (Dimensions & Position & {
+  objects: (Dimensions & Vector2 & {
     id: number;
     name: string;
     point: boolean;
@@ -378,7 +391,7 @@ export interface TileMap {
     tileMapJSON: TileMapJSON;
     tileSetJSON: TileSetJSON;
   }>;
-  getTilesAt: (mapName: string, position: Position) => {
+  getTilesAt: (mapName: string, position: Vector2) => {
     layer: TileLayer;
     tile: number;
   }[];

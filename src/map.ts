@@ -5,7 +5,7 @@ import tileMapJSONRaw from './data/spriteJSON/kuesuto-tilemap.json';
 import forrestWorldMap from './data/maps/kuesuto-world.json';
 import forrestTileset from './data/tilesets/ks-forrest-tileset.json';
 import { EventEmitter } from './events';
-import { GameMap, GameMapState, GameState, Position, TileMap, TileMapJSON, WorldMap, TileLayer, TileSetJSON } from './models';
+import { GameMap, GameMapState, GameState, Vector2, TileMap, TileMapJSON, WorldMap, TileLayer, TileSetJSON } from './models';
 import { positionIndexFromArray } from './array';
 import { getBoundingRect } from './rectangle';
 import { Collision } from './capabilities/collision';
@@ -15,7 +15,7 @@ export class GameTileMap implements TileMap {
 
   }
 
-  public getTilesAt = (mapName: string, position: Position) => {
+  public getTilesAt = (mapName: string, position: Vector2) => {
     const tileLayers = this.worldMaps[mapName].layers.filter(layer => layer.type === 'tilelayer') as TileLayer[];
     return tileLayers.map((layer: TileLayer) => {
 
@@ -57,7 +57,7 @@ export class RenderableMap implements GameMap {
     };
   }
 
-  public getTilesAt = (position: Position) => {
+  public getTilesAt = (position: Vector2) => {
     return this.activeMap.tileMap.getTilesAt(this.activeMap.name, position);
   };
 
@@ -95,7 +95,7 @@ export class RenderableMap implements GameMap {
   //   return collisionShapes;
   // };
 
-  public isTileOutOfBounds = (position: Position) => position.x < 0 || position.y < 0 || position.x > this.activeMap.worldMap.width || position.y > this.activeMap.worldMap.height;
+  public isTileOutOfBounds = (position: Vector2) => position.x < 0 || position.y < 0 || position.x > this.activeMap.worldMap.width || position.y > this.activeMap.worldMap.height;
 
   private getObjectLayer = () => this.activeMap.worldMap.layers.find(layer => layer.type === 'objectgroup');
 

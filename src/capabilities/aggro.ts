@@ -6,7 +6,7 @@ import {
   Capability,
   GameEntity,
   GameState,
-  Position
+  Vector2
 } from '../models';
 import { positionFromTileCoord, tileDistanceTo, positionToTileCoord, fromTileCoord } from '../position';
 
@@ -24,7 +24,7 @@ export class Aggro implements Capability {
 
   }
 
-  public moveTowards = (gameState: GameState, position: Position) => {
+  public moveTowards = (gameState: GameState, position: Vector2) => {
     // this.entity.state.moving = true;
 
     // const xDiff = position.x - this.entity.state.x;

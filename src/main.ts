@@ -17,6 +17,7 @@ import { DeathSystem } from './systems/deathSystem';
 import { SlimeEntity } from './entities/slimeEntity';
 import { LevelingSystem } from './systems/levelingSystem';
 import { LevelUpEntity } from './entities/levelUpEntity';
+import { PhysicsSystem } from './systems/physicsSystem';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -45,6 +46,7 @@ const init = () => {
         speedY: INIT_PLAYER_SPEED_Y,
         scaleX: 1,
         scaleY: 1,
+        mass: 5,
         visible: true,
         moving: false,
         attacking: false,
@@ -63,6 +65,7 @@ const init = () => {
           speedY: INIT_PLAYER_SPEED_Y,
           scaleX: 1,
           scaleY: 1,
+          mass: 5,
           visible: false,
           moving: false,
           attacking: false,
@@ -81,6 +84,7 @@ const init = () => {
           speedY: INIT_PLAYER_SPEED_Y,
           scaleX: 1,
           scaleY: 1,
+          mass: 5,
           visible: false,
           moving: false,
           attacking: false,
@@ -100,6 +104,7 @@ const init = () => {
         speedY: INIT_PLAYER_SPEED_Y,
         scaleX: 1,
         scaleY: 1,
+        mass: 5,
         visible: true,
         moving: false,
         attacking: false,
@@ -118,6 +123,7 @@ const init = () => {
         speedY: INIT_PLAYER_SPEED_Y * 0.8,
         scaleX: 1,
         scaleY: 1,
+        mass: 5,
         visible: true,
         moving: false,
         attacking: false,
@@ -171,6 +177,7 @@ const init = () => {
       death: new DeathSystem(emitter),
       experience: new ExperienceSystem(emitter),
       leveling: new LevelingSystem(emitter),
+      physics: new PhysicsSystem(emitter),
     }
   };
 

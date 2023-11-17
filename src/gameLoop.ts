@@ -9,6 +9,8 @@ const update = (gameState: GameState, timestamp: number) => {
     entities[i].update(gameState, timestamp);
   }
 
+  gameState.systems.physics.update(gameState, timestamp);
+
   gameState.camera.update(gameState, timestamp);
 };
 
