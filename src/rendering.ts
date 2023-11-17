@@ -1,5 +1,4 @@
 import { PlayerEntity } from "./entities/playerEntity";
-import { SlimeEntity } from './entities/slimeEntity';
 import { EVENTS } from './events';
 import { GameEntity, GameState } from './models';
 import { worldToCamera } from './position';
@@ -53,10 +52,7 @@ const drawEntity = (
 
   const entityState = entity.state;
   if (entity.state.flashing) {
-    // ctx.globalAlpha = 0.5;
-
     ctx.globalCompositeOperation = "color-dodge";
-
   }
   const spriteFrame = entity.getSpritePos(gameState);
 
