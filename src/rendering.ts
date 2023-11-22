@@ -51,7 +51,7 @@ const drawEntity = (
   }
 
   const entityState = entity.state;
-  if (entity.state.flashing) {
+  if (entity.state.flashing && gameState.time.frameID % 10 !== 0) {
     ctx.globalCompositeOperation = "color-dodge";
   }
   const spriteFrame = entity.getSpritePos(gameState);

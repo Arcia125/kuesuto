@@ -229,7 +229,7 @@ export interface IDamageSystem extends Updateable {
   dealDamage: (attacker: GameEntity, damages: Damage[], target: GameEntity) => void;
 }
 
-export interface IDeathSystem {
+export interface IDeathSystem extends Updateable {
   kill: (entity: GameEntity, killer: GameEntity) => void;
   checkDeath: (entity: GameEntity) => boolean;
 }

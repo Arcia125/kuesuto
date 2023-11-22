@@ -36,16 +36,7 @@ export const distanceTo = (positionA: Vector2, positionB: Vector2) => Math.abs(p
 
 export const tileDistanceTo = (positionA: Vector2, positionB: Vector2) => toTileCoord(distanceTo(positionA, positionB));
 
-// export const directionVectorBetween = (positionA: Vector2, positionB: Vector2) => ({
-//   x: positionB.x - positionA.x,
-//   y: positionB.y - positionA.y
-// });
-
-export const directionVectorBetween = (positionA: Vector2, positionB: Vector2) => {
-  const dir = ({
+export const directionVectorBetween = (positionA: Vector2, positionB: Vector2) => ({
   x: positionB.x - positionA.x,
   y: positionB.y - positionA.y
-})
-console.log(dir);
-return dir;
-};
+});
