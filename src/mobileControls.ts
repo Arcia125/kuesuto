@@ -6,22 +6,42 @@ class Joystick {
     container: HTMLDivElement;
   };
 
-  constructor() {
-
-  }
+  constructor() { }
 
   init(elements: BrowserElements) {
     this.joyStickElements = {
       stick: elements.joystick,
       container: elements.joystickContainer
     }
-
   }
+
+  public get center () {
+    const clientRect = this.joyStickElements?.container.getBoundingClientRect();
+    if (!clientRect) {
+      return {
+        x: 0,
+        y: 0
+      };
+    }
+    return {
+      x: ((clientRect.left + clientRect.right) / 2),
+      y: ((clientRect.top + clientRect.bottom) / 2),
+    };
+  }
+
+  public moveJoyStick = (moveX: number, moveY: number) => {
+    const containerCenter = this.center;
+    const x = clamp(moveX - containerCenter.x, -this.joyStickElements!.container.clientWidth / 2, this.joyStickElements!.container.clientWidth / 2);
+    const y = clamp(moveY - containerCenter.y, -this.joyStickElements!.container.clientHeight / 2, this.joyStickElements!.container.clientHeight / 2);
+    this!.joyStickElements!.stick.style.transform = `translate(${x}px, ${y}px)`;
+    return {
+      x,
+      y
+    };
+  };
 }
 
-const clamp = (num: number, min: number, max: number) => {
-  return Math.min(Math.max(num, min), max);
-};
+const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);
 
 type MobileControlEvent = {
   type: 'joystick';
@@ -53,32 +73,20 @@ export class MobileControls {
   }
 
   public handleJoyStickClick = () => {
-    const clientRect = this.joyStick.joyStickElements?.stick.getBoundingClientRect();
-    if (!clientRect) {
-      return;
-    }
+    const { x, y } = this.joyStick.center;
     this.listeners.joystick.forEach(listener => {
       listener({
         type: 'joystick',
-        x: (clientRect.left + clientRect.right) / 2,
-        y: (clientRect.top + clientRect.bottom) / 2,
+        x,
+        y,
       });
     });
   };
 
   public handleJoyStickMove = (moveX: number, moveY: number) => {
-    const clientRect = this.joyStick.joyStickElements?.container.getBoundingClientRect();
-    if (!clientRect) {
-      return;
-    }
-    let x = 0, y = 0;
-
-    x = clamp(moveX - ((clientRect.left + clientRect.right) / 2), -this.joyStick.joyStickElements!.container.clientWidth / 2, this.joyStick.joyStickElements!.container.clientWidth / 2);
-    y = clamp(moveY - ((clientRect.top + clientRect.bottom) / 2), -this.joyStick.joyStickElements!.container.clientHeight / 2, this.joyStick.joyStickElements!.container.clientHeight / 2);
+    const { x, y } = this.joyStick.moveJoyStick(moveX, moveY);
     this.state.xMove = x;
     this.state.yMove = y;
-
-    this!.joyStick!.joyStickElements!.stick.style.transform = `translate(${x}px, ${y}px)`;
     this.listeners.joystick.forEach(listener => {
       listener({
         type: 'joystick',
@@ -89,11 +97,10 @@ export class MobileControls {
   }
 
   public handleJoyStickRelease = () => {
-    let x = 0, y = 0;
-
-    this.state.xMove = 0;
-    this.state.yMove = 0;
-    this!.joyStick!.joyStickElements!.stick.style.transform = `translate(${x}px, ${y}px)`;
+    const joyStickCenter = this.joyStick.center;
+    const { x, y } = this.joyStick.moveJoyStick(joyStickCenter.x, joyStickCenter.y);
+    this.state.xMove = x;
+    this.state.yMove = y;
     this.listeners.joystick.forEach(listener => {
       listener({
         type: 'joystick',
@@ -155,7 +162,6 @@ export class MobileControls {
 
     this.actionElements.attack.addEventListener('touchend', (event) => {
       event.preventDefault();
-      // alert('touchend');
       this.state.attack = false;
       this.listeners.action.forEach(listener => {
         listener({
