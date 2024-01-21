@@ -128,7 +128,7 @@ export class MobileControls {
       const touch = event.touches[0] || event.changedTouches[0];
       this.handleJoyStickMove(touch.pageX, touch.pageY);
     });
-    this.joyStick.joyStickElements?.stick.addEventListener('mousemove', (event) => {
+    document.addEventListener('mousemove', (event) => {
       if (this.joystickClicked) {
         this.handleJoyStickMove(event.clientX, event.clientY);
       }
