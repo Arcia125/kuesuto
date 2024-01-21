@@ -139,6 +139,9 @@ export class MobileControls {
         this.joystickClicked = false;
         this.handleJoyStickRelease();
       }
+      if (this.state.attack) {
+        this.state.attack = false;
+      }
     });
 
     this.joyStick.joyStickElements?.stick.addEventListener('touchend', (event) => {
@@ -154,6 +157,10 @@ export class MobileControls {
           actionType: 'attack-down'
         });
       });
+    });
+
+    this.actionElements.attack.addEventListener('mousedown', (_event) => {
+      this.state.attack = true;
     });
 
     this.actionElements.attack.addEventListener('touchmove', (event) => {
