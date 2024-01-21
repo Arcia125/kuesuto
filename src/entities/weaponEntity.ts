@@ -1,4 +1,3 @@
-import { DAMAGE_TYPES } from './../damage';
 import { GameEntityState, GameEntity, SpriteJSON, ItemStats, GameState } from '../models';
 import { EventEmitter, EventListener, EVENTS } from '../events';
 import { Entity } from './entities';

@@ -16,10 +16,10 @@ const update = (gameState: GameState, timestamp: number) => {
   gameState.camera.update(gameState, timestamp);
 };
 
-const resetDelta = (gameState: GameState) => {
-  gameState.time.resetDeltaCount++;
-  gameState.time.delta = 0;
-};
+// const resetDelta = (gameState: GameState) => {
+//   gameState.time.resetDeltaCount++;
+//   gameState.time.delta = 0;
+// };
 
 export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   if (!ctx) {
@@ -50,7 +50,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
 
       gameState.time.framesThisSecond++;
 
-      let numUpdateSteps = 0;
+      // let numUpdateSteps = 0;
 
       // while (gameState.time.delta >= gameState.time.timeStep) {
       //   console.log('update', gameState.time.frameID);
@@ -63,7 +63,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
       //     break;
       //   }
       // }
-      let startTime = performance.now();
+      // let startTime = performance.now();
       update(gameState, timestamp);
       // console.log('update time: ', performance.now() - startTime);
       gameState.time.delta = 0;

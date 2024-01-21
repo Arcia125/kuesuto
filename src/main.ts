@@ -18,7 +18,7 @@ import { SlimeEntity } from './entities/slimeEntity';
 import { LevelingSystem } from './systems/levelingSystem';
 import { LevelUpEntity } from './entities/levelUpEntity';
 import { PhysicsSystem } from './systems/physicsSystem';
-import { WeaponEntity } from './entities/weaponEntity';
+// import { WeaponEntity } from './entities/weaponEntity';
 import { MobileControls } from './mobileControls';
 
 

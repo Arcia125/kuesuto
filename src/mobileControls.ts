@@ -108,10 +108,10 @@ export class MobileControls {
     this.actionElements = {
       attack: elements.attackButton,
     };
-    this.joyStick.joyStickElements?.stick.addEventListener('touchstart', (event) => {
+    this.joyStick.joyStickElements?.stick.addEventListener('touchstart', (_event) => {
       this.handleJoyStickClick();
     });
-    this.joyStick.joyStickElements?.stick.addEventListener('mousedown', (event) => {
+    this.joyStick.joyStickElements?.stick.addEventListener('mousedown', (_event) => {
       this.joystickClicked = true;
       this.handleJoyStickClick();
     });
@@ -127,7 +127,7 @@ export class MobileControls {
       }
     });
 
-    this.joyStick.joyStickElements?.stick.addEventListener('mouseup', (event) => {
+    this.joyStick.joyStickElements?.stick.addEventListener('mouseup', (_event) => {
       this.joystickClicked = false;
       this.handleJoyStickRelease();
     });
@@ -137,7 +137,7 @@ export class MobileControls {
       this.handleJoyStickRelease();
     });
 
-    this.actionElements.attack.addEventListener('touchstart', (event) => {
+    this.actionElements.attack.addEventListener('touchstart', (_event) => {
       this.state.attack = true;
       this.listeners.action.forEach(listener => {
         listener({
