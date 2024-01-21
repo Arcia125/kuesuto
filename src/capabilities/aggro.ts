@@ -9,6 +9,7 @@ import {
   Vector2
 } from '../models';
 import { positionFromTileCoord, tileDistanceTo, positionToTileCoord, fromTileCoord } from '../position';
+import { getSpriteScale } from '../sprites';
 
 export class Aggro implements Capability {
   public isAggroed = false;
@@ -104,7 +105,10 @@ export class Aggro implements Capability {
 
     // debugger;
     // console.log(path);
-    if ((Math.abs(player.state.x - this.entity.state.x)) + (Math.abs(player.state.y - this.entity.state.y)) < this.range) {
+    const playerDistance = (Math.abs(player.state.x - this.entity.state.x)) + (Math.abs(player.state.y - this.entity.state.y));
+    this.entity.state.attacking = playerDistance < getSpriteScale() * 2;
+
+    if (playerDistance < this.range) {
       if (this.isAggroed) {
         this.moveTowards(gameState, player.state);
       } else {

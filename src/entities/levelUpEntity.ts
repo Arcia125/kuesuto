@@ -1,15 +1,16 @@
-import { SpriteEntity } from './spriteEntity';
 import levelUpAnimationJSON from '../data/spriteJSON/ks-level-up-animation.json';
 import { SpriteJSON, GameEntityState, GameState } from '../models';
 import { EventEmitter, EVENTS } from '../events';
+import { Sprite } from '../sprites';
+import { Entity } from './entities';
 
-export class LevelUpEntity extends SpriteEntity {
+export class LevelUpEntity extends Entity {
   public static NAME = 'levelUp';
   public listening = false;
   public constructor(state: GameEntityState, emitter: EventEmitter) {
-    super(state, LevelUpEntity.NAME, [], emitter, levelUpAnimationJSON as SpriteJSON, './ks-level-up-animation.png')
+    super(state, LevelUpEntity.NAME, [], emitter)
+    this.sprite = new Sprite(levelUpAnimationJSON as SpriteJSON, './ks-level-up-animation.png', emitter);
     this.status.immortal = true;
-
   }
 
   public update = (_gameState: GameState) => {

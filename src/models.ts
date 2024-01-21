@@ -1,4 +1,5 @@
 import { EventEmitter } from './events';
+import { MobileControls } from './mobileControls';
 
 
 export type Direction = "up" | "down" | "left" | "right";
@@ -220,6 +221,9 @@ export type Elements = {
   mainCanvasContext: CanvasRenderingContext2D;
   gameStateContainer: HTMLPreElement;
   mainGameFpsContainer: HTMLParagraphElement;
+  joystickContainer: HTMLDivElement;
+  joystick: HTMLDivElement;
+  attackButton: HTMLButtonElement;
   resize: (gameState: GameState) => void;
 };
 
@@ -262,7 +266,8 @@ export type GameState = {
     experience: IExperienceSystem;
     leveling: ILevelingSystem;
     physics: IPhysicsSystem;
-  }
+  };
+  mobileControls: MobileControls;
 };
 
 type FrameTag = {

@@ -122,6 +122,10 @@ export class Entity implements GameEntity {
   }
 
   public update(gameState: GameState, timeStamp: number) {
+    // this.emitter.emit('update', { entity: this });
+    // if (this.name === 'slime') {
+    //   debugger;
+    // }
     if (!this.children?.length) {
       return;
     }

@@ -27,6 +27,7 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
   }
 
   const __gameLoop = (timestamp: number) => {
+    // console.log('game loop', gameState.time.frameID);
     if (timestamp < gameState.time.lastFrameTimeMs + (1000 / gameState.time.maxFPS)) {
       gameState.time.stepID = window.requestAnimationFrame(__gameLoop);
       return;
@@ -51,19 +52,26 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
 
       let numUpdateSteps = 0;
 
-      while (gameState.time.delta >= gameState.time.timeStep) {
-        update(gameState, timestamp);
-        gameState.time.delta -= gameState.time.timeStep;
+      // while (gameState.time.delta >= gameState.time.timeStep) {
+      //   console.log('update', gameState.time.frameID);
 
-        if (++numUpdateSteps >= 240) {
-          resetDelta(gameState);
-          break;
-        }
-      }
+      //   update(gameState, timestamp);
+      //   gameState.time.delta -= gameState.time.timeStep;
+
+      //   if (++numUpdateSteps >= 240) {
+      //     resetDelta(gameState);
+      //     break;
+      //   }
+      // }
+      let startTime = performance.now();
+      update(gameState, timestamp);
+      // console.log('update time: ', performance.now() - startTime);
+      gameState.time.delta = 0;
     }
 
 
     gameState.time.frameID++;
+    // console.log('render', gameState.time.frameID);
     render(ctx, canvas, gameState);
 
     gameState.time.stepID = window.requestAnimationFrame(__gameLoop);

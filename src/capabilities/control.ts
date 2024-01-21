@@ -9,22 +9,22 @@ export class Control implements Capability {
     let xDir = this.entity.state.xDir;
     let movedX = false;
     let movedY = false;
-    if (gameState.controls.up) {
+    if (gameState.controls.up || gameState.mobileControls.state.yMove < -10) {
       yDir = -1;
       moving = true;
       movedY = true;
     }
-    if (gameState.controls.down) {
+    if (gameState.controls.down || gameState.mobileControls.state.yMove > 10) {
       yDir = 1;
       moving = true;
       movedY = true;
     }
-    if (gameState.controls.left) {
+    if (gameState.controls.left || gameState.mobileControls.state.xMove < -10) {
       xDir = -1;
       moving = true;
       movedX = true;
     }
-    if (gameState.controls.right) {
+    if (gameState.controls.right || gameState.mobileControls.state.xMove > 10) {
       xDir = 1;
       moving = true;
       movedX = true;
@@ -40,6 +40,6 @@ export class Control implements Capability {
     this.entity.state.yDir = yDir;
     this.entity.state.xDir = xDir;
 
-    this.entity.state.attacking = gameState.controls.attack;
+    this.entity.state.attacking = gameState.controls.attack || gameState.mobileControls.state.attack;
   }
 }

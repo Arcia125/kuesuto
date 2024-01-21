@@ -5,6 +5,9 @@ export class BrowserElements implements Elements {
   public mainCanvasContext: CanvasRenderingContext2D;
   public gameStateContainer: HTMLPreElement;
   public mainGameFpsContainer: HTMLParagraphElement;
+  public joystickContainer: HTMLDivElement;
+  public joystick: HTMLDivElement;
+  public attackButton: HTMLButtonElement;
   public constructor(
     canvasId: string = '#main-game-canvas',
     gameStateContainerId: string = '#game-state',
@@ -39,6 +42,30 @@ export class BrowserElements implements Elements {
     }
 
     this.mainGameFpsContainer = mainGameFpsContainer;
+
+    const joystick = document.querySelector<HTMLDivElement>("#mobile-control-joystick-stick");
+    if (!joystick) {
+      throw new Error('Joystick not found');
+    }
+
+    this.joystick = joystick;
+
+    const joystickContainer = document.querySelector<HTMLDivElement>('#mobile-controls-joystick-container');
+
+    if (!joystickContainer) {
+      throw new Error('Joystick container not found');
+    }
+
+    this.joystickContainer = joystickContainer;
+
+    const attackButton = document.querySelector<HTMLButtonElement>('#mobile-controls-attack');
+
+    if (!attackButton) {
+      throw new Error('Attack button not found');
+    }
+
+    this.attackButton = attackButton;
+
   }
 
   public resize = (gameState: GameState) => {

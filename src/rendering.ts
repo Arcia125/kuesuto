@@ -42,6 +42,43 @@ const drawEntity = (
   canvas: HTMLCanvasElement,
   gameState: GameState
 ) => {
+
+  if (gameState.debugSettings.drawEntityHitboxes) {
+    const entityState = entity.state;
+    const canvasWidth = getSpriteScale() * entityState.scaleX;
+    const canvasHeight = getSpriteScale() * entityState.scaleX;
+    // const canvasX =  - Math.max(cameraBox.left, 0);
+    // const canvasY =  - Math.max(cameraBox.top, 0);
+    const canvasPos = worldToCamera({
+      x: entityState.x - canvasWidth / 2,
+      y: entityState.y - canvasHeight / 2
+    }, gameState.camera);
+
+
+    const spriteData = {
+      canvasX: canvasPos.x,
+      canvasY: canvasPos.y,
+      canvasWidth,
+      canvasHeight,
+      // spriteX: spriteX,
+      // spriteY: spriteY,
+      spriteWidth: canvasWidth,
+      spriteHeight: canvasHeight,
+    };
+
+
+    const entityBox = getBoundingRect({ x: canvasPos.x, y: canvasPos.y, h: spriteData.canvasHeight, w: spriteData.canvasWidth });
+    ctx.beginPath();
+    ctx.strokeStyle = 'teal';
+    const tempLineWidth = ctx.lineWidth;
+    ctx.lineWidth = 6;
+    ctx.rect(entityBox.left, entityBox.top, spriteData.canvasWidth, spriteData.canvasHeight);
+    ctx.stroke();
+    ctx.lineWidth = tempLineWidth;
+    ctx.closePath();
+    // return;
+  }
+
   if (!entity.sprite) {
     return;
   }
@@ -143,9 +180,19 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   const entities = gameState.entities;
   const entityCount = entities.length;
   for (let i = 0; i < entityCount; i++) {
-    drawEntity(entities[i], ctx, canvas, gameState);
+    try {
+      drawEntity(entities[i], ctx, canvas, gameState);
+    }
+    catch (err) {
+      // console.error(err);
+    }
     for (let j = 0; j < (entities[i]?.children?.length || 0); j++) {
-      drawEntity(entities[i]!.children![j], ctx, canvas, gameState);
+      try {
+        drawEntity(entities[i]!.children![j], ctx, canvas, gameState);
+      }
+      catch (err) {
+        // console.log(err);
+      }
     }
   }
 

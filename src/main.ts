@@ -18,6 +18,8 @@ import { SlimeEntity } from './entities/slimeEntity';
 import { LevelingSystem } from './systems/levelingSystem';
 import { LevelUpEntity } from './entities/levelUpEntity';
 import { PhysicsSystem } from './systems/physicsSystem';
+import { WeaponEntity } from './entities/weaponEntity';
+import { MobileControls } from './mobileControls';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -46,7 +48,7 @@ const init = () => {
         speedY: INIT_PLAYER_SPEED_Y,
         scaleX: 1,
         scaleY: 1,
-        mass: 5,
+        mass: 20,
         visible: true,
         moving: false,
         attacking: false,
@@ -132,7 +134,7 @@ const init = () => {
         animationToEnd: false,
         animationFrameX: 0,
         animationFrameXStart: 0,
-      }, emitter),
+      }, [], emitter),
     ],
     map: new RenderableMap({
       scaleX: 1,
@@ -178,9 +180,14 @@ const init = () => {
       experience: new ExperienceSystem(emitter),
       leveling: new LevelingSystem(emitter),
       physics: new PhysicsSystem(emitter),
-    }
+    },
+    mobileControls: new MobileControls(),
   };
 
+
+  gameState.mobileControls.init(gameState.elements);
+
+  // gameState.mobileControls.on('joystick', console.log)
 
   mainCanvas = gameState.elements.mainCanvas;
   mainCanvasContext = gameState.elements.mainCanvasContext;
@@ -198,10 +205,11 @@ const init = () => {
   });
   // gameState.emitter.on('player.animationEnd', console.log);
   // gameState.emitter.on('renderSprite', console.log);
-  gameState.emitter.on(EVENTS.COLLISION, console.log);
-  gameState.emitter.on(EVENTS.ATTACK, console.log);
+  // gameState.emitter.on('update', console.log);
+  // gameState.emitter.on(EVENTS.COLLISION, console.log);
+  // gameState.emitter.on(EVENTS.ATTACK, console.log);
 
-  gameState.emitter.on('imageLoaded', console.log);
+  // gameState.emitter.on('imageLoaded', console.log);
 
   gameState.camera.follow(gameState.entities.find(entity => entity.name === PlayerEntity.NAME) as GameEntity);
 
