@@ -127,9 +127,11 @@ export class MobileControls {
       }
     });
 
-    this.joyStick.joyStickElements?.stick.addEventListener('mouseup', (_event) => {
-      this.joystickClicked = false;
-      this.handleJoyStickRelease();
+    document.addEventListener('mouseup', (_event) => {
+      if (this.joystickClicked) {
+        this.joystickClicked = false;
+        this.handleJoyStickRelease();
+      }
     });
 
     this.joyStick.joyStickElements?.stick.addEventListener('touchend', (event) => {
