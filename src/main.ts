@@ -155,7 +155,7 @@ const init = () => {
     debugSettings: {
       debugGameState: false,
       debugPlayerSpriteSheet: false,
-      showFps: true,
+      showFps: false,
       showGrid: false,
       activateDebugger: false,
       drawEntityHitboxes: false,
