@@ -12,7 +12,7 @@ export class GameStateSystem implements IGameStateSystem {
     this.init();
   }
 
-  update(gameState: GameState, timeStamp: number) {
+  update(_gameState: GameState, _timeStamp: number) {
     console.log(this.state);
     if (this.state === 'init') {
       this.normal();

@@ -1,4 +1,3 @@
-import { EventListener, EVENTS } from '../events';
 import { GameEntity, GameState, Capability } from './../models';
 
 export class Control implements Capability {

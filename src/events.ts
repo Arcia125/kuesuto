@@ -63,6 +63,12 @@ export type EVENT_MAPPING = {
   [EVENTS.OPEN_CHAT]: {
 
   };
+  [EVENTS.CLOSE_CHAT]: {
+
+  };
+  [EVENTS.CHAT_NEXT]: {
+    phraseIndex: number;
+  };
   [EVENTS.GAMESTATE]: {
     state: IGameStateSystem['state'];
   }
