@@ -12,6 +12,8 @@ const update = (gameState: GameState, timestamp: number) => {
   gameState.systems.physics.update(gameState, timestamp);
   gameState.systems.damage.update(gameState, timestamp);
   gameState.systems.death.update(gameState, timestamp);
+  gameState.systems.chat.update(gameState, timestamp);
+  gameState.systems.gameState.update(gameState, timestamp);
 
   gameState.camera.update(gameState, timestamp);
 };

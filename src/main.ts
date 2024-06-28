@@ -1,3 +1,4 @@
+import { ChatSystem } from './systems/chatSystem';
 import { ExperienceSystem } from './systems/experienceSystem';
 import { DamageSystem } from './systems/damageSystem';
 import { cameraToWorld } from './position';
@@ -20,6 +21,7 @@ import { LevelUpEntity } from './entities/levelUpEntity';
 import { PhysicsSystem } from './systems/physicsSystem';
 // import { WeaponEntity } from './entities/weaponEntity';
 import { MobileControls } from './mobileControls';
+import { GameStateSystem } from './systems/gameStateSystem';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -146,6 +148,7 @@ const init = () => {
       left: false,
       right: false,
       attack: false,
+      chatNext: false,
     },
     camera: new GameCamera(2560, 1307),
     world: {
@@ -180,6 +183,8 @@ const init = () => {
       experience: new ExperienceSystem(emitter),
       leveling: new LevelingSystem(emitter),
       physics: new PhysicsSystem(emitter),
+      chat: new ChatSystem(emitter),
+      gameState: new GameStateSystem(emitter),
     },
     mobileControls: new MobileControls(),
   };

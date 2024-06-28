@@ -181,6 +181,7 @@ export type Controls = {
   left: boolean;
   right: boolean;
   attack: boolean;
+  chatNext: boolean;
 };
 
 export type World = {
@@ -233,6 +234,21 @@ export interface IDamageSystem extends Updateable {
   dealDamage: (attacker: GameEntity, damages: Damage[], target: GameEntity) => void;
 }
 
+export interface IChatSystem extends Updateable {
+  startChat: (phrases: string[]) => void;
+  next: () => void;
+  phrase: string;
+  hasNextPhrase: boolean;
+}
+
+export interface IGameStateSystem extends Updateable {
+  state: 'init' | 'normal' | 'chat' | null;
+  update: (gameState: GameState, timeStamp: number) => void;
+  init: () => void;
+  normal: () => void;
+  chat: () => void;
+}
+
 export interface IDeathSystem extends Updateable {
   kill: (entity: GameEntity, killer: GameEntity) => void;
   checkDeath: (entity: GameEntity) => boolean;
@@ -266,6 +282,8 @@ export type GameState = {
     experience: IExperienceSystem;
     leveling: ILevelingSystem;
     physics: IPhysicsSystem;
+    chat: IChatSystem;
+    gameState: IGameStateSystem;
   };
   mobileControls: MobileControls;
 };
@@ -412,4 +430,9 @@ export interface Damage {
 
 export interface ItemStats {
   damages: Damage[];
+}
+
+export type Interaction = {
+  type: 'CHAT';
+  phrases: string[];
 }
