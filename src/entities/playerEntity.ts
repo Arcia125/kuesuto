@@ -11,6 +11,7 @@ import { Sprite } from '../sprites';
 
 export class PlayerEntity extends Entity {
   public static NAME = 'player';
+  public static DISPLAY_NAME ='Arcia';
   public movementCapability = new Movement(this);
   public controlCability = new Control(this);
   public collisionCapability = new Collision(this, this.movementCapability);

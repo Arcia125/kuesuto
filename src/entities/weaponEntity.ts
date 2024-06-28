@@ -64,7 +64,7 @@ export class WeaponEntity extends Entity {
       this.emitter.on(EVENTS.ANIMATION_END, animationListener);
       this.attackListener = animationListener;
     }
-    if ((gameState.controls.attack || gameState.mobileControls.state.attack) && !this.state.attacking) {
+    if ((gameState.controls.attack || gameState.mobileControls.state.attack) && !this.state.attacking && gameState.systems.gameState.state === 'normal') {
       this.state.attacking = true;
       this.state.visible = true;
     }

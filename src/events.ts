@@ -1,4 +1,4 @@
-import { Corners, GameEntity, Damage } from './models';
+import { Corners, GameEntity, Damage, IGameStateSystem } from './models';
 export const EVENTS = {
   ALL: 'all',
   FPS: 'fps',
@@ -15,6 +15,11 @@ export const EVENTS = {
   DAMAGE: 'damage',
   EXP_GAIN: 'expGain',
   LEVEL_UP: 'levelUp',
+  CHAT: 'chat',
+  OPEN_CHAT: 'openChat',
+  CLOSE_CHAT: 'closeChat',
+  CHAT_NEXT: 'chatNext',
+  GAMESTATE: 'gameState',
 } as const;
 
 export type EVENT_KEY = keyof typeof EVENTS;
@@ -54,6 +59,19 @@ export type EVENT_MAPPING = {
   [EVENTS.DAMAGE]: { attacker: GameEntity; target: GameEntity; damages: Damage[] };
   [EVENTS.EXP_GAIN]: { entity: GameEntity; experience: number };
   [EVENTS.LEVEL_UP]: { entity: GameEntity };
+  [EVENTS.CHAT]: { message: string };
+  [EVENTS.OPEN_CHAT]: {
+
+  };
+  [EVENTS.CLOSE_CHAT]: {
+
+  };
+  [EVENTS.CHAT_NEXT]: {
+    phraseIndex: number;
+  };
+  [EVENTS.GAMESTATE]: {
+    state: IGameStateSystem['state'];
+  }
 }
 
 export type EventListener<T extends EVENT_NAME> = (eventName: T, payload: EVENT_MAPPING[T]) => void;
