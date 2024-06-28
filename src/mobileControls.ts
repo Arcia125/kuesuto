@@ -62,6 +62,7 @@ export class MobileControls {
     xMove: 0,
     yMove: 0,
     attack: false,
+    chatNext: false,
   };
   public joystickClicked = false;
   public constructor() {
@@ -151,6 +152,7 @@ export class MobileControls {
 
     this.actionElements.attack.addEventListener('touchstart', (_event) => {
       this.state.attack = true;
+      this.state.chatNext = true;
       this.listeners.action.forEach(listener => {
         listener({
           type: 'action',
@@ -161,6 +163,7 @@ export class MobileControls {
 
     this.actionElements.attack.addEventListener('mousedown', (_event) => {
       this.state.attack = true;
+      this.state.chatNext = true;
     });
 
     this.actionElements.attack.addEventListener('touchmove', (event) => {
