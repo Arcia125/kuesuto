@@ -53,11 +53,13 @@ export class ChatSystem implements IChatSystem {
 
   update = (gameState: GameState, _timeStamp: number) => {
 
-    if (gameState.controls.chatNext) {
+    if (gameState.controls.chatNext || gameState.mobileControls.state.chatNext) {
       if (!this.triggerUsed) {
 
         this.triggerUsed = true;
         this.next();
+        gameState.controls.chatNext = false;
+        gameState.mobileControls.state.chatNext = false;
       }
 
     } else {
