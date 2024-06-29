@@ -14,6 +14,23 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   ctx.closePath();
 };
 
+const drawStartMenu = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _gameState: GameState) => {
+  resetContext(ctx, canvas, "#265c42");
+  const title = "Kuesuto";
+  const text = "Press space to start";
+  const textMetrics = ctx.measureText(title);
+  const textWidth = Math.abs(textMetrics.width);
+  const textX = (canvas.width - textWidth) / 2;
+  const textY = canvas.height / 2 - 24;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "164px 'Press Start 2P'";
+  ctx.fillStyle = "#fff";
+  ctx.fillText(title, textX, textY);
+  ctx.font = "32px 'Press Start 2P'";
+  ctx.fillText(text, textX, textY + 100);
+};
+
 const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle'], gameState: GameState) => {
   const gridWidth = canvas.width;
   const gridHeight = canvas.height;
@@ -65,8 +82,7 @@ const drawChat = (
   canvas: HTMLCanvasElement,
   gameState: GameState
 ) => {
-  // Only draw the chat UI if the game is in the chat state.
-  if (gameState.systems.gameState.state === 'chat') {
+
     const gridWidth = canvas.width;
     const gridHeight = canvas.height;
 
@@ -128,15 +144,15 @@ const drawChat = (
       ctx.fillText(
         '▼',
         size.width -
-          paddingWidth / 2 -
-          offsetWidth -
-          (paddingWidth * 2) -
-          (fontSize / 2),
+        paddingWidth / 2 -
+        offsetWidth -
+        (paddingWidth * 2) -
+        (fontSize / 2),
         gridHeight - offsetHeight - fontSize
       );
     }
     ctx.closePath();
-  }
+
 };
 
 const drawEntity = (
@@ -275,31 +291,43 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   gameState.emitter.emit(EVENTS.RENDER_START, null);
 
   resetContext(ctx, canvas, "#fff");
-  gameState.map.render(ctx, canvas, gameState);
-  if (gameState.debugSettings.showGrid) {
-    drawGrid(ctx, canvas, 0, "teal", gameState);
-  }
+  if (gameState.systems.gameState.inStates(['running', 'paused', 'gameOver', 'menu'])) {
 
-  const entities = gameState.entities;
-  const entityCount = entities.length;
-  for (let i = 0; i < entityCount; i++) {
-    try {
-      drawEntity(entities[i], ctx, canvas, gameState);
+
+    gameState.map.render(ctx, canvas, gameState);
+    if (gameState.debugSettings.showGrid) {
+      drawGrid(ctx, canvas, 0, "teal", gameState);
     }
-    catch (err) {
-      // console.error(err);
-    }
-    for (let j = 0; j < (entities[i]?.children?.length || 0); j++) {
+
+    const entities = gameState.entities;
+    const entityCount = entities.length;
+    for (let i = 0; i < entityCount; i++) {
       try {
-        drawEntity(entities[i]!.children![j], ctx, canvas, gameState);
+        drawEntity(entities[i], ctx, canvas, gameState);
       }
       catch (err) {
-        // console.log(err);
+        // console.error(err);
       }
+      for (let j = 0; j < (entities[i]?.children?.length || 0); j++) {
+        try {
+          drawEntity(entities[i]!.children![j], ctx, canvas, gameState);
+        }
+        catch (err) {
+          // console.log(err);
+        }
+      }
+    }
+
+    // Only draw the chat UI if the game is in the chat state.
+    if (gameState.systems.controlState.state === 'chat') {
+      drawChat(ctx, canvas, gameState);
     }
   }
 
-  drawChat(ctx, canvas, gameState);
+  if (gameState.systems.gameState.inStates(['start'])) {
+    drawStartMenu(ctx, canvas, gameState);
+  }
+
 
   if (gameState.debugSettings.debugGameState && gameState.elements.gameStateContainer) {
     gameState.elements.gameStateContainer.innerHTML = JSON.stringify({

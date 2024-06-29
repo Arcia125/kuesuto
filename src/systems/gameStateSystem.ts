@@ -1,56 +1,47 @@
+import { IGameStateSystem, GameState } from '../models';
 import { EventEmitter, EVENTS } from '../events';
-import { GameState, IGameStateSystem } from '../models';
-
 
 export class GameStateSystem implements IGameStateSystem {
-
-  private openChatListener: null | (() => void) = null;
-  private closeChatListener: null | (() => void) = null;
   public state = 'init' as IGameStateSystem['state'];
+  public constructor(private emitter: EventEmitter) { }
 
-  public constructor(private emitter: EventEmitter) {
-    this.init();
-  }
-
-  update(_gameState: GameState, _timeStamp: number) {
-    console.log(this.state);
+  public update(_gameState: GameState, _timeStamp: number) {
     if (this.state === 'init') {
-      this.normal();
-    }
-
-    if (!this.openChatListener) {
-      const listener = () => {
-        this.chat();
-      };
-
-      this.emitter.on(EVENTS.OPEN_CHAT, listener);
-      this.openChatListener = listener;
-    }
-
-    if (!this.closeChatListener) {
-      const listener = () => {
-        this.normal();
-      };
-      this.emitter.on(EVENTS.CLOSE_CHAT, listener);
-      this.closeChatListener = listener;
+      this.start();
     }
   }
 
-  private changeState(state: IGameStateSystem['state']) {
+  public changeState(state: IGameStateSystem['state']) {
     this.state = state;
-    this.emitter.emit(EVENTS.GAMESTATE, { state });
+    this.emitter.emit(EVENTS.GAME_STATE, { state });
   }
 
-  init() {
+  public init() {
     this.changeState('init');
   }
 
-  chat() {
-    this.changeState('chat');
+  public start() {
+    this.changeState('start');
   }
 
-  normal() {
-    this.changeState('normal');
+  public running() {
+    this.changeState('running');
   }
 
+
+  public paused() {
+    this.changeState('paused');
+  }
+
+  public gameOver() {
+    this.changeState('gameOver');
+  }
+
+  public menu() {
+    this.changeState('menu');
+  }
+
+  public inStates(states: IGameStateSystem['state'][]) {
+    return states.includes(this.state);
+  }
 }

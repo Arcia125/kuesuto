@@ -3,6 +3,7 @@ import { EventEmitter, EVENTS, EVENT_MAPPING } from '../events';
 import { Damage, GameEntity, GameState, IDamageSystem } from '../models';
 
 export class DamageSystem implements IDamageSystem {
+  public skipUpdate = ['init' as const, 'start' as const, 'paused' as const, 'menu' as const];
   private damageAnimations: { duration: number; entity: GameEntity; }[] = [];
 
   public static getDamages(entity: GameEntity): Damage[] {

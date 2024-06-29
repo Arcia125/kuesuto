@@ -2,6 +2,7 @@ import { ILevelingSystem, GameEntity } from '../models';
 import { EventEmitter, EVENTS } from '../events';
 
 export class LevelingSystem implements ILevelingSystem {
+  public skipUpdate = ['init' as const, 'start' as const, 'paused' as const, 'menu' as const];
   public constructor(private emitter: EventEmitter) {
     emitter.on(EVENTS.EXP_GAIN, (_eventName, payload) => {
       const initialLevel = payload.entity.status.level;

@@ -10,7 +10,7 @@ export class Control implements Capability {
     let movedX = false;
     let movedY = false;
 
-    if (gameState.systems.gameState.state === 'normal') {
+    if (gameState.systems.controlState.state === 'normal') {
 
       if (gameState.controls.up || gameState.mobileControls.state.yMove < -10) {
         yDir = -1;

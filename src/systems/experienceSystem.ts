@@ -2,6 +2,7 @@ import { IExperienceSystem, GameEntity } from '../models';
 import { EventEmitter, EVENTS } from '../events';
 
 export class ExperienceSystem implements IExperienceSystem {
+  public skipUpdate = ['init' as const, 'start' as const, 'paused' as const, 'menu' as const];
   public constructor(private emitter: EventEmitter) {
     emitter.on(EVENTS.DEATH, (_eventName, payload) => {
       if (payload.killer) {

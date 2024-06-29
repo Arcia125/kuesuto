@@ -1,4 +1,5 @@
-import { Corners, GameEntity, Damage, IGameStateSystem } from './models';
+import { Corners, GameEntity, Damage, IControlStateSystem, IGameStateSystem } from './models';
+
 export const EVENTS = {
   ALL: 'all',
   FPS: 'fps',
@@ -19,7 +20,9 @@ export const EVENTS = {
   OPEN_CHAT: 'openChat',
   CLOSE_CHAT: 'closeChat',
   CHAT_NEXT: 'chatNext',
-  GAMESTATE: 'gameState',
+  CONTROL_STATE: 'controlState',
+  GAME_STATE: 'gameState',
+  START_MENU_OPEN: 'startMenuOpen',
 } as const;
 
 export type EVENT_KEY = keyof typeof EVENTS;
@@ -69,9 +72,13 @@ export type EVENT_MAPPING = {
   [EVENTS.CHAT_NEXT]: {
     phraseIndex: number;
   };
-  [EVENTS.GAMESTATE]: {
+  [EVENTS.CONTROL_STATE]: {
+    state: IControlStateSystem['state'];
+  },
+  [EVENTS.GAME_STATE]: {
     state: IGameStateSystem['state'];
-  }
+  },
+  [EVENTS.START_MENU_OPEN]: {}
 }
 
 export type EventListener<T extends EVENT_NAME> = (eventName: T, payload: EVENT_MAPPING[T]) => void;

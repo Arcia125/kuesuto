@@ -1,5 +1,6 @@
 import { EventEmitter } from './events';
 import { MobileControls } from './mobileControls';
+import { GameStateSystem } from './systems/gameStateSystem';
 
 
 export type Direction = "up" | "down" | "left" | "right";
@@ -86,6 +87,7 @@ export interface Renderable {
 
 export interface Updateable {
   update: (gameState: GameState, timeStamp: number) => void;
+  skipUpdate?: GameStateSystem['state'][];
 }
 
 export interface Parentable<T> {
@@ -241,12 +243,32 @@ export interface IChatSystem extends Updateable {
   hasNextPhrase: boolean;
 }
 
-export interface IGameStateSystem extends Updateable {
-  state: 'init' | 'normal' | 'chat' | null;
+export interface IControlStateSystem extends Updateable {
+  state: 'init' | 'menu' | 'normal' | 'chat' | null;
   update: (gameState: GameState, timeStamp: number) => void;
   init: () => void;
   normal: () => void;
+  menu: () => void;
   chat: () => void;
+}
+
+
+type GameStatus = 'init' | 'start' | 'running' | 'paused' | 'gameOver' | 'menu';
+
+export interface IGameStateSystem extends Updateable {
+  state: GameStatus;
+  update: (gameState: GameState, timeStamp: number) => void;
+  init: () => void;
+  start: () => void;
+  running: () => void;
+  paused: () => void;
+  gameOver: () => void;
+  menu: () => void;
+  inStates: (states: GameStatus[]) => boolean;
+}
+
+export interface IStartMenuSystem extends Updateable {
+  update: (gameState: GameState, timeStamp: number) => void;
 }
 
 export interface IDeathSystem extends Updateable {
@@ -283,7 +305,9 @@ export type GameState = {
     leveling: ILevelingSystem;
     physics: IPhysicsSystem;
     chat: IChatSystem;
+    controlState: IControlStateSystem;
     gameState: IGameStateSystem;
+    startMenu: IStartMenuSystem;
   };
   mobileControls: MobileControls;
 };

@@ -2,6 +2,7 @@ import { EventEmitter, EVENTS } from '../events';
 import { GameState, IChatSystem } from '../models';
 
 export class ChatSystem implements IChatSystem {
+  public skipUpdate = ['init' as const, 'start' as const, 'paused' as const, 'menu' as const];
 
   public isOpen = false;
   public phraseIndex = 0;
@@ -10,11 +11,6 @@ export class ChatSystem implements IChatSystem {
 
   public constructor(private emitter: EventEmitter) {
   }
-
-  private setChat = (phraseIndex: number) => {
-
-    console.log(this.phrases[phraseIndex]);
-  };
 
   public get phrase () {
     return this.phrases[this.phraseIndex];
@@ -36,7 +32,6 @@ export class ChatSystem implements IChatSystem {
       this.emitter.emit(EVENTS.OPEN_CHAT, {});
       this.isOpen = true;
     }
-    this.setChat(phraseIndex);
   };
 
   next = () => {
@@ -44,7 +39,6 @@ export class ChatSystem implements IChatSystem {
     if (phraseIndex < this.phrases.length) {
       this.phraseIndex = phraseIndex;
       this.emitter.emit(EVENTS.CHAT_NEXT, { phraseIndex });
-      this.setChat(phraseIndex);
     } else {
       this.emitter.emit(EVENTS.CLOSE_CHAT, {});
       this.isOpen = false;
