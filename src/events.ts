@@ -22,6 +22,7 @@ export const EVENTS = {
   CHAT_NEXT: 'chatNext',
   CONTROL_STATE: 'controlState',
   GAME_STATE: 'gameState',
+  START_MENU_OPEN: 'startMenuOpen',
 } as const;
 
 export type EVENT_KEY = keyof typeof EVENTS;
@@ -76,7 +77,8 @@ export type EVENT_MAPPING = {
   },
   [EVENTS.GAME_STATE]: {
     state: IGameStateSystem['state'];
-  }
+  },
+  [EVENTS.START_MENU_OPEN]: {}
 }
 
 export type EventListener<T extends EVENT_NAME> = (eventName: T, payload: EVENT_MAPPING[T]) => void;

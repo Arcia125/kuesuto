@@ -14,7 +14,7 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   ctx.closePath();
 };
 
-const drawStartMenu = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+const drawStartMenu = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _gameState: GameState) => {
   resetContext(ctx, canvas, "#265c42");
   const title = "Kuesuto";
   const text = "Press space to start";
@@ -82,8 +82,7 @@ const drawChat = (
   canvas: HTMLCanvasElement,
   gameState: GameState
 ) => {
-  // Only draw the chat UI if the game is in the chat state.
-  if (gameState.systems.controlState.state === 'chat') {
+
     const gridWidth = canvas.width;
     const gridHeight = canvas.height;
 
@@ -153,7 +152,7 @@ const drawChat = (
       );
     }
     ctx.closePath();
-  }
+
 };
 
 const drawEntity = (
@@ -319,7 +318,10 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
       }
     }
 
-    drawChat(ctx, canvas, gameState);
+    // Only draw the chat UI if the game is in the chat state.
+    if (gameState.systems.controlState.state === 'chat') {
+      drawChat(ctx, canvas, gameState);
+    }
   }
 
   if (gameState.systems.gameState.inStates(['start'])) {

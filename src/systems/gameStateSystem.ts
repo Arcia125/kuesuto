@@ -5,7 +5,7 @@ export class GameStateSystem implements IGameStateSystem {
   public state = 'init' as IGameStateSystem['state'];
   public constructor(private emitter: EventEmitter) { }
 
-  public update(gameState: GameState, _timeStamp: number) {
+  public update(_gameState: GameState, _timeStamp: number) {
     if (this.state === 'init') {
       this.start();
     }

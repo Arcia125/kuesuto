@@ -1,4 +1,3 @@
-import { IGameStateSystem } from './models';
 import { EventEmitter } from './events';
 import { MobileControls } from './mobileControls';
 import { GameStateSystem } from './systems/gameStateSystem';
