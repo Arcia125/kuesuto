@@ -6,6 +6,7 @@ import { getSpriteScale } from '../sprites';
 
 
 export class PhysicsSystem implements IPhysicsSystem {
+  public skipUpdate = ['init' as const, 'start' as const, 'paused' as const, 'menu' as const];
   private forceEntries: ForceEntry[] = [];
 
   public constructor(emitter: EventEmitter) {

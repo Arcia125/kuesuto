@@ -2,26 +2,29 @@ import { EVENTS } from './events';
 import { GameState } from './models';
 
 const keyMappings = {
-  up: {
-    bindings: ['ArrowUp', 'w', 'W']
-  },
-  down: { bindings: ['ArrowDown', 's', 'S'] },
-  left: { bindings: ['ArrowLeft', 'a', 'A'] },
-  right: { bindings: ['ArrowRight', 'd', 'D'] },
-  attack: { bindings: [' ']} ,
-  chatNext: { bindings: [' '], toggle: false } ,
-  toggleDebugGameState: { bindings: ['O']} ,
-  debugPlayerSpriteSheet: { bindings: ['P']} ,
-  showGrid: { bindings: ['G']} ,
-  activateDebugger: { bindings: ['<' ] }
+  up: ['ArrowUp', 'w', 'W'],
+  down: ['ArrowDown', 's', 'S'],
+  left: ['ArrowLeft', 'a', 'A'],
+  right: ['ArrowRight', 'd', 'D'],
+  attack: [' '],
+  chatNext: [' '],
+  toggleDebugGameState: ['O'],
+  debugPlayerSpriteSheet: ['P'],
+  showGrid: ['G'],
+  activateDebugger: ['<']
 };
 
 const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | KeyboardEvent['key']) => {
   const eventKey = typeof eventOrKey === 'string' ? eventOrKey : eventOrKey.key;
-  return keyMappings[key].bindings.includes(eventKey);
+  return keyMappings[key].includes(eventKey);
 }
 
 export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEvent) => {
+  // if (gameState.systems.controlState.state === 'menu') {
+  //   event.preventDefault();
+  //   gameState.systems.gameState.running();
+  //   return;
+  // }
   if (keyPressed('attack', event)) {
     event.preventDefault();
     gameState.controls.attack = true;
@@ -74,23 +77,23 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
 };
 
 export const createKeyUpHandler = (gameState: GameState) => (event: KeyboardEvent) => {
-  if (keyMappings.up.bindings.includes(event.key)) {
+  if (keyMappings.up.includes(event.key)) {
     event.preventDefault();
     gameState.controls.up = false;
   }
-  if (keyMappings.down.bindings.includes(event.key)) {
+  if (keyMappings.down.includes(event.key)) {
     event.preventDefault();
     gameState.controls.down = false;
   }
-  if (keyMappings.left.bindings.includes(event.key)) {
+  if (keyMappings.left.includes(event.key)) {
     event.preventDefault();
     gameState.controls.left = false;
   }
-  if (keyMappings.right.bindings.includes(event.key)) {
+  if (keyMappings.right.includes(event.key)) {
     event.preventDefault();
     gameState.controls.right = false;
   }
-  if (keyMappings.chatNext.bindings.includes(event.key)) {
+  if (keyMappings.chatNext.includes(event.key)) {
     event.preventDefault();
     gameState.controls.chatNext = false;
   }

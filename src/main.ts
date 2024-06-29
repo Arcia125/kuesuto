@@ -21,7 +21,9 @@ import { LevelUpEntity } from './entities/levelUpEntity';
 import { PhysicsSystem } from './systems/physicsSystem';
 // import { WeaponEntity } from './entities/weaponEntity';
 import { MobileControls } from './mobileControls';
+import { ControlStateSystem } from './systems/controlStateSystem';
 import { GameStateSystem } from './systems/gameStateSystem';
+import { StartMenuSystem } from './systems/startMenuSystem';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -184,7 +186,9 @@ const init = () => {
       leveling: new LevelingSystem(emitter),
       physics: new PhysicsSystem(emitter),
       chat: new ChatSystem(emitter),
+      controlState: new ControlStateSystem(emitter),
       gameState: new GameStateSystem(emitter),
+      startMenu: new StartMenuSystem(emitter),
     },
     mobileControls: new MobileControls(),
   };
@@ -203,7 +207,6 @@ const init = () => {
   });
 
   emitter.on(EVENTS.FPS, (_, msg) => {
-    console.log(msg);
     if (gameState.debugSettings.showFps && msg?.fps) {
       gameState.elements.mainGameFpsContainer.innerHTML = Math.round(msg.fps).toString();
     }

@@ -1,0 +1,17 @@
+import { EventEmitter } from '../events';
+import { GameState, IStartMenuSystem } from '../models';
+
+export class StartMenuSystem implements IStartMenuSystem {
+  public skipUpdate = ['init' as const, 'paused' as const, 'menu' as const, 'gameOver' as const];
+  public constructor(private _emitter: EventEmitter) {
+
+  }
+
+  public update(gameState: GameState, _timeStamp: number) {
+    if (gameState.systems.gameState.state === 'start') {
+      if (gameState.controls.attack || gameState.mobileControls.state.attack) {
+        gameState.systems.gameState.running();
+      }
+    }
+  }
+}

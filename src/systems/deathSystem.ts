@@ -2,6 +2,7 @@ import { IDeathSystem, GameEntity, GameState } from '../models';
 import { EventEmitter, EVENTS } from '../events';
 
 export class DeathSystem implements IDeathSystem {
+  public skipUpdate = ['init' as const, 'start' as const, 'paused' as const, 'menu' as const];
   private deaths: { duration: number; entity: GameEntity; }[] = [];
   public constructor(private emitter: EventEmitter) {
     emitter.on(EVENTS.DAMAGE, (_eventName, payload) => {
