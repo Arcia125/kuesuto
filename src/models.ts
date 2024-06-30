@@ -273,7 +273,6 @@ export interface IStartMenuSystem extends Updateable {
 }
 
 export interface ISpawnSystem extends Updateable {
-  spawnFromMapData: (gameState: GameState) => void;
 }
 
 export interface IDeathSystem extends Updateable {

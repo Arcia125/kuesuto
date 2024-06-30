@@ -7,7 +7,7 @@ import { Interactable } from '../capabilities/interactable';
 import { PlayerEntity } from './playerEntity';
 
 export class DarkWizardEntity extends NPCEntity {
-  public static NAME = 'dark wizard';
+  public static NAME = 'Dark Wizard';
   public static DISPLAY_NAME = 'Morghal';
   public collisionCapability = new Collision(this);
   public interactableCapability = new Interactable(this, [

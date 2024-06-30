@@ -813,6 +813,12 @@
                  "id":1,
                  "name":"Player Start Location",
                  "point":true,
+                 "properties":[
+                        {
+                         "name":"type",
+                         "type":"string",
+                         "value":"playerStart"
+                        }],
                  "rotation":0,
                  "type":"Spawn",
                  "visible":true,
@@ -825,6 +831,17 @@
                  "id":2,
                  "name":"Dark Wizard",
                  "point":true,
+                 "properties":[
+                        {
+                         "name":"hostile",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"type",
+                         "type":"string",
+                         "value":"Dark Wizard"
+                        }],
                  "rotation":0,
                  "type":"npc",
                  "visible":true,
@@ -898,8 +915,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":765.333333333333,
-                 "y":3529.33333333333
+                 "x":765.333,
+                 "y":3529.33
                 }, 
                 {
                  "height":0,
@@ -921,8 +938,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":886.666666666667,
-                 "y":3237.33333333333
+                 "x":886.667,
+                 "y":3237.33
                 }, 
                 {
                  "height":0,
@@ -944,7 +961,7 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":314.666666666667,
+                 "x":314.667,
                  "y":3268
                 }, 
                 {
@@ -968,7 +985,7 @@
                  "visible":true,
                  "width":0,
                  "x":580,
-                 "y":3370.66666666667
+                 "y":3370.67
                 }, 
                 {
                  "height":0,
@@ -990,8 +1007,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":309.333333333333,
-                 "y":2945.33333333333
+                 "x":309.333,
+                 "y":2945.33
                 }, 
                 {
                  "height":0,
@@ -1013,8 +1030,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":782.666666666667,
-                 "y":2806.66666666667
+                 "x":782.667,
+                 "y":2806.67
                 }, 
                 {
                  "height":0,
@@ -1036,8 +1053,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":894.666666666667,
-                 "y":3001.33333333333
+                 "x":894.667,
+                 "y":3001.33
                 }, 
                 {
                  "height":0,
@@ -1059,8 +1076,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":462.666666666667,
-                 "y":2973.33333333333
+                 "x":462.667,
+                 "y":2973.33
                 }, 
                 {
                  "height":0,
@@ -1082,8 +1099,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":833.333333333333,
-                 "y":2742.66666666667
+                 "x":833.333,
+                 "y":2742.67
                 }, 
                 {
                  "height":0,
@@ -1105,7 +1122,7 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":665.333333333333,
+                 "x":665.333,
                  "y":2708
                 }, 
                 {
@@ -1128,8 +1145,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":1382.66666666667,
-                 "y":3046.66666666667
+                 "x":1382.67,
+                 "y":3046.67
                 }],
          "opacity":1,
          "type":"objectgroup",

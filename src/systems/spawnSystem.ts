@@ -1,14 +1,19 @@
-import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from './../constants';
-import { GameState, ObjectGroupLayer } from './../models';
+import { LevelUpEntity } from '../entities/levelUpEntity';
+import { DarkWizardEntity } from '../entities/darkWizardEntity';
+import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from '../constants';
+import { GameState, ObjectGroupLayer } from '../models';
 import { EventEmitter } from '../events';
 import { ISpawnSystem } from '../models';
 import { SlimeEntity } from '../entities/slimeEntity';
 import { RENDERING_SCALE } from '../constants';
+import { PlayerEntity } from '../entities/playerEntity';
+import { SwordEntity } from '../entities/swordEntity';
 
 export class SpawnSystem implements ISpawnSystem {
   private spawnedFromMap = false;
   private static readonly entityClasses = {
-    [SlimeEntity.NAME]: SlimeEntity
+    [SlimeEntity.NAME]: SlimeEntity,
+    [DarkWizardEntity.NAME]: DarkWizardEntity
   };
 
   private static readonly defaultGameEntityState = {
@@ -29,6 +34,7 @@ export class SpawnSystem implements ISpawnSystem {
     animationFrameXStart: 0,
   }
 
+
   public constructor(private emitter: EventEmitter) {
 
   }
@@ -48,30 +54,58 @@ export class SpawnSystem implements ISpawnSystem {
     return SpawnSystem.entityClasses[SpawnSystem.getEntityType(object)];
   }
 
-  public spawnFromMapData(gameState: GameState): void {
 
-    const enemyStartLocationObject = gameState.map.getObjectStartLocations('Enemy');
 
-    if (!enemyStartLocationObject.length) {
-      throw new TypeError('Missing enemy entity');
+  private spawnFromMapData(gameState: GameState): void {
+
+    const playerStartLocationObject = gameState.map.getObjectStartLocation('Player Start Location');
+
+    const playerEntity = new PlayerEntity({
+      ...SpawnSystem.defaultGameEntityState,
+      x: playerStartLocationObject.x * RENDERING_SCALE,
+      y: playerStartLocationObject.y * RENDERING_SCALE,
+      mass: 20,
+    }, [
+      new SwordEntity({
+        ...SpawnSystem.defaultGameEntityState,
+        x: 0,
+        y: 0,
+      }, [], this.emitter),
+      new LevelUpEntity({
+        ...SpawnSystem.defaultGameEntityState,
+        x: 0,
+        y: 0,
+        visible: false,
+      }, this.emitter)
+    ], this.emitter);
+
+    gameState.camera.follow(playerEntity);
+
+    gameState.entities.push(playerEntity);
+
+    const startLocationsObject = gameState.map.getObjectStartLocations('Enemy').concat(gameState.map.getObjectStartLocations('Dark Wizard'));
+
+    if (!startLocationsObject.length) {
+      throw new TypeError('Missing entity');
     }
-    enemyStartLocationObject.forEach(enemy => {
+    startLocationsObject.forEach(entityObj => {
 
-      const EntityClass = SpawnSystem.getEntityClass(enemy);
+      const EntityClass = SpawnSystem.getEntityClass(entityObj);
 
       if (EntityClass) {
         const entity = new EntityClass({
-          x: enemy.x * RENDERING_SCALE,
-          y: enemy.y * RENDERING_SCALE,
+          x: entityObj.x * RENDERING_SCALE,
+          y: entityObj.y * RENDERING_SCALE,
           ...SpawnSystem.defaultGameEntityState,
         }, [], this.emitter
         );
         gameState.entities.push(entity);
-        entity.state.x = enemy.x * RENDERING_SCALE;
-        entity.state.y = enemy.y * RENDERING_SCALE;
+        entity.state.x = entityObj.x * RENDERING_SCALE;
+        entity.state.y = entityObj.y * RENDERING_SCALE;
       } else {
-        throw new TypeError(`Unknown enemy type ${SpawnSystem.getEntityType(enemy)}`);
+        throw new TypeError(`Unknown entity type ${SpawnSystem.getEntityType(entityObj)}`);
       }
     });
+
   }
 }
