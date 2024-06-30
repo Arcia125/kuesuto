@@ -20,11 +20,6 @@ const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | K
 }
 
 export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEvent) => {
-  // if (gameState.systems.controlState.state === 'menu') {
-  //   event.preventDefault();
-  //   gameState.systems.gameState.running();
-  //   return;
-  // }
   if (keyPressed('attack', event)) {
     event.preventDefault();
     gameState.controls.attack = true;

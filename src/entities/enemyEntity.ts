@@ -1,4 +1,4 @@
-import { getSpriteScale } from './../sprites';
+import { getSpriteScale } from '../sprites';
 import { EventEmitter } from '../events';
 import { GameEntity, GameEntityState, GameState, SpriteJSON } from '../models';
 import { NPCEntity } from './npcEntity';

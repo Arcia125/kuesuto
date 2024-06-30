@@ -1,4 +1,4 @@
-import { SpriteJSON, GameEntity } from './../models';
+import { SpriteJSON, GameEntity } from '../models';
 import { EventEmitter } from '../events';
 import { GameEntityState } from '../models';
 import { EnemyEntity } from './enemyEntity';

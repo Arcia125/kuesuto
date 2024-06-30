@@ -3,27 +3,21 @@ import { ExperienceSystem } from './systems/experienceSystem';
 import { DamageSystem } from './systems/damageSystem';
 import { cameraToWorld } from './position';
 import { createKeyDownHandler, createKeyUpHandler } from './controls';
-import { GameState, GameEntity } from './models';
+import { GameState } from './models';
 import './style.css'
 import { gameLoop } from "./gameLoop";
 import { EventEmitter, EVENTS } from './events';
-import { SwordEntity } from "./entities/swordEntity";
-import { PlayerEntity } from "./entities/playerEntity";
-import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y, RENDERING_SCALE } from './constants';
 import { RenderableMap } from './map';
 import { GameCamera } from './camera';
 import { BrowserElements } from './browserElements';
-import { DarkWizardEntity } from './entities/darkWizardEntity';
 import { DeathSystem } from './systems/deathSystem';
-import { SlimeEntity } from './entities/slimeEntity';
 import { LevelingSystem } from './systems/levelingSystem';
-import { LevelUpEntity } from './entities/levelUpEntity';
 import { PhysicsSystem } from './systems/physicsSystem';
-// import { WeaponEntity } from './entities/weaponEntity';
 import { MobileControls } from './mobileControls';
 import { ControlStateSystem } from './systems/controlStateSystem';
 import { GameStateSystem } from './systems/gameStateSystem';
 import { StartMenuSystem } from './systems/startMenuSystem';
+import { SpawnSystem } from './systems/spawnSystem';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -43,102 +37,6 @@ const init = () => {
 
   const gameState: GameState = {
     entities: [
-      new PlayerEntity({
-        x: 0,
-        y: 0,
-        xDir: 0,
-        yDir: 0,
-        speedX: INIT_PLAYER_SPEED_X,
-        speedY: INIT_PLAYER_SPEED_Y,
-        scaleX: 1,
-        scaleY: 1,
-        mass: 20,
-        visible: true,
-        moving: false,
-        attacking: false,
-        currentAnimationName: '',
-        lastAnimationName: '',
-        animationToEnd: false,
-        animationFrameX: 0,
-        animationFrameXStart: 0,
-      }, [
-        new SwordEntity({
-          x: 0,
-          y: 0,
-          xDir: 0,
-          yDir: 0,
-          speedX: INIT_PLAYER_SPEED_X,
-          speedY: INIT_PLAYER_SPEED_Y,
-          scaleX: 1,
-          scaleY: 1,
-          mass: 5,
-          visible: false,
-          moving: false,
-          attacking: false,
-          currentAnimationName: '',
-          lastAnimationName: '',
-          animationToEnd: false,
-          animationFrameX: 0,
-          animationFrameXStart: 0,
-        }, [], emitter),
-        new LevelUpEntity({
-          x: 0,
-          y: 0,
-          xDir: 0,
-          yDir: 0,
-          speedX: INIT_PLAYER_SPEED_X,
-          speedY: INIT_PLAYER_SPEED_Y,
-          scaleX: 1,
-          scaleY: 1,
-          mass: 5,
-          visible: false,
-          moving: false,
-          attacking: false,
-          currentAnimationName: '',
-          lastAnimationName: '',
-          animationToEnd: false,
-          animationFrameX: 0,
-          animationFrameXStart: 0,
-        }, emitter)
-      ], emitter),
-      new DarkWizardEntity({
-        x: 0,
-        y: 0,
-        xDir: 0,
-        yDir: 0,
-        speedX: INIT_PLAYER_SPEED_X,
-        speedY: INIT_PLAYER_SPEED_Y,
-        scaleX: 1,
-        scaleY: 1,
-        mass: 5,
-        visible: true,
-        moving: false,
-        attacking: false,
-        currentAnimationName: '',
-        lastAnimationName: '',
-        animationToEnd: false,
-        animationFrameX: 0,
-        animationFrameXStart: 0,
-      }, [], emitter),
-      new SlimeEntity({
-        x: 0,
-        y: 0,
-        xDir: 0,
-        yDir: 0,
-        speedX: INIT_PLAYER_SPEED_X * 0.8,
-        speedY: INIT_PLAYER_SPEED_Y * 0.8,
-        scaleX: 1,
-        scaleY: 1,
-        mass: 5,
-        visible: true,
-        moving: false,
-        attacking: false,
-        currentAnimationName: '',
-        lastAnimationName: '',
-        animationToEnd: false,
-        animationFrameX: 0,
-        animationFrameXStart: 0,
-      }, [], emitter),
     ],
     map: new RenderableMap({
       scaleX: 1,
@@ -189,9 +87,11 @@ const init = () => {
       controlState: new ControlStateSystem(emitter),
       gameState: new GameStateSystem(emitter),
       startMenu: new StartMenuSystem(emitter),
+      spawn: new SpawnSystem(emitter),
     },
     mobileControls: new MobileControls(),
   };
+
 
 
   gameState.mobileControls.init(gameState.elements);
@@ -217,39 +117,10 @@ const init = () => {
   // gameState.emitter.on(EVENTS.COLLISION, console.log);
   // gameState.emitter.on(EVENTS.ATTACK, console.log);
 
+  // gameState.emitter.on(EVENTS.ALL, (msg) => {
+  //   console.log(msg);
+  // });
   // gameState.emitter.on('imageLoaded', console.log);
-
-  gameState.camera.follow(gameState.entities.find(entity => entity.name === PlayerEntity.NAME) as GameEntity);
-
-  const playerStartLocationObject = gameState.map.getObjectStartLocation('Player Start Location');
-
-  const playerEntity = gameState.entities.find(entity => entity.name === PlayerEntity.NAME);
-  if (!playerEntity) {
-    throw new TypeError('Missing player entity');
-  }
-  playerEntity.state.x = playerStartLocationObject.x * RENDERING_SCALE;
-  playerEntity.state.y = playerStartLocationObject.y * RENDERING_SCALE;
-
-
-
-  const darkWizardStartLocationObject = gameState.map.getObjectStartLocation('Dark Wizard');
-
-  const darkWizardEntity = gameState.entities.find(entity => entity.name === DarkWizardEntity.NAME);
-  if (!darkWizardEntity) {
-    throw new TypeError('Missing dark wizard entity');
-  }
-  darkWizardEntity.state.x = darkWizardStartLocationObject.x * RENDERING_SCALE;
-  darkWizardEntity.state.y = darkWizardStartLocationObject.y * RENDERING_SCALE;
-
-
-  const enemyStartLocationObject = gameState.map.getObjectStartLocation('Enemy');
-
-  const slimeEntity = gameState.entities.find(entity => entity.name === SlimeEntity.NAME);
-  if (!slimeEntity) {
-    throw new TypeError('Missing enemy entity');
-  }
-  slimeEntity.state.x = enemyStartLocationObject.x * RENDERING_SCALE;
-  slimeEntity.state.y = enemyStartLocationObject.y * RENDERING_SCALE;
 
 
   mainCanvasContext?.rect(0, 0, mainCanvas.width, mainCanvas.height);

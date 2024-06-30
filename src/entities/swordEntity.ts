@@ -1,4 +1,4 @@
-import { DAMAGE_TYPES } from './../damage';
+import { DAMAGE_TYPES } from '../damage';
 import { GameEntityState, GameEntity, SpriteJSON } from '../models';
 import swordSpriteJSONRAW from '../data/spriteJSON/kuesuto-sword.json';
 import { EventEmitter } from '../events';

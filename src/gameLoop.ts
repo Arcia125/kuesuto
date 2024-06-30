@@ -9,13 +9,6 @@ const update = (gameState: GameState, timestamp: number) => {
     entities[i].update(gameState, timestamp);
   }
 
-  // gameState.systems.physics.update(gameState, timestamp);
-  // gameState.systems.damage.update(gameState, timestamp);
-  // gameState.systems.death.update(gameState, timestamp);
-  // gameState.systems.chat.update(gameState, timestamp);
-  // gameState.systems.controlState.update(gameState, timestamp);
-  // gam
-
   Object.values(gameState.systems).forEach((system) => {
     if ('update' in system) {
       if (system.skipUpdate?.includes(gameState.systems.gameState.state)) {

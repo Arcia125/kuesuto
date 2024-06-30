@@ -1,4 +1,3 @@
-// import { worldToCamera } from './../position';
 import { getRectCorners } from '../rectangle';
 import { EVENTS } from '../events';
 import { getSpriteScale } from '../sprites';
@@ -54,6 +53,9 @@ export class Collision implements Capability {
     let collidedCorners = [];
     let entities = [];
     for (let i = 0; i < entityCount; i++) {
+      if (!gameState.entities[i]) {
+        break;
+      }
       if (gameState.entities[i].name === entity.name) {
         continue;
       }

@@ -1,4 +1,4 @@
-import { GameEntity, GameState, Capability } from './../models';
+import { GameEntity, GameState, Capability } from '../models';
 
 export class Control implements Capability {
   public constructor(public entity: GameEntity) { }
