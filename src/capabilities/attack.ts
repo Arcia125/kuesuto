@@ -17,7 +17,7 @@ export class Attack implements Capability {
         return;
       }
 
-      console.log('weapon', weapon);
+      // console.log('weapon', weapon);
       const collisions = Collision.checkEntityCollision(gameState, weapon);
       if (collisions.collidedCorners) {
         collisions.entities.forEach(entity => {
@@ -30,7 +30,7 @@ export class Attack implements Capability {
           if (entity.id === weapon.parent!.id) {
             return;
           }
-          console.log('attack');
+          // console.log('attack');
           this.targetsHit.add(entity);
           gameState.emitter.emit(EVENTS.ATTACK, {
             attacker: this.entity,
