@@ -15,7 +15,6 @@ import { GameCamera } from './camera';
 import { BrowserElements } from './browserElements';
 import { DarkWizardEntity } from './entities/darkWizardEntity';
 import { DeathSystem } from './systems/deathSystem';
-import { SlimeEntity } from './entities/slimeEntity';
 import { LevelingSystem } from './systems/levelingSystem';
 import { LevelUpEntity } from './entities/levelUpEntity';
 import { PhysicsSystem } from './systems/physicsSystem';
@@ -266,20 +265,6 @@ const init = () => {
   }
   darkWizardEntity.state.x = darkWizardStartLocationObject.x * RENDERING_SCALE;
   darkWizardEntity.state.y = darkWizardStartLocationObject.y * RENDERING_SCALE;
-
-
-  // const enemyStartLocationObject = gameState.map.getObjectStartLocation('Enemy');
-
-  // const slimeEntity = gameState.entities.find(entity => entity.name === SlimeEntity.NAME);
-  // if (!slimeEntity) {
-  //   throw new TypeError('Missing enemy entity');
-  // }
-  // slimeEntity.state.x = enemyStartLocationObject.x * RENDERING_SCALE;
-  // slimeEntity.state.y = enemyStartLocationObject.y * RENDERING_SCALE;
-
-
-  // TODO: Get all slime locations
-
 
   mainCanvasContext?.rect(0, 0, mainCanvas.width, mainCanvas.height);
   mainCanvasContext?.fill();

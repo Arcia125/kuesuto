@@ -64,7 +64,7 @@ export class SpawnSystem implements ISpawnSystem {
           x: enemy.x * RENDERING_SCALE,
           y: enemy.y * RENDERING_SCALE,
           ...SpawnSystem.defaultGameEntityState,
-        }, [], gameState.emitter
+        }, [], this.emitter
         );
         gameState.entities.push(entity);
         entity.state.x = enemy.x * RENDERING_SCALE;
