@@ -24,6 +24,7 @@ import { MobileControls } from './mobileControls';
 import { ControlStateSystem } from './systems/controlStateSystem';
 import { GameStateSystem } from './systems/gameStateSystem';
 import { StartMenuSystem } from './systems/startMenuSystem';
+import { SpawnSystem } from './systems/spawnSystem';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -120,25 +121,25 @@ const init = () => {
         animationFrameX: 0,
         animationFrameXStart: 0,
       }, [], emitter),
-      new SlimeEntity({
-        x: 0,
-        y: 0,
-        xDir: 0,
-        yDir: 0,
-        speedX: INIT_PLAYER_SPEED_X * 0.8,
-        speedY: INIT_PLAYER_SPEED_Y * 0.8,
-        scaleX: 1,
-        scaleY: 1,
-        mass: 5,
-        visible: true,
-        moving: false,
-        attacking: false,
-        currentAnimationName: '',
-        lastAnimationName: '',
-        animationToEnd: false,
-        animationFrameX: 0,
-        animationFrameXStart: 0,
-      }, [], emitter),
+      // new SlimeEntity({
+      //   x: 0,
+      //   y: 0,
+      //   xDir: 0,
+      //   yDir: 0,
+      //   speedX: INIT_PLAYER_SPEED_X * 0.8,
+      //   speedY: INIT_PLAYER_SPEED_Y * 0.8,
+      //   scaleX: 1,
+      //   scaleY: 1,
+      //   mass: 5,
+      //   visible: true,
+      //   moving: false,
+      //   attacking: false,
+      //   currentAnimationName: '',
+      //   lastAnimationName: '',
+      //   animationToEnd: false,
+      //   animationFrameX: 0,
+      //   animationFrameXStart: 0,
+      // }, [], emitter),
     ],
     map: new RenderableMap({
       scaleX: 1,
@@ -189,9 +190,31 @@ const init = () => {
       controlState: new ControlStateSystem(emitter),
       gameState: new GameStateSystem(emitter),
       startMenu: new StartMenuSystem(emitter),
+      spawn: new SpawnSystem(emitter),
     },
     mobileControls: new MobileControls(),
   };
+
+
+  // new SlimeEntity({
+  //   x: 0,
+  //   y: 0,
+  //   xDir: 0,
+  //   yDir: 0,
+  //   speedX: INIT_PLAYER_SPEED_X * 0.8,
+  //   speedY: INIT_PLAYER_SPEED_Y * 0.8,
+  //   scaleX: 1,
+  //   scaleY: 1,
+  //   mass: 5,
+  //   visible: true,
+  //   moving: false,
+  //   attacking: false,
+  //   currentAnimationName: '',
+  //   lastAnimationName: '',
+  //   animationToEnd: false,
+  //   animationFrameX: 0,
+  //   animationFrameXStart: 0,
+  // }, [], emitter)
 
 
   gameState.mobileControls.init(gameState.elements);
@@ -217,6 +240,9 @@ const init = () => {
   // gameState.emitter.on(EVENTS.COLLISION, console.log);
   // gameState.emitter.on(EVENTS.ATTACK, console.log);
 
+  // gameState.emitter.on(EVENTS.ALL, (msg) => {
+  //   console.log(msg);
+  // });
   // gameState.emitter.on('imageLoaded', console.log);
 
   gameState.camera.follow(gameState.entities.find(entity => entity.name === PlayerEntity.NAME) as GameEntity);
@@ -242,14 +268,17 @@ const init = () => {
   darkWizardEntity.state.y = darkWizardStartLocationObject.y * RENDERING_SCALE;
 
 
-  const enemyStartLocationObject = gameState.map.getObjectStartLocation('Enemy');
+  // const enemyStartLocationObject = gameState.map.getObjectStartLocation('Enemy');
 
-  const slimeEntity = gameState.entities.find(entity => entity.name === SlimeEntity.NAME);
-  if (!slimeEntity) {
-    throw new TypeError('Missing enemy entity');
-  }
-  slimeEntity.state.x = enemyStartLocationObject.x * RENDERING_SCALE;
-  slimeEntity.state.y = enemyStartLocationObject.y * RENDERING_SCALE;
+  // const slimeEntity = gameState.entities.find(entity => entity.name === SlimeEntity.NAME);
+  // if (!slimeEntity) {
+  //   throw new TypeError('Missing enemy entity');
+  // }
+  // slimeEntity.state.x = enemyStartLocationObject.x * RENDERING_SCALE;
+  // slimeEntity.state.y = enemyStartLocationObject.y * RENDERING_SCALE;
+
+
+  // TODO: Get all slime locations
 
 
   mainCanvasContext?.rect(0, 0, mainCanvas.width, mainCanvas.height);

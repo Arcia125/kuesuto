@@ -175,6 +175,7 @@ export interface GameMap extends Renderable {
   // };
   isTileOutOfBounds: (position: Vector2) => boolean;
   getObjectStartLocation: (objectName: string) => ObjectGroupLayer['objects'][0];
+  getObjectStartLocations: (objectName: string) => ObjectGroupLayer['objects'];
 };
 
 export type Controls = {
@@ -271,6 +272,10 @@ export interface IStartMenuSystem extends Updateable {
   update: (gameState: GameState, timeStamp: number) => void;
 }
 
+export interface ISpawnSystem extends Updateable {
+  spawnFromMapData: (gameState: GameState) => void;
+}
+
 export interface IDeathSystem extends Updateable {
   kill: (entity: GameEntity, killer: GameEntity) => void;
   checkDeath: (entity: GameEntity) => boolean;
@@ -308,6 +313,7 @@ export type GameState = {
     controlState: IControlStateSystem;
     gameState: IGameStateSystem;
     startMenu: IStartMenuSystem;
+    spawn: ISpawnSystem;
   };
   mobileControls: MobileControls;
 };
@@ -405,6 +411,11 @@ export type ObjectGroupLayer = Vector2 & {
     rotation: number;
     type: string;
     visible: boolean;
+    properties: {
+      name: string;
+      type: string;
+      value: any;
+    }[];
   })[];
   opacity: number;
   type: 'objectgroup';

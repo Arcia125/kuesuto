@@ -111,6 +111,15 @@ export class RenderableMap implements GameMap {
     return objectStartLocation;
   };
 
+  public getObjectStartLocations = (objectName: string) => {
+
+    const objectLayer = this.getObjectLayer();
+    if (objectLayer?.type !== 'objectgroup') {
+      throw new Error('missing object layer');
+    }
+    return objectLayer.objects.filter(object => object.name === objectName);
+  };
+
   public render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
     const gridWidth = canvas.width;
     const gridHeight = canvas.height;
