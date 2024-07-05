@@ -17,7 +17,6 @@ export class Attack implements Capability {
         return;
       }
 
-      // console.log('weapon', weapon);
       const collisions = Collision.checkEntityCollision(gameState, weapon);
       if (collisions.collidedCorners) {
         collisions.entities.forEach(entity => {

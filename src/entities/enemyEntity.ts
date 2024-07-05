@@ -23,7 +23,8 @@ export class EnemyEntity extends NPCEntity {
     // debugger;
 
     // todo: fix update method. seems to be calling itself recursively somehow. It seems to do more than one update on the entity
-    // super.update(gameState, timeStamp);
+    // Update: seems to be fixed. May cause problems if weapon is created inside of entity contructor?
+    super.update(gameState, timeStamp);
     this.aggroCapability.update(gameState, timeStamp);
     this.movementCapability.update(gameState, timeStamp);
     this.collisionCapability.update(gameState, timeStamp);

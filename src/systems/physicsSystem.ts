@@ -28,6 +28,9 @@ export class PhysicsSystem implements IPhysicsSystem {
   }
 
   public update = (gameState: GameState, _timestamp: number) => {
+    if (gameState.systems.controlState.state === 'chat') {
+      return;
+    }
     for (let i = 0; i < this.forceEntries.length; i++) {
       const forceEntry = this.forceEntries[i];
       const { entity, force } = forceEntry;

@@ -10,6 +10,9 @@ export class Movement implements Capability {
     if (this.entity.status.dead) {
       return;
     }
+    if (gameState.systems.controlState.state === 'chat') {
+      return;
+    }
     const initialStateX = this.entity.state.x;
     const initialStateY = this.entity.state.y;
     this.action = new Action(() => {

@@ -93,11 +93,12 @@ export class SpawnSystem implements ISpawnSystem {
       const EntityClass = SpawnSystem.getEntityClass(entityObj);
 
       if (EntityClass) {
+        const children = 'getDefaultChildren' in EntityClass && EntityClass.getDefaultChildren(this.emitter, { ...SpawnSystem.defaultGameEntityState }) || [];
         const entity = new EntityClass({
           x: entityObj.x * RENDERING_SCALE,
           y: entityObj.y * RENDERING_SCALE,
           ...SpawnSystem.defaultGameEntityState,
-        }, [], this.emitter
+        }, children, this.emitter
         );
         gameState.entities.push(entity);
         entity.state.x = entityObj.x * RENDERING_SCALE;
