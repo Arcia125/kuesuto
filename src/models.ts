@@ -56,6 +56,7 @@ export type ForceEntry = { entity: GameEntity; force: Force };
 
 export interface Status {
   health: number;
+  maxHealth: number;
   immortal?: boolean;
   dead?: boolean;
   experience: number;
@@ -286,6 +287,7 @@ export interface IExperienceSystem {
 
 export interface ILevelingSystem {
   levelUp: (entity: GameEntity) => void;
+  calculateXPToNextLevel: (entity: GameEntity) => number;
 }
 
 export interface IPhysicsSystem extends Updateable {

@@ -28,7 +28,7 @@ export class PlayerEntity extends Entity {
   public constructor(public state: GameEntityState, public children: GameEntity[], emitter: EventEmitter) {
     super(state, PlayerEntity.NAME, children, emitter);
     this.sprite = new Sprite(playerSpriteJSONRAW as SpriteJSON, './kuesuto-player.png', emitter);
-    this.status.health = 200;
+    this.status.health = 100;
   }
 
   public update = (gameState: GameState, _timeStamp: number) => {
