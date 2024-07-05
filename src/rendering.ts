@@ -1,6 +1,6 @@
 import { PlayerEntity } from "./entities/playerEntity";
 import { EVENTS } from './events';
-import { GameEntity, GameState } from './models';
+import { GameEntity, GameState, Rect } from './models';
 import { worldToCamera } from './position';
 import { getBoundingRect } from './rectangle';
 import { drawSprite, getSpriteScale } from './sprites';
@@ -71,6 +71,128 @@ const getLines = (ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   return lines;
 }
 
+
+const drawBar = (
+  ctx: CanvasRenderingContext2D,
+  _canvas: HTMLCanvasElement,
+  _gameState: GameState,
+  values: { min: number, max: number },
+  rect: Rect,
+  fillStyle: string,
+  strokeStyle: string,
+  circleRad: number = 30,
+  textFillStyle: string = '#fff'
+) => {
+
+  ctx.beginPath();
+  ctx.arc(rect.x, rect.y + rect.h / 2, circleRad, Math.PI * .2, Math.PI * 1.8);
+  ctx.lineTo(rect.w, rect.y);
+  ctx.lineTo(rect.w, rect.y + rect.h);
+  ctx.closePath();
+  ctx.strokeStyle = strokeStyle;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(rect.x, rect.y + rect.h / 2, circleRad, Math.PI * .2, Math.PI * 1.8);
+  ctx.lineTo(rect.w * (Math.max(values.min, (circleRad) * .75) / values.max), rect.y);
+  ctx.lineTo(rect.w * (Math.max(values.min, (circleRad) * .75) / values.max), rect.y + rect.h);
+  ctx.closePath();
+
+  ctx.fillStyle = fillStyle;
+  ctx.fill();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = textFillStyle;
+  ctx.font = '24px "Press Start 2P"';
+  ctx.fillText(`${values.min}/${values.max}`, rect.x + rect.w / 2, rect.y + rect.h / 2);
+};
+
+const drawHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+
+  const gridWidth = canvas.width;
+  const gridHeight = canvas.height;
+
+  const player = gameState.entities.find(entity => entity.name === PlayerEntity.NAME);
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // // Healthbar
+  // ctx.fillStyle ='#a22633';
+  // const xOffset = 20;
+  // const yOffset = 20;
+  // ctx.fillRect(xOffset, yOffset, (player!.status.health / player!.status.maxHealth) * (gridWidth / 5), (gridHeight / 20));
+  // ctx.strokeStyle = '#000'
+  // ctx.lineWidth = 6;
+  // ctx.strokeRect(xOffset, yOffset, gridWidth / 5, gridHeight / 20);
+  // ctx.fillStyle = '#fff';
+  // ctx.font = '32px "Press Start 2P"';
+  // ctx.fillText(`${player!.status.health} / ${player!.status.maxHealth}`, xOffset + gridWidth / 5 / 2, yOffset + gridHeight / 20 / 2);
+
+  const yOffset = 20;
+
+  const barRect = {
+    x: 50,
+    y: yOffset,
+    w: gridWidth / 8,
+    h: 35
+  };
+  drawBar(
+    ctx,
+    canvas,
+    gameState,
+    {
+      min: player!.status.health,
+      max: player!.status.maxHealth
+    },
+    barRect,
+    '#a22633',
+    '#000',
+  );
+
+  ctx.fillText(`${player?.status.level}`, barRect.x, barRect.y + barRect.h / 2);
+  // drawBar(
+  //   ctx,
+  //   canvas,
+  //   gameState,
+  //   {
+  //     min: player!.status.experience,
+  //     max: (gameState.systems.leveling.calculateXPToNextLevel(player!) + player!.status.experience)
+  //   },
+  //   {
+  //     x: 50,
+  //     y: 100,
+  //     w: gridWidth / 8,
+  //     h: 25
+  //   },
+  //   '#2ce8f5',
+  //   '#000',
+  //   20
+  // );
+
+  // XP Bar
+  ctx.fillStyle ='#68386c';
+  const xOffset2 = 86;
+  const yOffset2 = yOffset + 48;
+  ctx.fillRect(xOffset2, yOffset2, (player!.status.experience / (gameState.systems.leveling.calculateXPToNextLevel(player!) + player!.status.experience)) * (gridWidth / 12), (gridHeight / 48));
+  ctx.strokeStyle = '#000'
+  ctx.lineWidth = 3;
+  ctx.strokeRect(xOffset2, yOffset2, gridWidth / 12, gridHeight / 48);
+  ctx.fillStyle = '#fff';
+  ctx.font = '16px "Press Start 2P"';
+  ctx.textAlign = "center";
+  ctx. textBaseline = "middle";
+  ctx.fillText(`${player!.status.experience} / ${Math.floor((gameState.systems.leveling.calculateXPToNextLevel(player!) + player!.status.experience)) }`, xOffset2 + gridWidth / 12 / 2, yOffset2 + gridHeight / 48 / 2);
+
+  // // Level
+  // ctx.fillStyle = '#fff';
+  // ctx.font = '32px "Press Start 2P"';
+  // ctx.lineWidth = 3;
+  // ctx.fillText(`Level ${player!.status.level}`, xOffset2 + gridWidth / 6 / 2, yOffset2 + gridHeight / 24 / 2 + 40);
+  // ctx.strokeStyle = '#000';
+  // ctx.strokeText(`Level ${player!.status.level}`, xOffset2 + gridWidth / 6 / 2, yOffset2 + gridHeight / 24 / 2 + 40);
+};
+
 /**
  * Draws the chat UI on the canvas.
  * @param ctx - The canvas rendering context.
@@ -83,75 +205,75 @@ const drawChat = (
   gameState: GameState
 ) => {
 
-    const gridWidth = canvas.width;
-    const gridHeight = canvas.height;
+  const gridWidth = canvas.width;
+  const gridHeight = canvas.height;
 
-    ctx.beginPath();
+  ctx.beginPath();
 
-    // Set the fill style for the chat background.
-    ctx.fillStyle = '#193c3e';
-    const size = {
-      height: 400,
-      width: gridWidth,
-    };
-    // Draw the chat background rectangle.
-    ctx.fillRect(0, gridHeight - size.height, size.width, size.height);
-    // Set the stroke style for the chat border.
-    ctx.strokeStyle = '#feae34';
-    const paddingWidth = 10;
-    ctx.lineWidth = paddingWidth;
-    // Draw the chat border rectangle.
-    ctx.strokeRect(
-      paddingWidth / 2,
-      gridHeight - size.height,
-      size.width - paddingWidth,
-      size.height
+  // Set the fill style for the chat background.
+  ctx.fillStyle = '#193c3e';
+  const size = {
+    height: 400,
+    width: gridWidth,
+  };
+  // Draw the chat background rectangle.
+  ctx.fillRect(0, gridHeight - size.height, size.width, size.height);
+  // Set the stroke style for the chat border.
+  ctx.strokeStyle = '#feae34';
+  const paddingWidth = 10;
+  ctx.lineWidth = paddingWidth;
+  // Draw the chat border rectangle.
+  ctx.strokeRect(
+    paddingWidth / 2,
+    gridHeight - size.height,
+    size.width - paddingWidth,
+    size.height
+  );
+  // Set the fill style for the chat text background.
+  ctx.fillStyle = '#ead4aa';
+  const fontSize = 54;
+  ctx.font = `${fontSize}px "Press Start 2P"`;
+  const offsetHeight = 24;
+  const offsetWidth = 32;
+  // Split the chat phrase into lines.
+  const lines = getLines(
+    ctx,
+    gameState.systems.chat.phrase,
+    size.width - paddingWidth * 2 - offsetWidth
+  );
+  const lineGap = 10;
+  ctx.strokeStyle = '#181425';
+  ctx.lineWidth = 4;
+  const textY = gridHeight - size.height + offsetHeight;
+  const textX = paddingWidth / 2 + offsetWidth;
+  const textHeight = fontSize;
+  const textGap = lineGap;
+  // set text alignment
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  // Draw each line of chat text.
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const y = textY + i * (textHeight + textGap);
+    ctx.fillText(line, textX, y);
+    ctx.strokeText(line, textX, y);
+  }
+
+  // Draw the next phrase indicator if there is one.
+  if (gameState.systems.chat.hasNextPhrase) {
+
+    ctx.fillText(
+      '▼',
+      size.width -
+      paddingWidth / 2 -
+      offsetWidth -
+      (paddingWidth * 2) -
+      (fontSize / 2),
+      gridHeight - offsetHeight - fontSize
     );
-    // Set the fill style for the chat text background.
-    ctx.fillStyle = '#ead4aa';
-    const fontSize = 54;
-    ctx.font = `${fontSize}px "Press Start 2P"`;
-    const offsetHeight = 24;
-    const offsetWidth = 32;
-    // Split the chat phrase into lines.
-    const lines = getLines(
-      ctx,
-      gameState.systems.chat.phrase,
-      size.width - paddingWidth * 2 - offsetWidth
-    );
-    const lineGap = 10;
-    ctx.strokeStyle = '#181425';
-    ctx.lineWidth = 4;
-    const textY = gridHeight - size.height + offsetHeight;
-    const textX = paddingWidth / 2 + offsetWidth;
-    const textHeight = fontSize;
-    const textGap = lineGap;
-    // set text alignment
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'top';
-
-    // Draw each line of chat text.
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const y = textY + i * (textHeight + textGap);
-      ctx.fillText(line, textX, y);
-      ctx.strokeText(line, textX, y);
-    }
-
-    // Draw the next phrase indicator if there is one.
-    if (gameState.systems.chat.hasNextPhrase) {
-
-      ctx.fillText(
-        '▼',
-        size.width -
-        paddingWidth / 2 -
-        offsetWidth -
-        (paddingWidth * 2) -
-        (fontSize / 2),
-        gridHeight - offsetHeight - fontSize
-      );
-    }
-    ctx.closePath();
+  }
+  ctx.closePath();
 
 };
 
@@ -318,6 +440,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
       }
     }
 
+    drawHUD(ctx, canvas, gameState);
     // Only draw the chat UI if the game is in the chat state.
     if (gameState.systems.controlState.state === 'chat') {
       drawChat(ctx, canvas, gameState);

@@ -12,6 +12,7 @@ export class Entity implements GameEntity {
   public parent?: GameEntity | undefined;
   public status: Status = {
     health: 0,
+    maxHealth: 0,
     experience: 0,
     level: 1,
   };
@@ -126,6 +127,9 @@ export class Entity implements GameEntity {
     // if (this.name === 'slime') {
     //   debugger;
     // }
+    if(this.status.maxHealth < this.status.health) {
+      this.status.maxHealth = this.status.health
+    }
     if (!this.children?.length) {
       return;
     }
