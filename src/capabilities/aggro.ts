@@ -1,3 +1,4 @@
+import { WeaponEntity } from './../entities/weaponEntity';
 import {  } from '../position';
 import { findPath, PathNode } from '@arcia125/pather';
 import { Collision } from './collision';
@@ -107,6 +108,18 @@ export class Aggro implements Capability {
     // console.log(path);
     const playerDistance = (Math.abs(player.state.x - this.entity.state.x)) + (Math.abs(player.state.y - this.entity.state.y));
     this.entity.state.attacking = playerDistance < getSpriteScale() * 2;
+
+    const weapon =this.entity.children?.find(child => child instanceof WeaponEntity);
+
+    if (weapon) {
+      if (playerDistance < getSpriteScale() * 2) {
+        weapon.state.attacking = true;
+        weapon.state.visible = true;
+      } else {
+        weapon.state.attacking = false;
+        weapon.state.visible = false;
+      }
+    }
 
     if (playerDistance < this.range) {
       if (this.isAggroed) {

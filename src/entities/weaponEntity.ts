@@ -56,7 +56,9 @@ export class WeaponEntity extends Entity {
     if (!this.attackListener) {
       const animationListener: EventListener<typeof EVENTS.ANIMATION_END> = (_name, payload) => {
         if (payload.entity === this) {
-          gameState.controls.attack = false;
+          if (payload.entity.parent?.name === 'player') {
+            gameState.controls.attack = false;
+          }
           this.state.attacking = false;
           this.state.visible = false;
         }
@@ -64,7 +66,7 @@ export class WeaponEntity extends Entity {
       this.emitter.on(EVENTS.ANIMATION_END, animationListener);
       this.attackListener = animationListener;
     }
-    if ((gameState.controls.attack || gameState.mobileControls.state.attack) && !this.state.attacking && gameState.systems.controlState.state === 'normal') {
+    if ((gameState.controls.attack || gameState.mobileControls.state.attack) && this.parent?.name === 'player' && !this.state.attacking && gameState.systems.controlState.state === 'normal') {
       this.state.attacking = true;
       this.state.visible = true;
     }
