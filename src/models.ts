@@ -286,6 +286,8 @@ export interface IExperienceSystem {
 }
 
 export interface ILevelingSystem {
+  x: number;
+  y: number;
   levelUp: (entity: GameEntity) => void;
   calculateXPToNextLevel: (entity: GameEntity) => number;
 }
