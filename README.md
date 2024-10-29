@@ -1,4 +1,5 @@
 # Kuesuto: A Tribute to Classic Adventure Games
+![project-kuesuto](https://github.com/user-attachments/assets/7cab0014-9282-4558-9d07-ff85064b4cd4)
 
 [Demo](https://arcia125.github.io/kuesuto/)
 
