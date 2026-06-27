@@ -4,6 +4,7 @@ import { GameEntity, GameState, Rect } from './models';
 import { worldToCamera } from './position';
 import { getBoundingRect } from './rectangle';
 import { drawSprite, getSpriteScale } from './sprites';
+import { getTintedSprite } from './spriteTinting';
 
 
 const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, background: CanvasFillStrokeStyles['fillStyle']) => {
@@ -363,8 +364,12 @@ const drawEntity = (
 
   gameState.emitter.emit(EVENTS.RENDER_SPRITE, { spriteData, entity });
 
-  const spriteSheet = entity.sprite.spriteSheet;
-  drawSprite(ctx, canvas, spriteSheet, spriteData);
+  let spriteSource: CanvasImageSource = entity.sprite.spriteSheet;
+  if (entity.state.tint) {
+    const cacheKey = `${entity.name}_${entity.state.tint.r}_${entity.state.tint.g}_${entity.state.tint.b}_${entity.state.tint.a}`;
+    spriteSource = getTintedSprite(entity.sprite.spriteSheet, entity.state.tint, cacheKey);
+  }
+  drawSprite(ctx, canvas, spriteSource, spriteData);
 
 
   const entityBox = getBoundingRect({ x: canvasPos.x, y: canvasPos.y, h: spriteData.canvasHeight, w: spriteData.canvasWidth });
@@ -384,15 +389,15 @@ const drawEntity = (
   if (gameState.debugSettings.debugPlayerSpriteSheet && entity.name === PlayerEntity.NAME) {
     const sheetScale = 4;
     const spriteOffset = 250;
-    drawSprite(ctx, canvas, spriteSheet, {
+    drawSprite(ctx, canvas, entity.sprite.spriteSheet, {
       canvasX: spriteOffset,
       canvasY: spriteOffset,
-      canvasWidth: spriteSheet.naturalWidth * sheetScale,
-      canvasHeight: spriteSheet.naturalHeight * sheetScale,
+      canvasWidth: entity.sprite.spriteSheet.naturalWidth * sheetScale,
+      canvasHeight: entity.sprite.spriteSheet.naturalHeight * sheetScale,
       spriteX: 0,
       spriteY: 0,
-      spriteWidth: spriteSheet.naturalWidth,
-      spriteHeight: spriteSheet.naturalHeight,
+      spriteWidth: entity.sprite.spriteSheet.naturalWidth,
+      spriteHeight: entity.sprite.spriteSheet.naturalHeight,
     });
 
     ctx.beginPath();

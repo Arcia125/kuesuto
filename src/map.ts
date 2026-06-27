@@ -95,6 +95,18 @@ export class RenderableMap implements GameMap {
   //   return collisionShapes;
   // };
 
+  public setActiveMap = (mapName: string) => {
+    const tileMap = this.tileMaps[mapName];
+    if (!tileMap) {
+      throw new Error(`Unknown map "${mapName}"`);
+    }
+    this.activeMap = {
+      name: mapName,
+      tileMap,
+      worldMap: tileMap.worldMaps[mapName],
+    };
+  };
+
   public isTileOutOfBounds = (position: Vector2) => position.x < 0 || position.y < 0 || position.x > this.activeMap.worldMap.width || position.y > this.activeMap.worldMap.height;
 
   private getObjectLayer = () => this.activeMap.worldMap.layers.find(layer => layer.type === 'objectgroup');
@@ -203,7 +215,7 @@ export class RenderableMap implements GameMap {
             debugger;
           }
           const cameraPos = worldToCamera({ x, y }, gameState.camera);
-          drawSprite(ctx, canvas, this.tileMaps.forrest.tileSets.forrest, {
+          drawSprite(ctx, canvas, Object.values(this.activeMap.tileMap.tileSets)[0], {
             spriteX: frame.frame.x,
             spriteY: frame.frame.y,
             spriteWidth: frame.frame.w,

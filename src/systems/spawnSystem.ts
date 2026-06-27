@@ -2,18 +2,23 @@ import { LevelUpEntity } from '../entities/levelUpEntity';
 import { DarkWizardEntity } from '../entities/darkWizardEntity';
 import { INIT_PLAYER_SPEED_X, INIT_PLAYER_SPEED_Y } from '../constants';
 import { GameState, ObjectGroupLayer } from '../models';
-import { EventEmitter } from '../events';
+import { EventEmitter, EVENTS } from '../events';
 import { ISpawnSystem } from '../models';
 import { SlimeEntity } from '../entities/slimeEntity';
+import { CorruptedSlimeEntity } from '../entities/corruptedSlimeEntity';
+import { FastSlimeEntity } from '../entities/fastSlimeEntity';
+import { InteractableZoneEntity } from '../entities/interactableZoneEntity';
 import { RENDERING_SCALE } from '../constants';
 import { PlayerEntity } from '../entities/playerEntity';
 import { SwordEntity } from '../entities/swordEntity';
 
 export class SpawnSystem implements ISpawnSystem {
-  private spawnedFromMap = false;
-  private static readonly entityClasses = {
+  private spawnedMaps: Record<string, boolean> = {};
+  private static readonly entityClasses: Record<string, any> = {
     [SlimeEntity.NAME]: SlimeEntity,
-    [DarkWizardEntity.NAME]: DarkWizardEntity
+    [DarkWizardEntity.NAME]: DarkWizardEntity,
+    [CorruptedSlimeEntity.NAME]: CorruptedSlimeEntity,
+    [FastSlimeEntity.NAME]: FastSlimeEntity,
   };
 
   private static readonly defaultGameEntityState = {
@@ -36,13 +41,16 @@ export class SpawnSystem implements ISpawnSystem {
 
 
   public constructor(private emitter: EventEmitter) {
-
+    emitter.on(EVENTS.AREA_TRANSITION_COMPLETE, (_eventName, payload) => {
+      this.spawnedMaps[payload.mapName] = false;
+    });
   }
 
   public update(gameState: GameState, _timestamp: number): void {
-    if (!this.spawnedFromMap && gameState.systems.gameState.inStates(['running'])) {
+    const currentMap = gameState.map.activeMap.name;
+    if (!this.spawnedMaps[currentMap] && gameState.systems.gameState.inStates(['running'])) {
       this.spawnFromMapData(gameState);
-      this.spawnedFromMap = true;
+      this.spawnedMaps[currentMap] = true;
     }
   }
 
@@ -54,42 +62,59 @@ export class SpawnSystem implements ISpawnSystem {
     return SpawnSystem.entityClasses[SpawnSystem.getEntityType(object)];
   }
 
+  private spawnInteractableZone(gameState: GameState, entityObj: ObjectGroupLayer['objects'][0]): void {
+    const phrasesRaw = entityObj.properties.find(p => p.name === 'phrases')?.value || '';
+    const phrases = phrasesRaw.split('|').map((s: string) => s.trim()).filter(Boolean);
+    if (!phrases.length) return;
 
+    const entity = new InteractableZoneEntity(
+      {
+        ...SpawnSystem.defaultGameEntityState,
+        x: entityObj.x * RENDERING_SCALE,
+        y: entityObj.y * RENDERING_SCALE,
+        visible: false,
+      },
+      [],
+      gameState.emitter,
+      phrases
+    );
+    gameState.entities.push(entity);
+  }
 
   private spawnFromMapData(gameState: GameState): void {
+    // Only spawn player on the first map load
+    const hasPlayer = gameState.entities.some(e => e.name === PlayerEntity.NAME);
+    if (!hasPlayer) {
+      const playerStartLocationObject = gameState.map.getObjectStartLocation('Player Start Location');
 
-    const playerStartLocationObject = gameState.map.getObjectStartLocation('Player Start Location');
-
-    const playerEntity = new PlayerEntity({
-      ...SpawnSystem.defaultGameEntityState,
-      x: playerStartLocationObject.x * RENDERING_SCALE,
-      y: playerStartLocationObject.y * RENDERING_SCALE,
-      mass: 20,
-    }, [
-      new SwordEntity({
+      const playerEntity = new PlayerEntity({
         ...SpawnSystem.defaultGameEntityState,
-        x: 0,
-        y: 0,
-      }, [], this.emitter),
-      new LevelUpEntity({
-        ...SpawnSystem.defaultGameEntityState,
-        x: 0,
-        y: 0,
-        visible: false,
-      }, this.emitter)
-    ], this.emitter);
+        x: playerStartLocationObject.x * RENDERING_SCALE,
+        y: playerStartLocationObject.y * RENDERING_SCALE,
+        mass: 20,
+      }, [
+        new SwordEntity({
+          ...SpawnSystem.defaultGameEntityState,
+          x: 0,
+          y: 0,
+        }, [], this.emitter),
+        new LevelUpEntity({
+          ...SpawnSystem.defaultGameEntityState,
+          x: 0,
+          y: 0,
+          visible: false,
+        }, this.emitter)
+      ], this.emitter);
 
-    gameState.camera.follow(playerEntity);
-
-    gameState.entities.push(playerEntity);
-
-    const startLocationsObject = gameState.map.getObjectStartLocations('Enemy').concat(gameState.map.getObjectStartLocations('Dark Wizard'));
-
-    if (!startLocationsObject.length) {
-      throw new TypeError('Missing entity');
+      gameState.camera.follow(playerEntity);
+      gameState.entities.push(playerEntity);
     }
-    startLocationsObject.forEach(entityObj => {
 
+    // Spawn enemies and NPCs
+    const startLocationsObject = gameState.map.getObjectStartLocations('Enemy')
+      .concat(gameState.map.getObjectStartLocations('Dark Wizard'));
+
+    startLocationsObject.forEach(entityObj => {
       const EntityClass = SpawnSystem.getEntityClass(entityObj);
 
       if (EntityClass) {
@@ -104,9 +129,14 @@ export class SpawnSystem implements ISpawnSystem {
         entity.state.x = entityObj.x * RENDERING_SCALE;
         entity.state.y = entityObj.y * RENDERING_SCALE;
       } else {
-        throw new TypeError(`Unknown entity type ${SpawnSystem.getEntityType(entityObj)}`);
+        console.warn(`Unknown entity type ${SpawnSystem.getEntityType(entityObj)}`);
       }
     });
 
+    // Spawn interactable zones
+    const zoneObjects = gameState.map.getObjectStartLocations('InteractableZone');
+    zoneObjects.forEach(zoneObj => {
+      this.spawnInteractableZone(gameState, zoneObj);
+    });
   }
 }

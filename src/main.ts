@@ -18,6 +18,8 @@ import { ControlStateSystem } from './systems/controlStateSystem';
 import { GameStateSystem } from './systems/gameStateSystem';
 import { StartMenuSystem } from './systems/startMenuSystem';
 import { SpawnSystem } from './systems/spawnSystem';
+import { NarrativeFlagSystem } from './systems/narrativeFlagSystem';
+import { AreaTransitionSystem } from './systems/areaTransitionSystem';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -88,6 +90,8 @@ const init = () => {
       gameState: new GameStateSystem(emitter),
       startMenu: new StartMenuSystem(emitter),
       spawn: new SpawnSystem(emitter),
+      narrativeFlags: new NarrativeFlagSystem(emitter),
+      areaTransition: new AreaTransitionSystem(emitter),
     },
     mobileControls: new MobileControls(),
   };

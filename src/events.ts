@@ -1,4 +1,4 @@
-import { Corners, GameEntity, Damage, IControlStateSystem, IGameStateSystem } from './models';
+import { Corners, GameEntity, Damage, IControlStateSystem, IGameStateSystem, NarrativeFlagValue } from './models';
 
 export const EVENTS = {
   ALL: 'all',
@@ -23,6 +23,9 @@ export const EVENTS = {
   CONTROL_STATE: 'controlState',
   GAME_STATE: 'gameState',
   START_MENU_OPEN: 'startMenuOpen',
+  NARRATIVE_FLAG_SET: 'narrativeFlagSet',
+  AREA_TRANSITION_START: 'areaTransitionStart',
+  AREA_TRANSITION_COMPLETE: 'areaTransitionComplete',
 } as const;
 
 export type EVENT_KEY = keyof typeof EVENTS;
@@ -78,7 +81,19 @@ export type EVENT_MAPPING = {
   [EVENTS.GAME_STATE]: {
     state: IGameStateSystem['state'];
   },
-  [EVENTS.START_MENU_OPEN]: {}
+  [EVENTS.START_MENU_OPEN]: {};
+  [EVENTS.NARRATIVE_FLAG_SET]: {
+    key: string;
+    value: NarrativeFlagValue;
+    previousValue?: NarrativeFlagValue;
+  };
+  [EVENTS.AREA_TRANSITION_START]: {
+    targetMap: string;
+    entryPoint: string;
+  };
+  [EVENTS.AREA_TRANSITION_COMPLETE]: {
+    mapName: string;
+  };
 }
 
 export type EventListener<T extends EVENT_NAME> = (eventName: T, payload: EVENT_MAPPING[T]) => void;
