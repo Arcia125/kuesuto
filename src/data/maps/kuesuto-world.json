@@ -1338,6 +1338,24 @@
                  "width":0,
                  "x":1600,
                  "y":2300
+                },
+                {
+                 "height":0,
+                 "id":28,
+                 "name":"From Ruins",
+                 "point":true,
+                 "properties":[
+                        {
+                         "name":"type",
+                         "type":"string",
+                         "value":"playerStart"
+                        }],
+                 "rotation":0,
+                 "type":"Spawn",
+                 "visible":true,
+                 "width":0,
+                 "x":1700,
+                 "y":2208
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -1346,7 +1364,7 @@
          "y":0
         }],
  "nextlayerid":6,
- "nextobjectid":28,
+ "nextobjectid":29,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.10.2",

@@ -3,6 +3,7 @@ import { getImage } from './images';
 import { getSpriteScale, drawSprite } from './sprites';
 import tileMapJSONRaw from './data/spriteJSON/kuesuto-tilemap.json';
 import forrestWorldMap from './data/maps/kuesuto-world.json';
+import ruinsApproachWorldMap from './data/maps/ruins-approach.json';
 import forrestTileset from './data/tilesets/ks-forrest-tileset.json';
 import { EventEmitter } from './events';
 import { GameMap, GameMapState, GameState, Vector2, TileMap, TileMapJSON, WorldMap, TileLayer, TileSetJSON } from './models';
@@ -33,21 +34,32 @@ export class RenderableMap implements GameMap {
   public activeMap: { name: string; tileMap: TileMap; worldMap: WorldMap; };
   public constructor(public state: GameMapState, public emitter: EventEmitter) {
     const forrestTileMapPath = './kuesuto-tilemap.png';
+    // Both maps draw from the same tileset image and source tileset; only the world
+    // (tile data + objects) differs. Share the loaded image and sourceMap so the
+    // renderer (which uses Object.values(tileSets)[0] + sourceMap[tileset.source])
+    // works for either active map.
+    const tileSetImage = getImage(() => {
+      emitter.emit('imageLoaded', {
+        imagePath: forrestTileMapPath
+      });
+    }, forrestTileMapPath);
+    const sourceMap = {
+      'ks-forrest-tileset.tsx': {
+        tileMapJSON: tileMapJSONRaw,
+        tileSetJSON: forrestTileset as unknown as TileSetJSON,
+      }
+    };
     this.tileMaps = {
       forrest: new GameTileMap(tileMapJSONRaw, {
-        forrest: getImage(() => {
-          emitter.emit('imageLoaded', {
-            imagePath: forrestTileMapPath
-          });
-        }, forrestTileMapPath)
+        forrest: tileSetImage,
       }, {
         forrest: forrestWorldMap as WorldMap
+      }, sourceMap),
+      'ruins-approach': new GameTileMap(tileMapJSONRaw, {
+        'ruins-approach': tileSetImage,
       }, {
-        'ks-forrest-tileset.tsx': {
-          tileMapJSON: tileMapJSONRaw,
-          tileSetJSON: forrestTileset as unknown as TileSetJSON,
-        }
-      }),
+        'ruins-approach': ruinsApproachWorldMap as unknown as WorldMap
+      }, sourceMap),
     }
 
     this.activeMap = {
