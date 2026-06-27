@@ -1,4 +1,4 @@
-# Kuesuto: A Tribute to Classic Adventure Games
+# Kuesuto: Chronicles of the Elven Blade
 ![project-kuesuto](https://github.com/user-attachments/assets/7cab0014-9282-4558-9d07-ff85064b4cd4)
 
 [Demo](https://arcia125.github.io/kuesuto/)
@@ -9,7 +9,7 @@ Kuesuto is a passion project and homage to *The Legend of Zelda: A Link to the P
 
 ### Game Overview
 
-Kuesuto transports players to the enchanted Forest of Verdelight, where the balance of nature is threatened by an ancient dark magic. The player assumes the role of a silver-haired protagonist who must face the Shadowthorn’s corruption and a host of adversaries to protect the forest. Along the way, the player encounters mysterious allies, like **Morghul**, a dark wizard who hints at a larger, unfolding destiny.
+Kuesuto transports players to the enchanted forests of Verdelight, where a slow, spreading **corruption** is twisting the creatures of the woods into something darker. The player is **Arcia**, a silver-haired elf and sword-first fighter, who is drawn into uncovering *why* — its source is a mystery, not a prophecy. Along the way she meets figures like **Morghal**, a robed wizard who has watched the forest far too long and offers direction and unsettled questions rather than easy answers. See [DESIGN.md](./DESIGN.md) for the full canon.
 
 ---
 
@@ -23,19 +23,19 @@ Kuesuto's development involved creating an entirely custom game engine in TypeSc
 * **Responsive Controls**: Movement uses **WASD** or arrow keys, with a custom on-screen controller for mobile.
 * **Real-Time Action Combat**: Engage enemies in close combat, leveling up as you gain experience.
 * **Advanced Enemy AI**: Enemies use the Pather library to track the player’s movements, increasing difficulty and realism.
-* **Dynamic Storyline**: Interact with NPCs like Morghul, who offer guidance and reveal the lore of Verdelight.
+* **Dynamic Storyline**: Interact with NPCs like Morghal, who offer guidance and reveal the lore of Verdelight.
 
 ---
 
-### Meet Morghul, the Dark Wizard
+### Meet Morghal
 
-Morghul, a robed figure shrouded in mystery, serves as a powerful ally and guide to the player. As the story begins, Morghul addresses the player with an eerie insight into their role in the forest's fate:
+Morghal, a robed figure who has watched the forest "longer than he cares to remember," serves as a guide to the player — one who asks questions rather than pronouncing fate. When Arcia first wanders into the glade, he greets her plainly:
 
-> **Morghul**: "Ah, so you are the one foretold by the ancient prophecies. How curious that a mere elf stands at the crossroads of destiny."
+> **Morghal**: "Hmm. A traveler. It has been some time since anyone wandered into Verdelight Glade."
 
-> Morghul steps forward, his eyes glowing with enigmatic power. "I am Morghul, a seeker of ancient truths. The Forest of Verdelight faces a dire threat. The Shadowthorn spreads with purpose. Your presence here is no coincidence."
+> The wizard studies you with calm, steady eyes. "Something is wrong here. The creatures of the glade are changing — a corruption is taking hold, twisting them into something darker. I could use your help."
 
-With each interaction, Morghul reveals more about the dark magic corrupting the forest, setting the player on a journey to find and eliminate its source.
+With each interaction, Morghal reveals a little more — but the source of the corruption stays a genuine mystery, for him as much as for Arcia. The game is the uncovering.
 
 ---
 
