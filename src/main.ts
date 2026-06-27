@@ -145,6 +145,12 @@ try {
   gameState = initilization.gameState;
   resize();
 
+  // Debug affordance: with ?debug in the URL, expose the live gameState for
+  // inspection/scripted testing from the console. No-op in normal play.
+  if (typeof location !== 'undefined' && location.search.includes('debug')) {
+    (window as unknown as { __kuesuto?: typeof gameState }).__kuesuto = gameState;
+  }
+
 } catch (error) {
   console.error('Failed to initialize' + error);
 }
