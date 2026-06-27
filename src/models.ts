@@ -80,6 +80,7 @@ export interface GameEntityState extends Vector2 {
   animationFrameX: number;
   animationFrameXStart: number;
   flashing?: boolean;
+  tint?: { r: number; g: number; b: number; a: number };
 };
 
 export interface Renderable {
@@ -177,6 +178,7 @@ export interface GameMap extends Renderable {
   isTileOutOfBounds: (position: Vector2) => boolean;
   getObjectStartLocation: (objectName: string) => ObjectGroupLayer['objects'][0];
   getObjectStartLocations: (objectName: string) => ObjectGroupLayer['objects'];
+  setActiveMap: (mapName: string) => void;
 };
 
 export type Controls = {
@@ -317,6 +319,8 @@ export type GameState = {
     gameState: IGameStateSystem;
     startMenu: IStartMenuSystem;
     spawn: ISpawnSystem;
+    narrativeFlags: INarrativeFlagSystem;
+    areaTransition: IAreaTransitionSystem;
   };
   mobileControls: MobileControls;
 };
@@ -470,7 +474,20 @@ export interface ItemStats {
   damages: Damage[];
 }
 
+export type NarrativeFlagValue = boolean | string | number;
+
+export interface INarrativeFlagSystem extends Updateable {
+  getFlag(key: string): NarrativeFlagValue | undefined;
+  setFlag(key: string, value: NarrativeFlagValue): void;
+  hasFlag(key: string): boolean;
+}
+
+export interface IAreaTransitionSystem extends Updateable {
+}
+
 export type Interaction = {
   type: 'CHAT';
   phrases: string[];
+  condition?: (gameState: GameState) => boolean;
+  onComplete?: (gameState: GameState) => void;
 }

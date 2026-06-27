@@ -11,16 +11,43 @@ export class DarkWizardEntity extends NPCEntity {
   public static DISPLAY_NAME = 'Morghal';
   public collisionCapability = new Collision(this);
   public interactableCapability = new Interactable(this, [
-    {type:'CHAT', phrases: [
-      `${DarkWizardEntity.DISPLAY_NAME}: Ah, so you are the one foretold by the ancient prophecies. How curious that a mere elf stands at the crossroads of destiny.`,
-      `The ${DarkWizardEntity.DISPLAY_NAME} steps forward, his eyes glowing with an enigmatic power.`,
-      `${DarkWizardEntity.DISPLAY_NAME}: Allow me to introduce myself. I am ${DarkWizardEntity.DISPLAY_NAME}, a seeker of ancient truths. The Forest of Verdelight is facing a dire threat, and the Shadowthorn spreads with purpose. Your presence here is no coincidence.`,
-      `Morghal's voice carries a calm and wise tone as he surveys the surroundings.`,
-      `${DarkWizardEntity.DISPLAY_NAME}: The balance of nature is delicate. The Shadowthorn's corruption stems from an ancient artifact, hidden deep within these woods. This dark magic has disrupted the natural order.`,
-      `He raises his staff, drawing power from the hidden energies around him.`,
-      `${DarkWizardEntity.DISPLAY_NAME}: I am here to guide you, ${PlayerEntity.DISPLAY_NAME}. Together, we must uncover the source of this corruption and find a way to eliminate it. The path ahead is shrouded in mystery, but with wisdom and courage, we will find our way.`,
-      `With a reassuring look, Morghal fades into the shadows, leaving the player with a sense of purpose and guidance.`
-    ]},
+    // After investigation - points to ruins
+    {
+      type: 'CHAT',
+      condition: (gameState: GameState) => gameState.systems.narrativeFlags.hasFlag('corruption_investigated'),
+      phrases: [
+        `${DarkWizardEntity.DISPLAY_NAME}: You have seen the corruption with your own eyes now. The creatures deeper in the forest... they are not what they once were.`,
+        `${DarkWizardEntity.DISPLAY_NAME}: Something is feeding this darkness. It is not natural. The corruption spreads from somewhere to the east.`,
+        `${DarkWizardEntity.DISPLAY_NAME}: There are ruins beyond the tree line. Ancient stones, older than this forest. I believe the source lies there.`,
+        `${DarkWizardEntity.DISPLAY_NAME}: Be careful, ${PlayerEntity.DISPLAY_NAME}. Whatever waits in those ruins has had a long time to grow strong.`,
+      ],
+      onComplete: (gameState: GameState) => {
+        gameState.systems.narrativeFlags.setFlag('chapter1_complete', true);
+      }
+    },
+    // After intro, before investigation
+    {
+      type: 'CHAT',
+      condition: (gameState: GameState) => gameState.systems.narrativeFlags.hasFlag('morghal_intro_complete'),
+      phrases: [
+        `${DarkWizardEntity.DISPLAY_NAME}: The corrupted creatures are deeper in the forest, to the north. You will know them by their color - dark, unnatural.`,
+        `${DarkWizardEntity.DISPLAY_NAME}: Defeat a few and return to me. I need to understand how far the corruption has spread.`,
+      ],
+    },
+    // First meeting
+    {
+      type: 'CHAT',
+      phrases: [
+        `${DarkWizardEntity.DISPLAY_NAME}: Hmm. A traveler. It has been some time since anyone wandered into Verdelight Glade.`,
+        `The wizard studies you with calm, steady eyes.`,
+        `${DarkWizardEntity.DISPLAY_NAME}: I am ${DarkWizardEntity.DISPLAY_NAME}. I have been watching the forest for... longer than I care to remember.`,
+        `${DarkWizardEntity.DISPLAY_NAME}: Something is wrong here, ${PlayerEntity.DISPLAY_NAME}. The creatures of the glade are changing. A corruption is taking hold, twisting them into something darker.`,
+        `${DarkWizardEntity.DISPLAY_NAME}: I could use your help. Head deeper into the forest and investigate the corrupted creatures. See what you can learn.`,
+      ],
+      onComplete: (gameState: GameState) => {
+        gameState.systems.narrativeFlags.setFlag('morghal_intro_complete', true);
+      }
+    },
   ]);
 
   public constructor(public state: GameEntityState, public children: GameEntity[], public emitter: EventEmitter) {

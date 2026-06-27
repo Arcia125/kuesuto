@@ -78,7 +78,7 @@ export const getSpriteScale = () => {
 export const drawSprite = (
   ctx: CanvasRenderingContext2D,
   _canvas: HTMLCanvasElement,
-  spriteSheet: HTMLImageElement,
+  spriteSheet: CanvasImageSource,
   {
     canvasX,
     canvasY,

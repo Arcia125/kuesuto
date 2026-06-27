@@ -18,6 +18,8 @@ import { ControlStateSystem } from './systems/controlStateSystem';
 import { GameStateSystem } from './systems/gameStateSystem';
 import { StartMenuSystem } from './systems/startMenuSystem';
 import { SpawnSystem } from './systems/spawnSystem';
+import { NarrativeFlagSystem } from './systems/narrativeFlagSystem';
+import { AreaTransitionSystem } from './systems/areaTransitionSystem';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -88,6 +90,8 @@ const init = () => {
       gameState: new GameStateSystem(emitter),
       startMenu: new StartMenuSystem(emitter),
       spawn: new SpawnSystem(emitter),
+      narrativeFlags: new NarrativeFlagSystem(emitter),
+      areaTransition: new AreaTransitionSystem(emitter),
     },
     mobileControls: new MobileControls(),
   };
@@ -140,6 +144,12 @@ try {
   mainCanvasContext = initilization.mainCanvasContext;
   gameState = initilization.gameState;
   resize();
+
+  // Debug affordance: with ?debug in the URL, expose the live gameState for
+  // inspection/scripted testing from the console. No-op in normal play.
+  if (typeof location !== 'undefined' && location.search.includes('debug')) {
+    (window as unknown as { __kuesuto?: typeof gameState }).__kuesuto = gameState;
+  }
 
 } catch (error) {
   console.error('Failed to initialize' + error);
