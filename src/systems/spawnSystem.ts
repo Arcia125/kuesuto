@@ -8,6 +8,7 @@ import { SlimeEntity } from '../entities/slimeEntity';
 import { CorruptedSlimeEntity } from '../entities/corruptedSlimeEntity';
 import { FastSlimeEntity } from '../entities/fastSlimeEntity';
 import { InteractableZoneEntity } from '../entities/interactableZoneEntity';
+import { TransitionTriggerEntity } from '../entities/transitionTriggerEntity';
 import { RENDERING_SCALE } from '../constants';
 import { PlayerEntity } from '../entities/playerEntity';
 import { SwordEntity } from '../entities/swordEntity';
@@ -138,5 +139,41 @@ export class SpawnSystem implements ISpawnSystem {
     zoneObjects.forEach(zoneObj => {
       this.spawnInteractableZone(gameState, zoneObj);
     });
+
+    // Spawn area-transition triggers
+    const transitionObjects = gameState.map.getObjectStartLocations('Transition');
+    transitionObjects.forEach(transitionObj => {
+      this.spawnTransitionTriggers(gameState, transitionObj);
+    });
+  }
+
+  private spawnTransitionTriggers(gameState: GameState, transitionObj: ObjectGroupLayer['objects'][0]): void {
+    const targetMap = transitionObj.properties.find(p => p.name === 'targetMap')?.value;
+    const entryPoint = transitionObj.properties.find(p => p.name === 'entryPoint')?.value;
+    if (!targetMap || !entryPoint) return;
+
+    // Gates can be wide (the forrest gate is 16 tiles across). A collision box is a
+    // single tile, so tile the gate with one trigger per tile to make it reliably
+    // crossable wherever the player walks through it.
+    const TILE = 16;
+    const width = transitionObj.width || TILE;
+    const height = transitionObj.height || TILE;
+    for (let dx = 0; dx < width; dx += TILE) {
+      for (let dy = 0; dy < height; dy += TILE) {
+        const entity = new TransitionTriggerEntity(
+          {
+            ...SpawnSystem.defaultGameEntityState,
+            x: (transitionObj.x + dx) * RENDERING_SCALE,
+            y: (transitionObj.y + dy) * RENDERING_SCALE,
+            visible: false,
+          },
+          [],
+          gameState.emitter,
+          targetMap,
+          entryPoint,
+        );
+        gameState.entities.push(entity);
+      }
+    }
   }
 }
