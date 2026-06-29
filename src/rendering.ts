@@ -1,5 +1,6 @@
 import { PlayerEntity } from "./entities/playerEntity";
 import { EVENTS } from './events';
+import { CORRUPTED_KILLS_REQUIRED } from './systems/narrativeFlagSystem';
 import { GameEntity, GameState, Rect } from './models';
 import { worldToCamera } from './position';
 import { getBoundingRect } from './rectangle';
@@ -106,6 +107,79 @@ const drawBar = (
   ctx.fillStyle = textFillStyle;
   ctx.font = '24px "Press Start 2P"';
   ctx.fillText(`${values.min}/${values.max}`, rect.x + rect.w / 2, rect.y + rect.h / 2);
+};
+
+/**
+ * Derives the player's current objective text from narrative flags and the active
+ * map. Returns the single line the objective tracker should show, so the player
+ * always knows the next step (see NarrativeFlagSystem for the flag chain).
+ */
+const getObjectiveText = (gameState: GameState): string | null => {
+  const flags = gameState.systems.narrativeFlags;
+  const mapName = gameState.map.activeMap.name;
+
+  if (flags.hasFlag('chapter1_complete')) {
+    return mapName === 'ruins-approach'
+      ? 'Explore the ruins approach'
+      : 'Travel east, to the ancient ruins';
+  }
+  if (flags.hasFlag('corruption_investigated')) {
+    return 'Return to Morghal in the glade';
+  }
+  if (flags.hasFlag('morghal_intro_complete')) {
+    const killsValue = flags.getFlag('corrupted_slimes_killed');
+    const kills = Math.min(
+      typeof killsValue === 'number' ? killsValue : 0,
+      CORRUPTED_KILLS_REQUIRED
+    );
+    return `Defeat the corrupted (purple) slimes  ${kills}/${CORRUPTED_KILLS_REQUIRED}`;
+  }
+  return 'Speak with Morghal in the glade';
+};
+
+/**
+ * Draws a small "OBJECTIVE" panel at the top-center of the screen so the current
+ * quest goal and progress are always visible.
+ */
+const drawObjective = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+  const text = getObjectiveText(gameState);
+  if (!text) return;
+
+  const label = 'OBJECTIVE';
+  const labelFont = '28px "Press Start 2P"';
+  const textFont = '40px "Press Start 2P"';
+
+  ctx.save();
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  ctx.font = textFont;
+  const textWidth = Math.abs(ctx.measureText(text).width);
+  ctx.font = labelFont;
+  const labelWidth = Math.abs(ctx.measureText(label).width);
+
+  const padX = 48;
+  const boxW = Math.max(textWidth, labelWidth) + padX * 2;
+  const boxH = 132;
+  const boxX = (canvas.width - boxW) / 2;
+  const boxY = 24;
+  const centerX = canvas.width / 2;
+
+  ctx.fillStyle = 'rgba(25, 60, 62, 0.85)';
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+  ctx.strokeStyle = '#feae34';
+  ctx.lineWidth = 5;
+  ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+  ctx.font = labelFont;
+  ctx.fillStyle = '#feae34';
+  ctx.fillText(label, centerX, boxY + 40);
+
+  ctx.font = textFont;
+  ctx.fillStyle = '#ead4aa';
+  ctx.fillText(text, centerX, boxY + 90);
+
+  ctx.restore();
 };
 
 const drawHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
@@ -446,6 +520,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
     }
 
     drawHUD(ctx, canvas, gameState);
+    drawObjective(ctx, canvas, gameState);
     // Only draw the chat UI if the game is in the chat state.
     if (gameState.systems.controlState.state === 'chat') {
       drawChat(ctx, canvas, gameState);
