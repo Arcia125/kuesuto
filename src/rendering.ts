@@ -1,8 +1,13 @@
 import { PlayerEntity } from "./entities/playerEntity";
+import { DarkWizardEntity } from "./entities/darkWizardEntity";
+import { SlimeEntity } from "./entities/slimeEntity";
+import { CorruptedSlimeEntity } from "./entities/corruptedSlimeEntity";
+import { FastSlimeEntity } from "./entities/fastSlimeEntity";
+import { TransitionTriggerEntity } from "./entities/transitionTriggerEntity";
 import { EVENTS } from './events';
 import { CORRUPTED_KILLS_REQUIRED } from './systems/narrativeFlagSystem';
-import { GameEntity, GameState, Rect } from './models';
-import { worldToCamera } from './position';
+import { GameEntity, GameState, Rect, Vector2, WorldMap } from './models';
+import { worldToCamera, positionToTileCoord, distanceTo } from './position';
 import { getBoundingRect } from './rectangle';
 import { drawSprite, getSpriteScale } from './sprites';
 import { getTintedSprite } from './spriteTinting';
@@ -109,32 +114,84 @@ const drawBar = (
   ctx.fillText(`${values.min}/${values.max}`, rect.x + rect.w / 2, rect.y + rect.h / 2);
 };
 
-/**
- * Derives the player's current objective text from narrative flags and the active
- * map. Returns the single line the objective tracker should show, so the player
- * always knows the next step (see NarrativeFlagSystem for the flag chain).
- */
-const getObjectiveText = (gameState: GameState): string | null => {
-  const flags = gameState.systems.narrativeFlags;
-  const mapName = gameState.map.activeMap.name;
+type ObjectivePhase =
+  | 'meetMorghal'
+  | 'investigate'
+  | 'returnToMorghal'
+  | 'goToRuins'
+  | 'exploreRuins';
 
+/**
+ * The single source of truth for the player's current goal, derived from the
+ * narrative flag chain (see NarrativeFlagSystem). Both the objective text and the
+ * minimap marker read from this so they can never disagree.
+ */
+const getObjectivePhase = (gameState: GameState): ObjectivePhase => {
+  const flags = gameState.systems.narrativeFlags;
   if (flags.hasFlag('chapter1_complete')) {
-    return mapName === 'ruins-approach'
-      ? 'Explore the ruins approach'
-      : 'Travel east, to the ancient ruins';
+    return gameState.map.activeMap.name === 'ruins-approach' ? 'exploreRuins' : 'goToRuins';
   }
-  if (flags.hasFlag('corruption_investigated')) {
-    return 'Return to Morghal in the glade';
+  if (flags.hasFlag('corruption_investigated')) return 'returnToMorghal';
+  if (flags.hasFlag('morghal_intro_complete')) return 'investigate';
+  return 'meetMorghal';
+};
+
+const getObjectiveText = (gameState: GameState): string | null => {
+  switch (getObjectivePhase(gameState)) {
+    case 'exploreRuins':
+      return 'Explore the ruins approach';
+    case 'goToRuins':
+      return 'Travel east, to the ancient ruins';
+    case 'returnToMorghal':
+      return 'Return to Morghal in the glade';
+    case 'investigate': {
+      const killsValue = gameState.systems.narrativeFlags.getFlag('corrupted_slimes_killed');
+      const kills = Math.min(
+        typeof killsValue === 'number' ? killsValue : 0,
+        CORRUPTED_KILLS_REQUIRED
+      );
+      return `Defeat the corrupted (purple) slimes  ${kills}/${CORRUPTED_KILLS_REQUIRED}`;
+    }
+    case 'meetMorghal':
+    default:
+      return 'Speak with Morghal in the glade';
   }
-  if (flags.hasFlag('morghal_intro_complete')) {
-    const killsValue = flags.getFlag('corrupted_slimes_killed');
-    const kills = Math.min(
-      typeof killsValue === 'number' ? killsValue : 0,
-      CORRUPTED_KILLS_REQUIRED
-    );
-    return `Defeat the corrupted (purple) slimes  ${kills}/${CORRUPTED_KILLS_REQUIRED}`;
+};
+
+/**
+ * World-space position of the current objective, resolved from live entities so the
+ * minimap can mark it. Returns null when there is nothing to point at yet.
+ */
+const getObjectiveTarget = (gameState: GameState): Vector2 | null => {
+  const entities = gameState.entities;
+  const positionOf = (e: GameEntity | undefined): Vector2 | null =>
+    e ? { x: e.state.x, y: e.state.y } : null;
+  const averageOf = (matches: GameEntity[]): Vector2 | null => {
+    if (!matches.length) return null;
+    const sum = matches.reduce((acc, e) => ({ x: acc.x + e.state.x, y: acc.y + e.state.y }), { x: 0, y: 0 });
+    return { x: sum.x / matches.length, y: sum.y / matches.length };
+  };
+
+  switch (getObjectivePhase(gameState)) {
+    case 'meetMorghal':
+    case 'returnToMorghal':
+      return positionOf(entities.find(e => e.name === DarkWizardEntity.NAME));
+    case 'investigate': {
+      const player = entities.find(e => e.name === PlayerEntity.NAME);
+      const corrupted = entities.filter(e => e.name === CorruptedSlimeEntity.NAME && !e.status.dead);
+      if (!corrupted.length) return null;
+      if (!player) return positionOf(corrupted[0]);
+      const nearest = corrupted.reduce((best, e) =>
+        distanceTo(player.state, e.state) < distanceTo(player.state, best.state) ? e : best
+      );
+      return positionOf(nearest);
+    }
+    case 'goToRuins':
+    case 'exploreRuins':
+    default:
+      // Point at the gate the player should cross next (triggers tile the gateway).
+      return averageOf(entities.filter(e => e.name === TransitionTriggerEntity.NAME));
   }
-  return 'Speak with Morghal in the glade';
 };
 
 /**
@@ -179,6 +236,128 @@ const drawObjective = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   ctx.fillStyle = '#ead4aa';
   ctx.fillText(text, centerX, boxY + 90);
 
+  ctx.restore();
+};
+
+// Cached pre-rendered terrain images, one per map (keyed by map name). The forest is
+// 256x256 tiles, so we rasterize it once into a 1px-per-tile offscreen canvas and blit
+// it scaled each frame rather than re-walking 65k tiles every render.
+const minimapTerrainCache = new Map<string, HTMLCanvasElement>();
+
+const getTileLayerData = (worldMap: WorldMap, name: string): number[] | undefined => {
+  const layer = worldMap.layers.find(l => l.type === 'tilelayer' && l.name === name);
+  return layer && layer.type === 'tilelayer' ? layer.data : undefined;
+};
+
+/**
+ * Rasterizes a map's terrain to a 1px-per-tile offscreen canvas: collision tiles read
+ * as walls, decorated Things tiles as forest, everything else as ground. Tile id 1 in
+ * the Things layer is the blank filler and is treated as empty.
+ */
+const buildMinimapTerrain = (worldMap: WorldMap): HTMLCanvasElement => {
+  const w = worldMap.width;
+  const h = worldMap.height;
+  const off = document.createElement('canvas');
+  off.width = w;
+  off.height = h;
+  const octx = off.getContext('2d')!;
+  const collision = getTileLayerData(worldMap, 'Collision');
+  const things = getTileLayerData(worldMap, 'Things');
+  const image = octx.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) {
+    let r = 74, g = 140, b = 79; // ground #4a8c4f
+    if (things && things[i] && things[i] !== 1) { r = 46; g = 90; b = 52; } // tree #2e5a34
+    if (collision && collision[i]) { r = 28; g = 28; b = 34; } // wall #1c1c22
+    const o = i * 4;
+    image.data[o] = r;
+    image.data[o + 1] = g;
+    image.data[o + 2] = b;
+    image.data[o + 3] = 255;
+  }
+  octx.putImageData(image, 0, 0);
+  return off;
+};
+
+/**
+ * Draws a minimap panel in the top-right corner: a scaled rasterization of the current
+ * map plus live markers for the player, enemies, and the current objective. Shares its
+ * objective target with the objective text via getObjectiveTarget so they agree.
+ */
+const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+  const worldMap = gameState.map.activeMap.worldMap;
+  if (!worldMap || !worldMap.layers) return;
+  const player = gameState.entities.find(e => e.name === PlayerEntity.NAME);
+  if (!player) return;
+
+  const mapName = gameState.map.activeMap.name;
+  let terrain = minimapTerrainCache.get(mapName);
+  if (!terrain) {
+    terrain = buildMinimapTerrain(worldMap);
+    minimapTerrainCache.set(mapName, terrain);
+  }
+
+  const size = 360;
+  const margin = 28;
+  const rect = { x: canvas.width - size - margin, y: margin, w: size, h: size };
+
+  ctx.save();
+  // Backing + terrain + border.
+  ctx.fillStyle = 'rgba(25, 60, 62, 0.85)';
+  ctx.fillRect(rect.x - 6, rect.y - 6, rect.w + 12, rect.h + 12);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(terrain, rect.x, rect.y, rect.w, rect.h);
+  ctx.strokeStyle = '#feae34';
+  ctx.lineWidth = 5;
+  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+
+  const toMini = (pos: Vector2) => {
+    const tile = positionToTileCoord(pos);
+    return {
+      x: rect.x + (tile.x / worldMap.width) * rect.w,
+      y: rect.y + (tile.y / worldMap.height) * rect.h,
+    };
+  };
+  const dot = (pos: Vector2, color: string, radius: number) => {
+    const p = toMini(pos);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  // Enemies: corrupted targets stand out in purple, the rest are faded red.
+  for (const e of gameState.entities) {
+    if (e.status.dead) continue;
+    if (e.name === CorruptedSlimeEntity.NAME) dot(e.state, '#c040c0', 4);
+    else if (e.name === SlimeEntity.NAME || e.name === FastSlimeEntity.NAME) dot(e.state, 'rgba(200, 70, 70, 0.7)', 3);
+  }
+
+  // Objective: a pulsing yellow ring at the current goal.
+  const target = getObjectiveTarget(gameState);
+  if (target) {
+    const p = toMini(target);
+    const pulse = 7 + Math.sin(Date.now() / 200) * 2;
+    ctx.strokeStyle = '#ffd54a';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, pulse, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Player on top, ringed for visibility.
+  dot(player.state, '#ffffff', 5);
+  const pp = toMini(player.state);
+  ctx.strokeStyle = '#2ce8f5';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(pp.x, pp.y, 5, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = '#feae34';
+  ctx.font = '22px "Press Start 2P"';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText('MAP', rect.x + 8, rect.y + 8);
   ctx.restore();
 };
 
@@ -521,6 +700,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
 
     drawHUD(ctx, canvas, gameState);
     drawObjective(ctx, canvas, gameState);
+    drawMinimap(ctx, canvas, gameState);
     // Only draw the chat UI if the game is in the chat state.
     if (gameState.systems.controlState.state === 'chat') {
       drawChat(ctx, canvas, gameState);
