@@ -198,43 +198,85 @@ const getObjectiveTarget = (gameState: GameState): Vector2 | null => {
  * Draws a small "OBJECTIVE" panel at the top-center of the screen so the current
  * quest goal and progress are always visible.
  */
-const drawObjective = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
-  const text = getObjectiveText(gameState);
-  if (!text) return;
+const QUEST_TITLE = 'Chapter 1: The Glade Corruption';
 
-  const label = 'OBJECTIVE';
-  const labelFont = '28px "Press Start 2P"';
-  const textFont = '40px "Press Start 2P"';
-
+/**
+ * A small persistent tab hinting that the quest log can be opened, so the player
+ * discovers the keybind without an always-on objective banner cluttering the screen.
+ */
+const drawQuestLogHint = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+  const label = '[J] Quests';
   ctx.save();
+  ctx.font = '22px "Press Start 2P"';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  const w = Math.abs(ctx.measureText(label).width) + 40;
+  const h = 48;
+  const x = (canvas.width - w) / 2;
+  const y = 18;
+  ctx.fillStyle = 'rgba(25, 60, 62, 0.7)';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#feae34';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillStyle = '#ead4aa';
+  ctx.fillText(label, canvas.width / 2, y + h / 2);
+  ctx.restore();
+};
 
-  ctx.font = textFont;
-  const textWidth = Math.abs(ctx.measureText(text).width);
-  ctx.font = labelFont;
-  const labelWidth = Math.abs(ctx.measureText(label).width);
+/**
+ * The quest log panel, shown only while toggled open (J). Lists the current quest and
+ * its active objective derived from the shared objective source.
+ */
+const drawQuestLog = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+  const objective = getObjectiveText(gameState) || 'No active objective.';
 
-  const padX = 48;
-  const boxW = Math.max(textWidth, labelWidth) + padX * 2;
-  const boxH = 132;
+  const boxW = 1180;
+  const boxH = 380;
   const boxX = (canvas.width - boxW) / 2;
-  const boxY = 24;
-  const centerX = canvas.width / 2;
+  const boxY = 140;
+  const padX = 56;
 
-  ctx.fillStyle = 'rgba(25, 60, 62, 0.85)';
+  ctx.save();
+  ctx.fillStyle = 'rgba(20, 48, 50, 0.94)';
   ctx.fillRect(boxX, boxY, boxW, boxH);
   ctx.strokeStyle = '#feae34';
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 6;
   ctx.strokeRect(boxX, boxY, boxW, boxH);
 
-  ctx.font = labelFont;
-  ctx.fillStyle = '#feae34';
-  ctx.fillText(label, centerX, boxY + 40);
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
 
-  ctx.font = textFont;
+  // Header.
+  ctx.fillStyle = '#feae34';
+  ctx.font = '34px "Press Start 2P"';
+  ctx.fillText('QUEST LOG', boxX + padX, boxY + 40);
+
+  // Divider.
+  ctx.strokeStyle = 'rgba(254, 174, 52, 0.5)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(boxX + padX, boxY + 96);
+  ctx.lineTo(boxX + boxW - padX, boxY + 96);
+  ctx.stroke();
+
+  // Quest title.
+  ctx.fillStyle = '#ffd54a';
+  ctx.font = '26px "Press Start 2P"';
+  ctx.fillText(QUEST_TITLE, boxX + padX, boxY + 132);
+
+  // Active objective.
   ctx.fillStyle = '#ead4aa';
-  ctx.fillText(text, centerX, boxY + 90);
+  ctx.font = '24px "Press Start 2P"';
+  const lines = getLines(ctx, '- ' + objective, boxW - padX * 2);
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i]!, boxX + padX, boxY + 196 + i * 40);
+  }
+
+  // Footer hint.
+  ctx.fillStyle = 'rgba(234, 212, 170, 0.7)';
+  ctx.font = '20px "Press Start 2P"';
+  ctx.fillText('[J] Close', boxX + padX, boxY + boxH - 52);
 
   ctx.restore();
 };
@@ -723,8 +765,12 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
     }
 
     drawHUD(ctx, canvas, gameState);
-    drawObjective(ctx, canvas, gameState);
     drawMinimap(ctx, canvas, gameState);
+    if (gameState.ui.questLogOpen) {
+      drawQuestLog(ctx, canvas, gameState);
+    } else {
+      drawQuestLogHint(ctx, canvas);
+    }
     // Only draw the chat UI if the game is in the chat state.
     if (gameState.systems.controlState.state === 'chat') {
       drawChat(ctx, canvas, gameState);

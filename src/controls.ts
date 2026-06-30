@@ -11,7 +11,8 @@ const keyMappings = {
   toggleDebugGameState: ['O'],
   debugPlayerSpriteSheet: ['P'],
   showGrid: ['G'],
-  activateDebugger: ['<']
+  activateDebugger: ['<'],
+  toggleQuestLog: ['j', 'J']
 };
 
 const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | KeyboardEvent['key']) => {
@@ -68,6 +69,10 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
   if (keyPressed('activateDebugger', event)) {
     event.preventDefault();
     gameState.debugSettings.activateDebugger = !gameState.debugSettings.activateDebugger;
+  }
+  if (keyPressed('toggleQuestLog', event)) {
+    event.preventDefault();
+    gameState.ui.questLogOpen = !gameState.ui.questLogOpen;
   }
 };
 

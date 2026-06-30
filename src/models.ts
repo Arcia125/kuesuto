@@ -208,6 +208,10 @@ export type Time = {
   resetDeltaCount: number;
 };
 
+export type UIState = {
+  questLogOpen: boolean;
+};
+
 export type DebugSettings = {
   debugGameState: boolean;
   debugPlayerSpriteSheet: boolean;
@@ -306,6 +310,7 @@ export type GameState = {
   world: World;
   time: Time;
   debugSettings: DebugSettings;
+  ui: UIState;
   elements: Elements;
   emitter: EventEmitter;
   systems: {

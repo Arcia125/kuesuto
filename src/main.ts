@@ -65,6 +65,9 @@ const init = () => {
       activateDebugger: false,
       drawEntityHitboxes: false,
     },
+    ui: {
+      questLogOpen: false,
+    },
     time: {
       delta: 0,
       fps: 60,
