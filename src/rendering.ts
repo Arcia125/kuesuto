@@ -302,7 +302,7 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
 
   // Zoomed, player-centered viewport: show VIEW_TILES across, panning with the player
   // and clamped to the map edges (rather than fitting the whole map in the panel).
-  const VIEW_TILES = 96;
+  const VIEW_TILES = 80;
   const playerTile = positionToTileCoord(player.state);
   const half = VIEW_TILES / 2;
   const viewX = Math.max(0, Math.min(worldMap.width - VIEW_TILES, playerTile.x - half));
