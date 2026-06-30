@@ -300,12 +300,25 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
   const margin = 28;
   const rect = { x: canvas.width - size - margin, y: margin, w: size, h: size };
 
+  // Zoomed, player-centered viewport: show VIEW_TILES across, panning with the player
+  // and clamped to the map edges (rather than fitting the whole map in the panel).
+  const VIEW_TILES = 96;
+  const playerTile = positionToTileCoord(player.state);
+  const half = VIEW_TILES / 2;
+  const viewX = Math.max(0, Math.min(worldMap.width - VIEW_TILES, playerTile.x - half));
+  const viewY = Math.max(0, Math.min(worldMap.height - VIEW_TILES, playerTile.y - half));
+
   ctx.save();
-  // Backing + terrain + border.
+  // Backing + terrain crop + border. Clip so the cropped terrain can't bleed past the panel.
   ctx.fillStyle = 'rgba(25, 60, 62, 0.85)';
   ctx.fillRect(rect.x - 6, rect.y - 6, rect.w + 12, rect.h + 12);
   ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(terrain, rect.x, rect.y, rect.w, rect.h);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(rect.x, rect.y, rect.w, rect.h);
+  ctx.clip();
+  ctx.drawImage(terrain, viewX, viewY, VIEW_TILES, VIEW_TILES, rect.x, rect.y, rect.w, rect.h);
+  ctx.restore();
   ctx.strokeStyle = '#feae34';
   ctx.lineWidth = 5;
   ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
@@ -313,9 +326,13 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
   const toMini = (pos: Vector2) => {
     const tile = positionToTileCoord(pos);
     return {
-      x: rect.x + (tile.x / worldMap.width) * rect.w,
-      y: rect.y + (tile.y / worldMap.height) * rect.h,
+      x: rect.x + ((tile.x - viewX) / VIEW_TILES) * rect.w,
+      y: rect.y + ((tile.y - viewY) / VIEW_TILES) * rect.h,
     };
+  };
+  const inView = (pos: Vector2) => {
+    const tile = positionToTileCoord(pos);
+    return tile.x >= viewX && tile.x <= viewX + VIEW_TILES && tile.y >= viewY && tile.y <= viewY + VIEW_TILES;
   };
   const dot = (pos: Vector2, color: string, radius: number) => {
     const p = toMini(pos);
@@ -327,30 +344,37 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
 
   // Enemies: corrupted targets stand out in purple, the rest are faded red.
   for (const e of gameState.entities) {
-    if (e.status.dead) continue;
-    if (e.name === CorruptedSlimeEntity.NAME) dot(e.state, '#c040c0', 4);
-    else if (e.name === SlimeEntity.NAME || e.name === FastSlimeEntity.NAME) dot(e.state, 'rgba(200, 70, 70, 0.7)', 3);
+    if (e.status.dead || !inView(e.state)) continue;
+    if (e.name === CorruptedSlimeEntity.NAME) dot(e.state, '#c040c0', 5);
+    else if (e.name === SlimeEntity.NAME || e.name === FastSlimeEntity.NAME) dot(e.state, 'rgba(200, 70, 70, 0.7)', 4);
   }
 
-  // Objective: a pulsing yellow ring at the current goal.
+  // Objective: a pulsing yellow ring at the current goal. If off the viewport, clamp it
+  // to the panel edge as a direction hint so the player still knows which way to go.
   const target = getObjectiveTarget(gameState);
   if (target) {
-    const p = toMini(target);
-    const pulse = 7 + Math.sin(Date.now() / 200) * 2;
+    const pulse = 8 + Math.sin(Date.now() / 200) * 2;
+    let p = toMini(target);
+    const edge = 10;
+    const clamped = !inView(target);
+    p = {
+      x: Math.max(rect.x + edge, Math.min(rect.x + rect.w - edge, p.x)),
+      y: Math.max(rect.y + edge, Math.min(rect.y + rect.h - edge, p.y)),
+    };
     ctx.strokeStyle = '#ffd54a';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = clamped ? 5 : 3;
     ctx.beginPath();
     ctx.arc(p.x, p.y, pulse, 0, Math.PI * 2);
     ctx.stroke();
   }
 
-  // Player on top, ringed for visibility.
-  dot(player.state, '#ffffff', 5);
+  // Player on top, ringed for visibility (always centered-ish in the viewport).
+  dot(player.state, '#ffffff', 6);
   const pp = toMini(player.state);
   ctx.strokeStyle = '#2ce8f5';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(pp.x, pp.y, 5, 0, Math.PI * 2);
+  ctx.arc(pp.x, pp.y, 6, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.fillStyle = '#feae34';
