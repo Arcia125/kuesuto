@@ -86,6 +86,7 @@ const init = () => {
       timeStep: 1000 / 60,
       stepID: 0,
       frameID: 0,
+      freezeUntil: 0,
       resetDeltaCount: 0,
     },
     elements: new BrowserElements(),
@@ -169,6 +170,20 @@ const init = () => {
   emitter.emit(EVENTS.INIT, {
     mainCanvas,
     mainCanvasContext
+  });
+
+  // Game feel: brief hit-pause when the player lands a hit; screen shake scaled to
+  // whether you dealt it or took it.
+  emitter.on(EVENTS.ATTACK, (_, payload) => {
+    if (payload.attacker.name === PlayerEntity.NAME) {
+      gameState.time.freezeUntil = performance.now() + 70;
+      gameState.camera.shake(7, 100);
+    }
+  });
+  emitter.on(EVENTS.DAMAGE, (_, payload) => {
+    if (payload.target.name === PlayerEntity.NAME) {
+      gameState.camera.shake(16, 200);
+    }
   });
 
   emitter.on(EVENTS.FPS, (_, msg) => {

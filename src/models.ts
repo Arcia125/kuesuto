@@ -209,6 +209,8 @@ export type Time = {
   stepID: number;
   frameID: number;
   resetDeltaCount: number;
+  // Hit-pause: while now < freezeUntil the world holds still (rendering continues).
+  freezeUntil: number;
 };
 
 export type UIState = {
@@ -233,6 +235,7 @@ export interface Camera extends ShortDimensions, Updateable, Follower {
   canvasWidth: number;
   canvasHeight: number;
   aspectRatio: number;
+  shake: (magnitude: number, durationMs: number) => void;
 }
 
 export type Elements = {

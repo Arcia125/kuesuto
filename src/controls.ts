@@ -33,8 +33,12 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
   }
   if (keyPressed('attack', event)) {
     event.preventDefault();
-    gameState.controls.attack = true;
-    gameState.emitter.emit(EVENTS.ATTACK_COMMAND, null);
+    // Held key: the OS fires auto-repeat keydowns as fast as key rollover; only the
+    // first press is an attack command.
+    if (!event.repeat) {
+      gameState.controls.attack = true;
+      gameState.emitter.emit(EVENTS.ATTACK_COMMAND, null);
+    }
   }
   if (keyPressed('up', event)) {
     event.preventDefault();

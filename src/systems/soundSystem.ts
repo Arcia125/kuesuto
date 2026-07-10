@@ -90,8 +90,14 @@ export class SoundSystem implements ISoundSystem {
     src.start(t0);
   }
 
-  // Sword swing: airy noise sweep.
+  private lastSwishAt = 0;
+
+  // Sword swing: airy noise sweep. Rate-limited to a plausible swing cadence so a
+  // spammed/held attack key can't machine-gun the sound.
   private swish() {
+    const now = performance.now();
+    if (now - this.lastSwishAt < 220) return;
+    this.lastSwishAt = now;
     this.noise(0.09, { vol: 0.5, cutoff: 4500 });
     this.tone(700, 0.08, { type: 'sawtooth', endFreq: 220, vol: 0.25 });
   }
