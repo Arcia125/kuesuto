@@ -12,7 +12,8 @@ const keyMappings = {
   debugPlayerSpriteSheet: ['P'],
   showGrid: ['G'],
   activateDebugger: ['<'],
-  toggleQuestLog: ['j', 'J']
+  toggleQuestLog: ['j', 'J'],
+  toggleTeleport: ['t', 'T']
 };
 
 const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | KeyboardEvent['key']) => {
@@ -73,6 +74,10 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
   if (keyPressed('toggleQuestLog', event)) {
     event.preventDefault();
     gameState.ui.questLogOpen = !gameState.ui.questLogOpen;
+  }
+  if (keyPressed('toggleTeleport', event)) {
+    event.preventDefault();
+    gameState.debugSettings.teleport = !gameState.debugSettings.teleport;
   }
 };
 

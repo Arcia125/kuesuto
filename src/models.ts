@@ -225,6 +225,8 @@ export type DebugSettings = {
   // Map-viewer mode (?map=<name>&freecam): player is a fast, immortal ghost for
   // flying around a map to inspect terrain.
   freecam: boolean;
+  // Testing superpower ('T' to toggle): click the minimap to teleport there.
+  teleport: boolean;
 };
 
 export interface Camera extends ShortDimensions, Updateable, Follower {

@@ -321,6 +321,30 @@ const buildMinimapTerrain = (worldMap: WorldMap): HTMLCanvasElement => {
 };
 
 /**
+ * Minimap panel geometry + viewport, shared by drawMinimap and the teleport click
+ * handler (main.ts) so a click maps to exactly what is drawn. Returns null before
+ * the player exists.
+ */
+export const getMinimapGeometry = (canvas: HTMLCanvasElement, gameState: GameState) => {
+  const worldMap = gameState.map.activeMap.worldMap;
+  const player = gameState.entities.find(e => e.name === PlayerEntity.NAME);
+  if (!worldMap || !worldMap.layers || !player) return null;
+
+  const size = 360;
+  const margin = 28;
+  const rect = { x: canvas.width - size - margin, y: margin, w: size, h: size };
+
+  // Zoomed, player-centered viewport: show viewTiles across, panning with the player
+  // and clamped to the map edges (rather than fitting the whole map in the panel).
+  const viewTiles = 80;
+  const playerTile = positionToTileCoord(player.state);
+  const half = viewTiles / 2;
+  const viewX = Math.max(0, Math.min(worldMap.width - viewTiles, playerTile.x - half));
+  const viewY = Math.max(0, Math.min(worldMap.height - viewTiles, playerTile.y - half));
+  return { rect, viewX, viewY, viewTiles };
+};
+
+/**
  * Draws a minimap panel in the top-right corner: a scaled rasterization of the current
  * map plus live markers for the player, enemies, and the current objective. Shares its
  * objective target with the objective text via getObjectiveTarget so they agree.
@@ -338,17 +362,7 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
     minimapTerrainCache.set(mapName, terrain);
   }
 
-  const size = 360;
-  const margin = 28;
-  const rect = { x: canvas.width - size - margin, y: margin, w: size, h: size };
-
-  // Zoomed, player-centered viewport: show VIEW_TILES across, panning with the player
-  // and clamped to the map edges (rather than fitting the whole map in the panel).
-  const VIEW_TILES = 80;
-  const playerTile = positionToTileCoord(player.state);
-  const half = VIEW_TILES / 2;
-  const viewX = Math.max(0, Math.min(worldMap.width - VIEW_TILES, playerTile.x - half));
-  const viewY = Math.max(0, Math.min(worldMap.height - VIEW_TILES, playerTile.y - half));
+  const { rect, viewX, viewY, viewTiles: VIEW_TILES } = getMinimapGeometry(canvas, gameState)!;
 
   ctx.save();
   // Backing + terrain crop + border. Clip so the cropped terrain can't bleed past the panel.
@@ -361,9 +375,16 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
   ctx.clip();
   ctx.drawImage(terrain, viewX, viewY, VIEW_TILES, VIEW_TILES, rect.x, rect.y, rect.w, rect.h);
   ctx.restore();
-  ctx.strokeStyle = '#feae34';
+  // Teleport mode ('T'): cyan border + hint, click on the panel warps the player.
+  ctx.strokeStyle = gameState.debugSettings.teleport ? '#4ae0e0' : '#feae34';
   ctx.lineWidth = 5;
   ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  if (gameState.debugSettings.teleport) {
+    ctx.fillStyle = '#4ae0e0';
+    ctx.font = '26px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TELEPORT: CLICK MAP', rect.x + rect.w / 2, rect.y + rect.h + 34);
+  }
 
   const toMini = (pos: Vector2) => {
     const tile = positionToTileCoord(pos);
