@@ -38,6 +38,12 @@ export class Entity implements GameEntity {
     let spriteFrameEntries;
 
     spriteFrameEntries = Object.entries(entity.sprite?.spriteFrames).filter(frameMatchesEntity(entity, direction));
+    if (!spriteFrameEntries.length && entity.status.dead) {
+      // Sheet has no death animation (e.g. the player): keep the last living pose
+      // instead of vanishing — DeathSystem tints the corpse to sell it.
+      const aliveLike = { ...entity, status: { ...entity.status, dead: false } } as GameEntity;
+      spriteFrameEntries = Object.entries(entity.sprite?.spriteFrames).filter(frameMatchesEntity(aliveLike, direction));
+    }
 
     const [spriteFrameName, spriteFrameValue] = spriteFrameEntries.find(([name, value]) => {
       if (!name) {

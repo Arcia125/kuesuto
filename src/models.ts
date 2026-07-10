@@ -293,6 +293,7 @@ export interface ISpawnSystem extends Updateable {
 export interface IDeathSystem extends Updateable {
   kill: (entity: GameEntity, killer: GameEntity) => void;
   checkDeath: (entity: GameEntity) => boolean;
+  respawnPlayer: (gameState: GameState) => void;
 }
 
 export interface IExperienceSystem {

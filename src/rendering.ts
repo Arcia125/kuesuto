@@ -819,6 +819,22 @@ const drawSpeechBubbles = (ctx: CanvasRenderingContext2D, gameState: GameState) 
   }
 };
 
+// Game-over screen: the fallen world stays visible under a dark red-black veil.
+const drawGameOver = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+  ctx.fillStyle = 'rgba(20, 4, 8, 0.78)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#c03030';
+  ctx.font = 'bold 110px monospace';
+  ctx.fillText('YOU HAVE FALLEN', canvas.width / 2, canvas.height / 2 - 40);
+  ctx.fillStyle = '#e8d8b0';
+  ctx.font = '40px monospace';
+  const blink = Math.floor(Date.now() / 600) % 2 === 0;
+  if (blink) {
+    ctx.fillText('press SPACE to rise again', canvas.width / 2, canvas.height / 2 + 70);
+  }
+};
+
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   gameState.emitter.emit(EVENTS.RENDER_START, null);
 
@@ -862,6 +878,10 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
     // Only draw the chat UI if the game is in the chat state.
     if (gameState.systems.controlState.state === 'chat') {
       drawChat(ctx, canvas, gameState);
+    }
+
+    if (gameState.systems.gameState.inStates(['gameOver'])) {
+      drawGameOver(ctx, canvas);
     }
   }
 

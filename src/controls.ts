@@ -22,6 +22,14 @@ const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | K
 }
 
 export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEvent) => {
+  // Game-over screen: Space respawns instead of attacking.
+  if (gameState.systems.gameState.inStates(['gameOver'])) {
+    if (keyPressed('attack', event)) {
+      event.preventDefault();
+      gameState.systems.death.respawnPlayer(gameState);
+    }
+    return;
+  }
   if (keyPressed('attack', event)) {
     event.preventDefault();
     gameState.controls.attack = true;
