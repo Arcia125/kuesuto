@@ -219,6 +219,9 @@ export type DebugSettings = {
   showGrid: boolean;
   activateDebugger: boolean;
   drawEntityHitboxes: boolean;
+  // Map-viewer mode (?map=<name>&freecam): player is a fast, immortal ghost for
+  // flying around a map to inspect terrain.
+  freecam: boolean;
 };
 
 export interface Camera extends ShortDimensions, Updateable, Follower {

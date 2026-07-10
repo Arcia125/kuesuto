@@ -64,6 +64,7 @@ const init = () => {
       showGrid: false,
       activateDebugger: false,
       drawEntityHitboxes: false,
+      freecam: typeof location !== 'undefined' && new URLSearchParams(location.search).has('freecam'),
     },
     ui: {
       questLogOpen: false,
@@ -100,6 +101,17 @@ const init = () => {
   };
 
 
+
+  // Map-viewer affordance: ?map=<name> starts on any known map (pairs with &freecam
+  // for flying around it — see debugSettings.freecam).
+  if (typeof location !== 'undefined') {
+    const mapParam = new URLSearchParams(location.search).get('map');
+    if (mapParam && gameState.map.tileMaps[mapParam]) {
+      gameState.map.setActiveMap(mapParam);
+    } else if (mapParam) {
+      console.warn(`Unknown ?map=${mapParam}; known maps: ${Object.keys(gameState.map.tileMaps).join(', ')}`);
+    }
+  }
 
   gameState.mobileControls.init(gameState.elements);
 

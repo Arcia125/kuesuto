@@ -107,6 +107,13 @@ export class SpawnSystem implements ISpawnSystem {
         }, this.emitter)
       ], this.emitter);
 
+      if (gameState.debugSettings.freecam) {
+        // Map-viewer ghost: fast, unkillable, walks through everything (see Collision).
+        playerEntity.state.speedX *= 2.5;
+        playerEntity.state.speedY *= 2.5;
+        playerEntity.status.immortal = true;
+      }
+
       gameState.camera.follow(playerEntity);
       gameState.entities.push(playerEntity);
     }

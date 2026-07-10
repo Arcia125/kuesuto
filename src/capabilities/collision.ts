@@ -112,6 +112,10 @@ export class Collision implements Capability {
   public constructor(public entity: GameEntity, public movementCapability?: Movement) {}
 
   public update = (gameState: GameState, _timeStamp: number) => {
+    // Freecam map-viewer: the player ghosts through everything.
+    if (gameState.debugSettings.freecam && this.entity.name === 'player') {
+      return;
+    }
     const {
       collidedCorners,
       entities,
