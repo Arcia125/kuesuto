@@ -24,12 +24,23 @@ export class GameCamera implements Camera {
     this.shakeMagnitude = magnitude;
   };
 
-  public update = (_gameState: GameState, _timeStamp: number) => {
+  public update = (gameState: GameState, _timeStamp: number) => {
     if (!this.following) {
       return;
     }
-    this.x = Math.max(this.following.state.x, 0);
-    this.y = Math.max(this.following.state.y, 0);
+    const targetX = Math.max(this.following.state.x, 0);
+    const targetY = Math.max(this.following.state.y, 0);
+    // Ease toward the player (frame-rate independent). Big jumps (map transition,
+    // teleport, respawn) snap instantly instead of gliding across the world.
+    const snapDistance = this.w / 2;
+    if (Math.abs(targetX - this.x) > snapDistance || Math.abs(targetY - this.y) > snapDistance) {
+      this.x = targetX;
+      this.y = targetY;
+    } else {
+      const alpha = 1 - Math.exp(-12 * (gameState.time.delta / 1000));
+      this.x += (targetX - this.x) * alpha;
+      this.y += (targetY - this.y) * alpha;
+    }
 
     const now = performance.now();
     if (now < this.shakeUntil) {
