@@ -57,9 +57,12 @@ export class PhysicsSystem implements IPhysicsSystem {
       }
       entity.state.x = newX;
       entity.state.y = newY;
-      force.magnitude -= Math.abs(xForce) + Math.abs(yForce);
+      // Impulse decay over TIME, not distance moved: draining the magnitude by the few
+      // pixels moved each frame made knockback slide the entity for seconds.
+      force.magnitude *= Math.pow(0.98, gameState.time.delta);
       if (force.magnitude <= 10) {
         this.forceEntries.splice(i, 1);
+        i--;
       }
     }
   }
