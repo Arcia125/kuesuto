@@ -16,7 +16,7 @@ export class PhysicsSystem implements IPhysicsSystem {
   private handleAttack = ({ attacker, target }: EVENT_MAPPING[typeof EVENTS.ATTACK]) => {
     this.applyForce(target, {
       direction: directionVectorBetween(attacker.state, target.state),
-      magnitude: 700
+      magnitude: 1000
     });
   };
 
