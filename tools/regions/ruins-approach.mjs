@@ -32,6 +32,8 @@ export default {
   width: WIDTH,
   height: HEIGHT,
   rows,
+  canopyWalls: true, // LTTP treeline walls following the winding corridor
+
   objects: [
     // Entry from the forrest gate (matches that Transition's entryPoint).
     { name: 'Player Start Location', ...on(6) },

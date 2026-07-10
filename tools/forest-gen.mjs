@@ -170,7 +170,15 @@ const build = (region) => {
     }
     return false;
   };
+  // `canopyWalls: true` makes the ENTIRE wall area the canopy mask — LTTP treeline walls
+  // that exactly follow the corridor/clearing outline — replacing scattered blob stamps.
+  // (Mask runs to the map border so edge masses read as continuous deep forest.)
+  const canopyWalls = region.canopyWalls === true;
   const tileIsCanopy = (x, y) => {
+    if (canopyWalls) {
+      if (x < 0 || y < 0 || x >= W || y >= H) return true; // off-map counts as forest
+      return !walkable(x, y) && !nearDirt(x, y);
+    }
     if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return false;
     if (walkable(x, y) || nearDirt(x, y)) return false;
     for (const c of canopies) if (Math.hypot(x - c.x, y - c.y) <= c.r) return true;
@@ -188,7 +196,7 @@ const build = (region) => {
   // tile their interiors) — so big masses read as LTTP treetop lobes, not a flat slab.
   // The composed wangset tiles are used for the EDGES, where arbitrary outlines happen.
   const interiorGid = (x, y) => ((x + y) % 2 === 0 ? 135 : ((x >> 1) + y) % 2 ? 158 : 161);
-  if (canopies.length) {
+  if (canopies.length || canopyWalls) {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const corners = [ccan(x + 1, y), ccan(x + 1, y + 1), ccan(x, y + 1), ccan(x, y)];
       if (!corners.includes(1)) continue;          // fully-grass cell: leave as is

@@ -58,6 +58,7 @@ export default {
   height: HEIGHT,
   rows,
   trails: PATHS, // dirt trail follows the actual path polylines
+  canopyWalls: true, // LTTP treeline walls following the clearing/corridor outlines
   // Pond on the east road's south shoulder — a landmark at the last bend before the
   // gate; overlaps the corridor edge so the road visibly skirts the shoreline.
   waters: [{ x: 47, y: 34, r: 4 }, { x: 51, y: 33, r: 3 }],
