@@ -161,8 +161,18 @@ const build = (region) => {
   // hedge/tree stamps treat canopy cells as occupied and never overwrite them. Regions
   // without `canopies` are unaffected — the stamp-based blobs keep working unchanged. ---
   const canopies = region.canopies ?? [];
+  // The mask never eats the corridor, and keeps >= 2 grass tiles between canopy and trail
+  // dirt (shrinking the CANOPY, not the trail) so the two corner lattices can't interact
+  // to bite notches into the road or pinch 1-tile grass slivers.
+  const nearDirt = (x, y) => {
+    for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) {
+      if (tileIsDirt(x + ox, y + oy)) return true;
+    }
+    return false;
+  };
   const tileIsCanopy = (x, y) => {
     if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return false;
+    if (walkable(x, y) || nearDirt(x, y)) return false;
     for (const c of canopies) if (Math.hypot(x - c.x, y - c.y) <= c.r) return true;
     return false;
   };
@@ -173,14 +183,29 @@ const build = (region) => {
     return false;
   };
   const ccan = (cx, cy) => (cornerCanopy(cx, cy) ? 1 : 2); // Grass Canopy: 1=Canopy, 2=Grass
+  // Interior cells (all 4 corners canopy) use the hand-map blob-interior crown pattern —
+  // gid 135 on the (x+y)-even checker, 158/161 on the other (exactly how the hand blobs
+  // tile their interiors) — so big masses read as LTTP treetop lobes, not a flat slab.
+  // The composed wangset tiles are used for the EDGES, where arbitrary outlines happen.
+  const interiorGid = (x, y) => ((x + y) % 2 === 0 ? 135 : ((x >> 1) + y) % 2 ? 158 : 161);
   if (canopies.length) {
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const corners = [ccan(x + 1, y), ccan(x + 1, y + 1), ccan(x, y + 1), ccan(x, y)];
       if (!corners.includes(1)) continue;          // fully-grass cell: leave as is
-      things[y * W + x] = canopyTile(...corners);   // opaque canopy over the grass ground
+      things[y * W + x] = corners.every((c) => c === 1)
+        ? interiorGid(x, y)                         // deep interior: hand-art crown lobes
+        : canopyTile(...corners);                   // outline: composed wang edge tile
       if (tileIsCanopy(x, y)) collision[y * W + x] = TILE.COLLISION; // solid interior
     }
   }
+  // Stamps must never butt against the wangset canopy: treat mask cells + a 1-tile margin
+  // as occupied for brush placement.
+  const nearCanopy = (x, y) => {
+    for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+      if (tileIsCanopy(x + ox, y + oy)) return true;
+    }
+    return false;
+  };
 
   // Whole-sprite stamping: a brush is placed only where its FULL footprint is free wall
   // (never clipped — clipping is what produces broken trees; see tools/MAP-GENERATION.md).
@@ -189,7 +214,7 @@ const build = (region) => {
       if (s.things[y * s.w + x] === 0) continue;
       const mx = tx + x, my = ty + y;
       if (mx < 0 || my < 0 || mx >= W || my >= H) return false;
-      if (walkable(mx, my) || tileIsWater(mx, my) || things[my * W + mx] !== TILE.BLANK) return false;
+      if (walkable(mx, my) || tileIsWater(mx, my) || nearCanopy(mx, my) || things[my * W + mx] !== TILE.BLANK) return false;
     }
     return true;
   };
@@ -219,7 +244,19 @@ const build = (region) => {
         const len = end - x + 1;
         if (len >= hedgeUnit.w) {
           const top = dir === 1 ? y - hedgeUnit.h + 1 : y;
-          for (let hx = x; hx + hedgeUnit.w - 1 <= end; hx += hedgeUnit.w) stamp(hedgeUnit, hx, top);
+          // A hedge segment must be >= 2 contiguous units, or it reads as a lone stray
+          // fragment (e.g. when the wangset canopy occupies the rest of the run).
+          // Collect the placeable slots first, then only stamp contiguous groups of >= 2.
+          const slots = [];
+          for (let hx = x; hx + hedgeUnit.w - 1 <= end; hx += hedgeUnit.w) {
+            if (stampFits(hedgeUnit, hx, top)) slots.push(hx);
+          }
+          for (let i = 0; i < slots.length; ) {
+            let j = i;
+            while (j + 1 < slots.length && slots[j + 1] === slots[j] + hedgeUnit.w) j++;
+            if (j > i) for (let k = i; k <= j; k++) stamp(hedgeUnit, slots[k], top);
+            i = j + 1;
+          }
         }
         x = end + 1;
       }
@@ -268,6 +305,9 @@ const build = (region) => {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x;
     if (things[i] !== TILE.BLANK || tileIsDirt(x, y)) continue;
+    // Keep the trail's autotiled EDGE tiles clear too — decor there reads as a notch
+    // bitten into the road.
+    if ([cc(x + 1, y), cc(x + 1, y + 1), cc(x, y + 1), cc(x, y)].includes(DIRT)) continue;
     // Keep water and its autotiled shoreline clear of decor.
     if ([cw(x + 1, y), cw(x + 1, y + 1), cw(x, y + 1), cw(x, y)].includes(1)) continue;
     if (rand() < 0.06) things[i] = DECOR_TILES[(rand() * DECOR_TILES.length) | 0];

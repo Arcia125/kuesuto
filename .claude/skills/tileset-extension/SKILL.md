@@ -67,12 +67,21 @@ Proof: `tools/_canopy-test.mjs` (irregular concave cluster) + `tools/renders/can
 and the generator render `tools/renders/canopy-gen-proof.png`.
 
 Decisions worth knowing before extending it:
-- **Composed procedurally, not reused.** The hand-map blob art (gids 135/158/161 interior,
-  scalloped edges) is a soft rounded-lump style whose bumps deliberately span tile borders,
-  so it is NOT on a strict corner grid — reused in novel corner combos it seams. Colours are
-  all sampled from that art, but the tiles are re-derived by bilinear field so continuity is
-  true by construction (same method as water-tiles.mjs). Interior uses a period-4 leaf-clump
-  texture (divides 16 → seamless) so the mass reads as foliage, not a flat slab.
+- **Edges composed procedurally; interiors reuse the hand-art crowns.** The hand-map blob
+  art (gids 135/158/161 interior, scalloped edges) is a soft rounded-lump style whose bumps
+  deliberately span tile borders, so it is NOT on a strict corner grid — reused in novel
+  EDGE combos it seams. Colours are all sampled from that art, but the 12 edge tiles are
+  re-derived by bilinear field so continuity is true by construction (same method as
+  water-tiles.mjs). For DEEP INTERIOR cells (all 4 corners canopy) the generator emits the
+  hand-map blob-interior pattern instead — gid 135 on the (x+y)-even checker, 158/161 on
+  the other — so big masses read as repeated LTTP crown lobes, not a flat slab. The
+  wangset's own all-canopy tile (182) carries a per-tile crown lobe as fallback for
+  wangset-only consumers.
+- **Generator coordination rules** (in forest-gen): the canopy mask never covers walkable
+  cells and keeps ≥2 grass tiles from trail dirt (mask shrinks, not the trail) so the two
+  corner lattices can't bite notches/slivers; stamps treat canopy cells + a 1-tile margin
+  as occupied; hedge fences only appear in contiguous groups of ≥2 units (no lone
+  fragments); ambience decor stays off trail-edge wang tiles.
 - **Trunk fringe lives IN the south tiles (single-tile solution).** Trees show trunks below
   their leaves, so every tile whose canopy overhangs grass at the bottom grows small trunk
   tufts in its own grass region, in two fixed interior columns kept ≥3px off the L/R borders

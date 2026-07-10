@@ -75,14 +75,19 @@ const field = (c, x, y) => {
 };
 
 // Rounded leaf-clump texture for the canopy interior: a regular grid of 4px lit clumps
-// (CANOPY) separated by shadow gutters (CANOPY_DK), mimicking the hand-art blobs' foliage
-// lumps and giving the mass a leafy, LTTP-treeline read rather than a flat slab. Period 4
-// divides TILE (16) exactly, so the pattern is continuous across tile borders -> no seams.
-const CLUMP = 4;
+// Crown texture for the canopy interior: one rounded tree-crown lobe per tile (like the
+// LTTP forest wall and the hand-art blobs' repeated crowns): a lit dome with a dark swirl
+// detail, a navy shading crescent on the lower-right, sitting in a shadow gutter. Pure
+// function of (x mod 16, y mod 16), so identical on every tile -> continuous across
+// borders and unaffected by tile arrangement (no seams by construction).
 const leafPixel = (x, y) => {
-  const lx = (x % CLUMP) - (CLUMP - 1) / 2;
-  const ly = (y % CLUMP) - (CLUMP - 1) / 2;
-  return lx * lx + ly * ly <= 2.3 ? CANOPY : CANOPY_DK;
+  const lx = (x % TILE) - 7.5, ly = (y % TILE) - 7.5;
+  const d = Math.hypot(lx, ly);
+  if (d > 7.7) return CANOPY_DK;                        // shadow gutter between crowns
+  if (d > 6.2) return lx + ly > 1.5 ? RIM : CANOPY_DK;  // navy crescent on lower-right
+  if (d > 5.2) return CANOPY_DK;                        // dark ring around the dome
+  if (d > 2.4 && d <= 3.6 && ly < 0.5) return CANOPY_DK; // inner swirl arc detail
+  return CANOPY;                                        // lit dome
 };
 
 // Base terrain color for a pixel, purely a function of its canopy field value (so any tile
