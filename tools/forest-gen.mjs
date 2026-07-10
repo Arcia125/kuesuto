@@ -109,12 +109,33 @@ const build = (region) => {
     ? nearTrail(x, y)
     : (colMid[x] >= 0 && Math.abs(y - colMid[x]) <= TRAIL_HALF));
 
-  // Water: `waters` = array of circles {x,y,r}. Water is a solid barrier (collision) and
-  // overrides trail/floor art. Keep bodies >= 2 tiles wide (missing wang diagonals).
+  // Mask precedence: TRAIL beats WATER beats CANOPY, each yielding with a grass buffer,
+  // so the three corner lattices never fight over a cell (fighting = bitten roads,
+  // flat-cut shorelines, art drawn over art).
+  const nearDirt = (x, y) => {
+    for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) {
+      if (tileIsDirt(x + ox, y + oy)) return true;
+    }
+    return false;
+  };
+
+  // Water: `waters` = array of circles {x,y,r}. Water is a solid barrier (collision).
+  // Keep bodies >= 2 tiles wide (missing wang diagonals). Yields to the trail: shrinks
+  // to keep >= 2 grass tiles between shoreline and road (never bites the road).
   const waters = region.waters ?? [];
   const tileIsWater = (x, y) => {
     if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return false;
+    if (nearDirt(x, y)) return false;
     for (const c of waters) if (Math.hypot(x - c.x, y - c.y) <= c.r) return true;
+    return false;
+  };
+  // Canopy must stay 3 tiles from water: shoreline art extends 1 cell beyond the water
+  // mask and canopy things extend 1 cell beyond the canopy mask — 3 keeps a clean grass
+  // cell between them so canopy never paints over foam.
+  const nearWater = (x, y) => {
+    for (let oy = -3; oy <= 3; oy++) for (let ox = -3; ox <= 3; ox++) {
+      if (tileIsWater(x + ox, y + oy)) return true;
+    }
     return false;
   };
   // Corner lattice (W+1 x H+1): a corner is dirt if any of its 4 surrounding tiles is dirt.
@@ -161,15 +182,8 @@ const build = (region) => {
   // hedge/tree stamps treat canopy cells as occupied and never overwrite them. Regions
   // without `canopies` are unaffected — the stamp-based blobs keep working unchanged. ---
   const canopies = region.canopies ?? [];
-  // The mask never eats the corridor, and keeps >= 2 grass tiles between canopy and trail
-  // dirt (shrinking the CANOPY, not the trail) so the two corner lattices can't interact
-  // to bite notches into the road or pinch 1-tile grass slivers.
-  const nearDirt = (x, y) => {
-    for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) {
-      if (tileIsDirt(x + ox, y + oy)) return true;
-    }
-    return false;
-  };
+  // The mask never eats the corridor, keeps >= 2 grass tiles from trail dirt (nearDirt)
+  // and >= 3 from water (nearWater) — shrinking the CANOPY, never the road or the lake.
   // `canopyWalls: true` makes the ENTIRE wall area the canopy mask — LTTP treeline walls
   // that exactly follow the corridor/clearing outline — replacing scattered blob stamps.
   // (Mask runs to the map border so edge masses read as continuous deep forest.)
@@ -177,10 +191,10 @@ const build = (region) => {
   const tileIsCanopy = (x, y) => {
     if (canopyWalls) {
       if (x < 0 || y < 0 || x >= W || y >= H) return true; // off-map counts as forest
-      return !walkable(x, y) && !nearDirt(x, y);
+      return !walkable(x, y) && !nearDirt(x, y) && !nearWater(x, y);
     }
     if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return false;
-    if (walkable(x, y) || nearDirt(x, y)) return false;
+    if (walkable(x, y) || nearDirt(x, y) || nearWater(x, y)) return false;
     for (const c of canopies) if (Math.hypot(x - c.x, y - c.y) <= c.r) return true;
     return false;
   };
@@ -304,6 +318,9 @@ const build = (region) => {
   const SHRUB = 112;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     if (walkable(x, y) || tileIsWater(x, y) || things[y * W + x] !== TILE.BLANK) continue;
+    // Skip shoreline cells too (any water corner): their ground is autotiled foam, and a
+    // shrub's opaque grass background would paint over it. The lake is its own barrier.
+    if ([cw(x + 1, y), cw(x + 1, y + 1), cw(x, y + 1), cw(x, y)].includes(1)) continue;
     const nearFloor = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]
       .some(([ox, oy]) => walkable(x + ox, y + oy) && !tileIsWater(x + ox, y + oy));
     if (nearFloor) things[y * W + x] = SHRUB;
