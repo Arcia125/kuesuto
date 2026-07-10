@@ -12,6 +12,7 @@ import { TransitionTriggerEntity } from '../entities/transitionTriggerEntity';
 import { RENDERING_SCALE } from '../constants';
 import { PlayerEntity } from '../entities/playerEntity';
 import { SwordEntity } from '../entities/swordEntity';
+import { HeartPickupEntity } from '../entities/heartPickupEntity';
 
 export class SpawnSystem implements ISpawnSystem {
   private spawnedMaps: Record<string, boolean> = {};
@@ -41,9 +42,19 @@ export class SpawnSystem implements ISpawnSystem {
   }
 
 
+  private pendingHearts: { x: number; y: number }[] = [];
+
   public constructor(private emitter: EventEmitter) {
     emitter.on(EVENTS.AREA_TRANSITION_COMPLETE, (_eventName, payload) => {
       this.spawnedMaps[payload.mapName] = false;
+    });
+    // Slain slimes sometimes drop a heart (spawned next update, when gameState is
+    // in hand). Corrupted ones always drop — they're the quest fights.
+    emitter.on(EVENTS.DEATH, (_eventName, { entity }) => {
+      const chance = entity.name === CorruptedSlimeEntity.NAME ? 1 : 0.35;
+      if ([SlimeEntity.NAME, FastSlimeEntity.NAME, CorruptedSlimeEntity.NAME].includes(entity.name) && Math.random() < chance) {
+        this.pendingHearts.push({ x: entity.state.x, y: entity.state.y });
+      }
     });
   }
 
@@ -52,6 +63,16 @@ export class SpawnSystem implements ISpawnSystem {
     if (!this.spawnedMaps[currentMap] && gameState.systems.gameState.inStates(['running'])) {
       this.spawnFromMapData(gameState);
       this.spawnedMaps[currentMap] = true;
+    }
+    if (this.pendingHearts.length) {
+      for (const drop of this.pendingHearts) {
+        gameState.entities.push(new HeartPickupEntity({
+          ...SpawnSystem.defaultGameEntityState,
+          x: drop.x,
+          y: drop.y,
+        }, this.emitter));
+      }
+      this.pendingHearts = [];
     }
   }
 

@@ -26,6 +26,7 @@ export const EVENTS = {
   NARRATIVE_FLAG_SET: 'narrativeFlagSet',
   AREA_TRANSITION_START: 'areaTransitionStart',
   AREA_TRANSITION_COMPLETE: 'areaTransitionComplete',
+  HEAL: 'heal',
 } as const;
 
 export type EVENT_KEY = keyof typeof EVENTS;
@@ -93,6 +94,10 @@ export type EVENT_MAPPING = {
   };
   [EVENTS.AREA_TRANSITION_COMPLETE]: {
     mapName: string;
+  };
+  [EVENTS.HEAL]: {
+    entity: GameEntity;
+    amount: number;
   };
 }
 

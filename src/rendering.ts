@@ -4,6 +4,7 @@ import { SlimeEntity } from "./entities/slimeEntity";
 import { CorruptedSlimeEntity } from "./entities/corruptedSlimeEntity";
 import { FastSlimeEntity } from "./entities/fastSlimeEntity";
 import { TransitionTriggerEntity } from "./entities/transitionTriggerEntity";
+import { HeartPickupEntity } from "./entities/heartPickupEntity";
 import { EVENTS } from './events';
 import { CORRUPTED_KILLS_REQUIRED } from './systems/narrativeFlagSystem';
 import { GameEntity, GameState, Rect, Vector2, WorldMap } from './models';
@@ -754,6 +755,29 @@ const drawEntity = (
   ctx.globalCompositeOperation = "source-over";
 };
 
+// Heart pickups have no sprite sheet; draw them as chunky pixel hearts that bob.
+// Blink during the last seconds before they expire.
+const HEART_ROWS = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'];
+const drawHeartPickups = (ctx: CanvasRenderingContext2D, gameState: GameState) => {
+  const now = performance.now();
+  for (const e of gameState.entities) {
+    if (!(e instanceof HeartPickupEntity)) continue;
+    const age = now - e.spawnedAt;
+    if (age > 9000 && Math.floor(now / 150) % 2 === 0) continue;
+    const bob = Math.sin(now / 300 + e.id) * 6;
+    const pos = worldToCamera({ x: e.state.x, y: e.state.y + bob }, gameState.camera);
+    const cell = 12;
+    ctx.fillStyle = '#e04848';
+    HEART_ROWS.forEach((row, ry) => {
+      for (let rx = 0; rx < row.length; rx++) {
+        if (row[rx] === 'X') ctx.fillRect(pos.x + (rx - 3.5) * cell, pos.y + (ry - 3) * cell, cell, cell);
+      }
+    });
+    ctx.fillStyle = '#ffb0b0';
+    ctx.fillRect(pos.x - 2.5 * cell, pos.y - 2 * cell, cell, cell);
+  }
+};
+
 // Overhead speech bubbles (SpeechSystem): small rounded panels floating above the
 // speaker's head. Non-blocking flavor text, styled to match the HUD panels.
 const drawSpeechBubbles = (ctx: CanvasRenderingContext2D, gameState: GameState) => {
@@ -866,6 +890,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
       }
     }
 
+    drawHeartPickups(ctx, gameState);
     drawSpeechBubbles(ctx, gameState);
 
     drawHUD(ctx, canvas, gameState);

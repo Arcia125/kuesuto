@@ -33,12 +33,10 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
   }
   if (keyPressed('attack', event)) {
     event.preventDefault();
-    // Held key: the OS fires auto-repeat keydowns as fast as key rollover; only the
-    // first press is an attack command.
-    if (!event.repeat) {
-      gameState.controls.attack = true;
-      gameState.emitter.emit(EVENTS.ATTACK_COMMAND, null);
-    }
+    // Auto-repeat keydowns are what keep the sword swinging while the key is held —
+    // let them through. The attack SFX is rate-limited in SoundSystem instead.
+    gameState.controls.attack = true;
+    gameState.emitter.emit(EVENTS.ATTACK_COMMAND, null);
   }
   if (keyPressed('up', event)) {
     event.preventDefault();

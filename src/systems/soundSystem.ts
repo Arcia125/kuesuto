@@ -26,6 +26,7 @@ export class SoundSystem implements ISoundSystem {
     emitter.on(EVENTS.CHAT, () => this.blip());
     emitter.on(EVENTS.CHAT_NEXT, () => this.blip());
     emitter.on(EVENTS.AREA_TRANSITION_START, () => this.whoosh());
+    emitter.on(EVENTS.HEAL, () => this.chime());
   }
 
   public toggleMute = () => {
@@ -130,6 +131,12 @@ export class SoundSystem implements ISoundSystem {
   private levelUp() {
     const notes = [523, 659, 784, 1047];
     notes.forEach((f, i) => this.tone(f, 0.12, { type: 'square', delay: i * 0.09, vol: 0.7 }));
+  }
+
+  // Heart pickup: warm two-note chime.
+  private chime() {
+    this.tone(660, 0.1, { type: 'triangle', vol: 0.7 });
+    this.tone(990, 0.16, { type: 'triangle', delay: 0.08, vol: 0.7 });
   }
 
   // Chat text advancing: tiny blip.
