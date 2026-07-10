@@ -4,12 +4,18 @@ import { NPCEntity } from './npcEntity';
 import darkWizardSpriteJSONRaw from '../data/spriteJSON/ks-dark-wizard.json';
 import { Collision } from '../capabilities/collision';
 import { Interactable } from '../capabilities/interactable';
+import { Movement } from '../capabilities/movement';
+import { Aggro } from '../capabilities/aggro';
 import { PlayerEntity } from './playerEntity';
+import { getSpriteScale } from '../sprites';
 
 export class DarkWizardEntity extends NPCEntity {
   public static NAME = 'Dark Wizard';
   public static DISPLAY_NAME = 'Morghal';
-  public collisionCapability = new Collision(this);
+  public movementCapability = new Movement(this);
+  public collisionCapability = new Collision(this, this.movementCapability);
+  // Used only for its pathfinding (moveTowards); the wizard never attacks.
+  private chaseCapability = new Aggro(this, 0);
   public interactableCapability = new Interactable(this, [
     // After investigation - points to ruins
     {
@@ -54,10 +60,35 @@ export class DarkWizardEntity extends NPCEntity {
     super(state, DarkWizardEntity.NAME, [], emitter, darkWizardSpriteJSONRaw as unknown as SpriteJSON, './ks-dark-wizard.png');
     this.status.immortal = true;
     this.status.health = 99999;
+    // Spawn default is 0.8x player speed; he must be able to catch a fleeing player.
+    this.state.speedX *= 1.5;
+    this.state.speedY *= 1.5;
   }
 
   public update(gameState: GameState, _timeStamp: number) {
+    this.chase(gameState);
+    this.movementCapability.update(gameState, _timeStamp);
     this.collisionCapability.update(gameState, _timeStamp);
     this.interactableCapability.update(gameState, _timeStamp);
+  }
+
+  // Before the first meeting, Morghal won't let the player slip past: if they get
+  // near, he runs over to them so the intro chat triggers on contact.
+  private chase(gameState: GameState) {
+    if (gameState.systems.narrativeFlags.hasFlag('morghal_intro_complete')) {
+      this.state.moving = false;
+      return;
+    }
+    const player = PlayerEntity.find(gameState);
+    if (!player) return;
+    const tileSize = getSpriteScale();
+    const distance = Math.abs(player.state.x - this.state.x) + Math.abs(player.state.y - this.state.y);
+    if (distance < 8 * tileSize && distance > 1.2 * tileSize) {
+      this.chaseCapability.moveTowards(gameState, player.state);
+    } else {
+      this.state.moving = false;
+      this.state.xDir = 0;
+      this.state.yDir = 0;
+    }
   }
 }
