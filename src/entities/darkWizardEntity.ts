@@ -1,6 +1,7 @@
 import { EventEmitter } from '../events';
-import { GameEntity, GameEntityState, GameState, SpriteJSON } from '../models';
+import { Frame, GameEntity, GameEntityState, GameState, SpriteJSON } from '../models';
 import { NPCEntity } from './npcEntity';
+import { Entity } from './entities';
 import darkWizardSpriteJSONRaw from '../data/spriteJSON/ks-dark-wizard.json';
 import { Collision } from '../capabilities/collision';
 import { Interactable } from '../capabilities/interactable';
@@ -65,6 +66,23 @@ export class DarkWizardEntity extends NPCEntity {
     this.state.speedY *= 1.5;
   }
 
+  // The wizard's sheet only has down-facing idle animations (Bounce/Blink Down);
+  // any other movement/direction state matches zero frames and he turns invisible.
+  // Always render him as idle-down — he glides while chasing.
+  public getDirection(): 'down' {
+    return 'down';
+  }
+
+  public getSpritePos = (gameState: GameState): Frame => {
+    const wasMoving = this.state.moving;
+    this.state.moving = false;
+    try {
+      return Entity.getSpritePos(gameState, 'down', this);
+    } finally {
+      this.state.moving = wasMoving;
+    }
+  }
+
   public update(gameState: GameState, _timeStamp: number) {
     this.chase(gameState);
     this.movementCapability.update(gameState, _timeStamp);
@@ -83,7 +101,9 @@ export class DarkWizardEntity extends NPCEntity {
     if (!player) return;
     const tileSize = getSpriteScale();
     const distance = Math.abs(player.state.x - this.state.x) + Math.abs(player.state.y - this.state.y);
-    if (distance < 8 * tileSize && distance > 1.2 * tileSize) {
+    // Manhattan distance, so 14 covers ~9 tiles diagonally — enough to catch a
+    // player hugging the far edge of his clearing.
+    if (distance < 14 * tileSize && distance > 1.2 * tileSize) {
       this.chaseCapability.moveTowards(gameState, player.state);
     } else {
       this.state.moving = false;
