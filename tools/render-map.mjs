@@ -58,7 +58,7 @@ const out = new PNG({ width: cw * TILE * scale, height: ch * TILE * scale });
 
 // Blit one 16x16 tile (gid, firstgid=1 tileset only) at tile coords (tx,ty) in the crop.
 const blit = (gid, tx, ty, alphaBlend) => {
-  if (gid <= 0 || gid >= 170) return; // 170+ = Collision.tsx marker, not art
+  if (gid <= 0 || gid > SHEET_COLS * Math.floor(sheet.height / TILE)) return; // beyond sheet = not art (e.g. Collision.tsx marker)
   const id = gid - 1;
   const sx = (id % SHEET_COLS) * TILE;
   const sy = Math.floor(id / SHEET_COLS) * TILE;
