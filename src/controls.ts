@@ -13,7 +13,8 @@ const keyMappings = {
   showGrid: ['G'],
   activateDebugger: ['<'],
   toggleQuestLog: ['j', 'J'],
-  toggleTeleport: ['t', 'T']
+  toggleTeleport: ['t', 'T'],
+  toggleMute: ['m', 'M']
 };
 
 const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | KeyboardEvent['key']) => {
@@ -86,6 +87,10 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
   if (keyPressed('toggleTeleport', event)) {
     event.preventDefault();
     gameState.debugSettings.teleport = !gameState.debugSettings.teleport;
+  }
+  if (keyPressed('toggleMute', event)) {
+    event.preventDefault();
+    gameState.systems.sound.toggleMute();
   }
 };
 

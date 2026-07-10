@@ -307,6 +307,11 @@ export interface ILevelingSystem {
   calculateXPToNextLevel: (entity: GameEntity) => number;
 }
 
+export interface ISoundSystem extends Updateable {
+  muted: boolean;
+  toggleMute: () => void;
+}
+
 export type SpeechBubble = { entity: GameEntity; text: string; expiresAt: number };
 
 export interface ISpeechSystem extends Updateable {
@@ -335,6 +340,7 @@ export type GameState = {
     experience: IExperienceSystem;
     leveling: ILevelingSystem;
     physics: IPhysicsSystem;
+    sound: ISoundSystem;
     speech: ISpeechSystem;
     chat: IChatSystem;
     controlState: IControlStateSystem;

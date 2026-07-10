@@ -21,6 +21,7 @@ import { SpawnSystem } from './systems/spawnSystem';
 import { NarrativeFlagSystem } from './systems/narrativeFlagSystem';
 import { AreaTransitionSystem } from './systems/areaTransitionSystem';
 import { SpeechSystem } from './systems/speechSystem';
+import { SoundSystem } from './systems/soundSystem';
 import { getMinimapGeometry } from './rendering';
 import { positionFromTileCoord } from './position';
 import { Collision } from './capabilities/collision';
@@ -95,6 +96,7 @@ const init = () => {
       experience: new ExperienceSystem(emitter),
       leveling: new LevelingSystem(emitter),
       physics: new PhysicsSystem(emitter),
+      sound: new SoundSystem(emitter),
       speech: new SpeechSystem(),
       chat: new ChatSystem(emitter),
       controlState: new ControlStateSystem(emitter),
