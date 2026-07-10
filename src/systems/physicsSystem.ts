@@ -58,9 +58,10 @@ export class PhysicsSystem implements IPhysicsSystem {
       entity.state.x = newX;
       entity.state.y = newY;
       // Impulse decay over TIME, not distance moved: draining the magnitude by the few
-      // pixels moved each frame made knockback slide the entity for seconds.
-      force.magnitude *= Math.pow(0.98, gameState.time.delta);
-      if (force.magnitude <= 10) {
+      // pixels moved each frame made knockback slide the entity for seconds. Half-life
+      // ~140ms, cutoff at ~1/10 strength ≈ half a second of shove total.
+      force.magnitude *= Math.pow(0.995, gameState.time.delta);
+      if (force.magnitude <= 70) {
         this.forceEntries.splice(i, 1);
         i--;
       }
