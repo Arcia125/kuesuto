@@ -3,24 +3,32 @@
 Opportunities spotted while working. Roughly ordered by impact-per-effort within each
 section. Strike items when done (leave them listed as a record).
 
-## Polish (in progress this pass)
+## Polish (DONE in the 2026-07-10 pass)
 
-- [ ] Player i-frames during the damage flash window
-- [ ] Player death → game over screen → respawn loop (death currently goes nowhere)
-- [ ] WebAudio SFX: swish/hit/death/level-up/chat blip (game has zero audio)
-- [ ] Hit-pause + screen shake on hits
-- [ ] Heart drops from slimes (no way to recover health)
-- [ ] localStorage save/continue (refresh loses everything)
-- [ ] Camera lerp smoothing
+- [x] Player i-frames during the damage flash window
+- [x] Player death → game over screen → respawn loop (death currently goes nowhere)
+- [x] WebAudio SFX: swish/hit/death/level-up/chat blip (game has zero audio)
+- [x] Hit-pause + screen shake on hits
+- [x] Heart drops from slimes (no way to recover health)
+- [x] localStorage save/continue (refresh loses everything)
+- [x] Camera lerp smoothing
+
+## Follow-ups from that pass
+
+- [ ] Save/load v2: persist enemy deaths per map (currently enemies respawn on
+      Continue; quest flags prevent soft-locks but corrupted slimes reappear as decor)
+- [ ] Continue is keyboard-only ('C') — mobile needs a tap target
+- [ ] Attack cadence: swing rate is driven by OS key-repeat rate while held (varies
+      per machine); should be a real cooldown in the player attack logic, with the
+      SFX played per actual swing instead of rate-limited guesswork
+- [ ] Hearts are not persisted in saves (fine — they expire — but note it)
+- [ ] SFX volumes/envelopes deserve one tuning pass with headphones
 
 ## Bugs / engine debt
 
-- [ ] `DeathSystem` splices the PLAYER entity out of `gameState.entities` 4.5s after
-      death — camera loses target, `PlayerEntity.find` breaks. Player must be exempt
-      from corpse cleanup.
-- [ ] `DeathSystem.update` / `DamageSystem.update` mutate their arrays with
-      `splice(i, 1)` inside forward loops — skips the next entry for a frame
-      (same bug fixed in PhysicsSystem).
+- [x] `DeathSystem` splices the PLAYER entity out of `gameState.entities` 4.5s after
+      death — fixed: player exempt from corpse cleanup, goes to game-over instead.
+- [x] `DeathSystem.update` / `DamageSystem.update` splice-in-forward-loop — fixed.
 - [ ] `Collision.checkEntityCollision` skips entities with the same NAME (`entities[i].name === entity.name`)
       — two slimes never collide with each other; should compare `id`, not `name`.
 - [ ] `Aggro.update` runs `findPath` every frame per aggroed enemy — fine now, will
