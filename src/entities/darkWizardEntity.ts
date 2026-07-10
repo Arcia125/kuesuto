@@ -95,6 +95,7 @@ export class DarkWizardEntity extends NPCEntity {
   private escortLineIndex = 0;
   private nextLineAt = 0;
   private warnedAboutCorruption = false;
+  private hailedPlayer = false;
   private saidFarewell = false;
 
   public update(gameState: GameState, timeStamp: number) {
@@ -163,6 +164,10 @@ export class DarkWizardEntity extends NPCEntity {
     // First meeting: Manhattan distance, so 14 covers ~9 tiles diagonally — enough
     // to catch a player hugging the far edge of his clearing.
     if (distance < 14 * tileSize && distance > 1.2 * tileSize) {
+      if (!this.hailedPlayer) {
+        this.hailedPlayer = true;
+        gameState.systems.speech.say(this, 'You there — traveler! A moment!', 4000);
+      }
       this.chaseCapability.moveTowards(gameState, player.state);
     } else {
       stop();
