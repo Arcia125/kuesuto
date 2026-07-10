@@ -35,10 +35,19 @@ satisfies all layout requirements — then edit its objects/lore and corridor sh
 Copy `tools/regions/ruins-approach.mjs` as a template. A region exports:
 `{ name, width, height, rows, objects }` where `rows` is an array of strings,
 one character per tile: `'.'` = walkable floor, `'#'` = forest wall.
+Optional region fields:
+- `trails`: array of polylines (`[[x,y],[x,y],...]`) — the dirt trail follows these lines
+  (required for diagonal/branching paths; without it the trail follows the corridor midline).
+- `waters`: array of circles (`{x,y,r}`) — ponds/lakes with autotiled shoreline (the
+  "Grass Water" wangset). Water is ALWAYS solid collision; keep bodies ≥ 2 tiles wide and
+  never cover an object tile or the only route (the BFS validator will fail the build).
+
 Objects use TILE coordinates (not pixels). Supported object names:
 `'Player Start Location'`, `'Enemy'` (with `type: 'corrupted_slime' | 'fast_slime' | 'slime'`),
 `'InteractableZone'` (with `phrases: 'line1|line2'`), `'Transition'` (with
-`targetMap`, `entryPoint`, `widthTiles`, `heightTiles`).
+`targetMap`, `entryPoint`, `widthTiles`, `heightTiles`), `'Dark Wizard'` (Morghal the NPC),
+and named entry points for incoming Transitions via `kind: 'Entry'`
+(e.g. `{ name: 'From Ruins', kind: 'Entry', x, y }`).
 
 Layout requirements:
 - Walkable corridors must be at least 7 tiles wide (band of ±3 around a centre line).
