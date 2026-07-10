@@ -32,7 +32,10 @@ if (!mapName) {
 }
 
 const TILE = 16;
-const map = JSON.parse(readFileSync(path.join(repoRoot, 'src/data/maps', `${mapName}.json`), 'utf8'));
+const mapPath = mapName.endsWith('.json')
+  ? path.resolve(process.cwd(), mapName)
+  : path.join(repoRoot, 'src/data/maps', `${mapName}.json`);
+const map = JSON.parse(readFileSync(mapPath, 'utf8'));
 const sheet = PNG.sync.read(readFileSync(path.join(repoRoot, 'public/kuesuto-tilemap.png')));
 const SHEET_COLS = Math.floor(sheet.width / TILE);
 
@@ -118,7 +121,7 @@ if (showGrid) {
   }
 }
 
-const outPath = path.resolve(repoRoot, typeof flag('out') === 'string' ? flag('out') : `tools/renders/${mapName}.png`);
+const outPath = path.resolve(repoRoot, typeof flag('out') === 'string' ? flag('out') : `tools/renders/${path.basename(mapPath, '.json')}.png`);
 import('node:fs').then(({ mkdirSync }) => {
   mkdirSync(path.dirname(outPath), { recursive: true });
   writeFileSync(outPath, PNG.sync.write(out));

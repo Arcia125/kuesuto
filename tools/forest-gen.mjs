@@ -23,7 +23,6 @@ const tileset = readJSON(path.join(repoRoot, 'src/data/tilesets/ks-forrest-tiles
 const sourceMap = readJSON(path.join(repoRoot, 'src/data/maps/kuesuto-world.json'));
 
 const TILE = { GRASS: 5, BLANK: 1, COLLISION: 170, EMPTY: 0 };
-const BUSHES = [112, 114, 115, 111]; // passable single-tile decor
 const DIRT = 1, GRASS = 2; // wang color ids
 
 // --- wang corner lookup: [TR,BR,BL,TL] color string -> ground tile (firstgid=1) ---
@@ -46,16 +45,8 @@ const groundTile = (tr, br, bl, tl) => {
   return dirt >= 2 ? (WANG.get('1111') ?? TILE.GRASS) : (WANG.get('2222') ?? TILE.GRASS);
 };
 
-// --- forest texture sampled from the existing forrest (real, coherent tree art) ---
-const SRC = { x: 48, y: 176, w: 32, h: 32 };
-const srcLayer = (name) => sourceMap.layers.find((l) => l.name === name).data;
-const SRC_W = sourceMap.width;
-const srcThings = srcLayer('Things');
-const srcCol = srcLayer('Collision');
-// Tiled (modulo) sampling; the seam falls inside the deep-forest backdrop, never on the
-// walkable path, so at worst two tree patches meet — never a half-drawn sprite.
-const forestThingsAt = (x, y) => srcThings[(SRC.y + (y % SRC.h)) * SRC_W + (SRC.x + (x % SRC.w))];
-const forestColAt = (x, y) => srcCol[(SRC.y + (y % SRC.h)) * SRC_W + (SRC.x + (x % SRC.w))];
+// --- whole-sprite stamps extracted from the hand-authored forest (see tools/stamps.mjs) ---
+import { STAMPS, DECOR_TILES } from './stamps.mjs';
 
 // --- deterministic RNG ---
 let seed = 1337;
@@ -107,16 +98,95 @@ const build = (region) => {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
       ground[i] = groundTile(cc(x + 1, y), cc(x + 1, y + 1), cc(x, y + 1), cc(x, y));
-      if (walkable(x, y)) {
-        things[i] = (!tileIsDirt(x, y) && rand() < 0.10) ? BUSHES[(rand() * BUSHES.length) | 0] : TILE.BLANK;
-        collision[i] = TILE.EMPTY;
-      } else {
-        // Forest wall: draw the real tree art for looks, but keep collision SOLID on every
-        // wall cell so the source texture's internal gaps can't become passable holes.
-        things[i] = forestThingsAt(x, y);
-        collision[i] = TILE.COLLISION;
+      things[i] = TILE.BLANK;
+      // Every wall cell is SOLID regardless of art — visual gaps beyond the tree fences
+      // are unreachable, so they can stay decorative grass without becoming holes.
+      collision[i] = walkable(x, y) ? TILE.EMPTY : TILE.COLLISION;
+    }
+  }
+
+  // Whole-sprite stamping: a brush is placed only where its FULL footprint is free wall
+  // (never clipped — clipping is what produces broken trees; see tools/MAP-GENERATION.md).
+  const stampFits = (s, tx, ty) => {
+    for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+      if (s.things[y * s.w + x] === 0) continue;
+      const mx = tx + x, my = ty + y;
+      if (mx < 0 || my < 0 || mx >= W || my >= H) return false;
+      if (walkable(mx, my) || things[my * W + mx] !== TILE.BLANK) return false;
+    }
+    return true;
+  };
+  const stamp = (s, tx, ty) => {
+    if (!stampFits(s, tx, ty)) return false;
+    for (let y = 0; y < s.h; y++) for (let x = 0; x < s.w; x++) {
+      const v = s.things[y * s.w + x];
+      if (v !== 0) things[(ty + y) * W + (tx + x)] = v;
+    }
+    return true;
+  };
+
+  // --- Fences: hedges along horizontal floor boundaries, tree columns along vertical ones,
+  // like the hand-authored map bounds its trail. Only whole sprites; gaps left by the
+  // winding boundary get shrub-filled below. ---
+  // Hedges only on straight horizontal runs (>= 2 units) so no lone fragment ever appears;
+  // stepped/diagonal sections are shrub-filled below instead.
+  const { tree, hedgeUnit, blobSmall, blobMedium } = STAMPS;
+  const isWall = (x, y) => x >= 0 && y >= 0 && x < W && y < H && !walkable(x, y);
+  for (let y = 0; y < H; y++) {
+    for (const dir of [1, -1]) { // floor below / floor above
+      for (let x = 0; x < W; ) {
+        const boundary = (xx) => isWall(xx, y) && walkable(xx, y + dir);
+        if (!boundary(x)) { x++; continue; }
+        let end = x;
+        while (boundary(end + 1)) end++;
+        const len = end - x + 1;
+        if (len >= hedgeUnit.w) {
+          const top = dir === 1 ? y - hedgeUnit.h + 1 : y;
+          for (let hx = x; hx + hedgeUnit.w - 1 <= end; hx += hedgeUnit.w) stamp(hedgeUnit, hx, top);
+        }
+        x = end + 1;
       }
     }
+  }
+  // Tree columns on straight vertical runs.
+  for (let x = 0; x < W; x++) {
+    for (const dir of [1, -1]) { // floor right / floor left
+      for (let y = 0; y < H; ) {
+        const boundary = (yy) => isWall(x, yy) && walkable(x + dir, yy);
+        if (!boundary(y)) { y++; continue; }
+        let end = y;
+        while (boundary(end + 1)) end++;
+        if (end - y + 1 >= tree.h) {
+          const left = dir === 1 ? x - tree.w + 1 : x;
+          for (let ty = y; ty + tree.h - 1 <= end; ty += tree.h) stamp(tree, left, ty);
+        }
+        y = end + 1;
+      }
+    }
+  }
+
+  // --- Deep forest: scatter canopy blobs where the whole footprint is free wall. ---
+  const blobs = [blobMedium, blobSmall, blobSmall];
+  for (let attempt = 0; attempt < W * H / 8; attempt++) {
+    const s = blobs[(rand() * blobs.length) | 0];
+    stamp(s, (rand() * (W - s.w)) | 0, (rand() * (H - s.h)) | 0);
+  }
+
+  // --- Shrub-fill: any bare wall cell touching the corridor gets a self-contained bush,
+  // so every solid cell the player can reach has a visual barrier. ---
+  const SHRUB = 112;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (walkable(x, y) || things[y * W + x] !== TILE.BLANK) continue;
+    const nearFloor = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]
+      .some(([ox, oy]) => walkable(x + ox, y + oy));
+    if (nearFloor) things[y * W + x] = SHRUB;
+  }
+
+  // --- Ambience: passable decor on open grass (floor off-trail + unreached wall grass). ---
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    if (things[i] !== TILE.BLANK || tileIsDirt(x, y)) continue;
+    if (rand() < 0.06) things[i] = DECOR_TILES[(rand() * DECOR_TILES.length) | 0];
   }
 
   // Force object tiles + a ring clear & walkable (no tree on an NPC, ground readable).
@@ -185,7 +255,8 @@ const main = async () => {
   const outPath = path.join(repoRoot, 'src/data/maps', `${name}.json`);
   writeFileSync(outPath, JSON.stringify(map));
   let trees = 0, bushes = 0;
-  for (const v of map.layers[1].data) { if (v === TILE.BLANK) continue; if (BUSHES.includes(v)) bushes++; else trees++; }
+  const { DECOR_TILES } = await import('./stamps.mjs');
+  for (const v of map.layers[1].data) { if (v === TILE.BLANK) continue; if (DECOR_TILES.includes(v)) bushes++; else trees++; }
   console.log(`Wrote ${path.relative(repoRoot, outPath)} — ${region.width}x${region.height}, ${map.layers[3].objects.length} objects, forestTiles=${trees}, bushes=${bushes}, gate reachable=OK`);
 };
 
