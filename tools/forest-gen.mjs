@@ -105,9 +105,39 @@ const build = (region) => {
     }
     return false;
   };
-  const tileIsDirt = (x, y) => walkable(x, y) && (trails.length
-    ? nearTrail(x, y)
-    : (colMid[x] >= 0 && Math.abs(y - colMid[x]) <= TRAIL_HALF));
+  // Dirt mask as a grid so we can post-process it: where two trails diverge they can
+  // pinch off a lone grass cell inside the dirt. The wangset has no tile for a dirt
+  // ring around grass (missing diagonal combos), so it renders as a hard square notch.
+  // Closing pass: grass cells nearly surrounded by dirt get absorbed into the trail.
+  const dirtGrid = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    dirtGrid[y * W + x] = (walkable(x, y) && (trails.length
+      ? nearTrail(x, y)
+      : (colMid[x] >= 0 && Math.abs(y - colMid[x]) <= TRAIL_HALF))) ? 1 : 0;
+  }
+  // Morphological closing (dilate radius 1, then erode radius 1): removes grass
+  // channels/slivers narrower than ~2 tiles (the wedge between diverging trails)
+  // while leaving straight trail edges byte-identical. Only walkable cells may
+  // become dirt — never paint road under a collision wall.
+  {
+    const anyNeighbor = (grid, x, y, want) => {
+      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+        const nx = x + ox, ny = y + oy;
+        const v = (nx >= 0 && ny >= 0 && nx < W && ny < H) ? grid[ny * W + nx] : 0;
+        if (v === want) return true;
+      }
+      return false;
+    };
+    const dilated = new Uint8Array(W * H);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      dilated[y * W + x] = anyNeighbor(dirtGrid, x, y, 1) ? 1 : 0;
+    }
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      if (!dirtGrid[i] && walkable(x, y) && !anyNeighbor(dilated, x, y, 0)) dirtGrid[i] = 1;
+    }
+  }
+  const tileIsDirt = (x, y) => x >= 0 && y >= 0 && x < W && y < H && dirtGrid[y * W + x] === 1;
 
   // Mask precedence: TRAIL beats WATER beats CANOPY, each yielding with a grass buffer,
   // so the three corner lattices never fight over a cell (fighting = bitten roads,
