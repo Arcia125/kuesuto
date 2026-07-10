@@ -733,6 +733,71 @@ const drawEntity = (
   ctx.globalCompositeOperation = "source-over";
 };
 
+// Overhead speech bubbles (SpeechSystem): small rounded panels floating above the
+// speaker's head. Non-blocking flavor text, styled to match the HUD panels.
+const drawSpeechBubbles = (ctx: CanvasRenderingContext2D, gameState: GameState) => {
+  const bubbles = gameState.systems.speech.bubbles;
+  if (!bubbles.length) return;
+
+  const fontSize = 30;
+  const padding = 16;
+  const maxTextWidth = 620;
+  ctx.font = `${fontSize}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+
+  for (const bubble of bubbles) {
+    const entity = bubble.entity;
+    if (!entity.state.visible) continue;
+
+    const size = getSpriteScale() * entity.state.scaleX;
+    const anchor = worldToCamera({ x: entity.state.x, y: entity.state.y - size * 0.7 }, gameState.camera);
+
+    // Word-wrap to maxTextWidth.
+    const words = bubble.text.split(' ');
+    const lines: string[] = [];
+    let line = '';
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (ctx.measureText(candidate).width > maxTextWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = candidate;
+      }
+    }
+    if (line) lines.push(line);
+
+    const textWidth = Math.min(maxTextWidth, Math.max(...lines.map(l => ctx.measureText(l).width)));
+    const boxWidth = textWidth + padding * 2;
+    const boxHeight = lines.length * (fontSize + 6) + padding * 2 - 6;
+    const boxX = anchor.x - boxWidth / 2;
+    const boxY = anchor.y - boxHeight - 18;
+
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(25, 60, 62, 0.88)';
+    ctx.strokeStyle = '#feae34';
+    ctx.lineWidth = 3;
+    ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 12);
+    ctx.fill();
+    ctx.stroke();
+    // Tail pointing at the speaker.
+    ctx.beginPath();
+    ctx.moveTo(anchor.x - 12, boxY + boxHeight - 1);
+    ctx.lineTo(anchor.x + 12, boxY + boxHeight - 1);
+    ctx.lineTo(anchor.x, boxY + boxHeight + 16);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(25, 60, 62, 0.88)';
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    lines.forEach((l, i) => {
+      ctx.fillText(l, anchor.x, boxY + padding + fontSize - 6 + i * (fontSize + 6));
+    });
+    ctx.closePath();
+  }
+};
+
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   gameState.emitter.emit(EVENTS.RENDER_START, null);
 
@@ -763,6 +828,8 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
         }
       }
     }
+
+    drawSpeechBubbles(ctx, gameState);
 
     drawHUD(ctx, canvas, gameState);
     drawMinimap(ctx, canvas, gameState);

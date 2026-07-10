@@ -83,32 +83,111 @@ export class DarkWizardEntity extends NPCEntity {
     }
   }
 
-  public update(gameState: GameState, _timeStamp: number) {
-    this.chase(gameState);
-    this.movementCapability.update(gameState, _timeStamp);
-    this.collisionCapability.update(gameState, _timeStamp);
-    this.interactableCapability.update(gameState, _timeStamp);
+  // Ambient escort commentary, shown as overhead speech bubbles while Morghal
+  // follows the player to the corrupted glade.
+  private static ESCORT_LINES = [
+    'These trees were seedlings when I first came to the glade.',
+    'Listen... even the birds have gone quiet out here.',
+    'The corruption creeps a little further every season.',
+    'I used to know every creature of this forest. Now I hardly recognize them.',
+    'Stay near the path. The forest remembers those who respect it.',
+  ];
+  private escortLineIndex = 0;
+  private nextLineAt = 0;
+  private warnedAboutCorruption = false;
+  private saidFarewell = false;
+
+  public update(gameState: GameState, timeStamp: number) {
+    this.behave(gameState, timeStamp);
+    this.movementCapability.update(gameState, timeStamp);
+    this.collisionCapability.update(gameState, timeStamp);
+    this.interactableCapability.update(gameState, timeStamp);
   }
 
-  // Before the first meeting, Morghal won't let the player slip past: if they get
-  // near, he runs over to them so the intro chat triggers on contact.
-  private chase(gameState: GameState) {
-    if (gameState.systems.narrativeFlags.hasFlag('morghal_intro_complete')) {
-      this.state.moving = false;
-      return;
-    }
+  // Morghal's life in chapter 1:
+  //   1. Before the first meeting: intercepts a player who tries to slip past.
+  //   2. Until the corruption is investigated: gently escorts them, trailing a couple
+  //      of tiles behind, with occasional overhead commentary.
+  //   3. Quest done: runs to the player to deliver the ruins briefing (contact chat).
+  //   4. Chapter 1 complete: a short farewell bubble, then he stays put for good.
+  private behave(gameState: GameState, timeStamp: number) {
+    const flags = gameState.systems.narrativeFlags;
     const player = PlayerEntity.find(gameState);
     if (!player) return;
     const tileSize = getSpriteScale();
     const distance = Math.abs(player.state.x - this.state.x) + Math.abs(player.state.y - this.state.y);
-    // Manhattan distance, so 14 covers ~9 tiles diagonally — enough to catch a
-    // player hugging the far edge of his clearing.
-    if (distance < 14 * tileSize && distance > 1.2 * tileSize) {
-      this.chaseCapability.moveTowards(gameState, player.state);
-    } else {
+    const stop = () => {
       this.state.moving = false;
       this.state.xDir = 0;
       this.state.yDir = 0;
+    };
+
+    if (flags.hasFlag('chapter1_complete')) {
+      if (!this.saidFarewell) {
+        this.saidFarewell = true;
+        gameState.systems.speech.say(this, `Go well, ${PlayerEntity.DISPLAY_NAME}. This is as far as I follow.`, 6000);
+      }
+      stop();
+      return;
+    }
+
+    if (flags.hasFlag('corruption_investigated')) {
+      // Quest finished: he comes to the player wherever they are for the debrief.
+      if (distance > 1.2 * tileSize) {
+        this.chaseCapability.moveTowards(gameState, player.state);
+      } else {
+        stop();
+      }
+      return;
+    }
+
+    if (flags.hasFlag('morghal_intro_complete')) {
+      // Escort: follow at a polite distance, never crowding the player.
+      if (distance > 3.5 * tileSize) {
+        this.chaseCapability.moveTowards(gameState, player.state);
+      } else {
+        stop();
+      }
+      this.commentate(gameState, timeStamp);
+      return;
+    }
+
+    // First meeting: Manhattan distance, so 14 covers ~9 tiles diagonally — enough
+    // to catch a player hugging the far edge of his clearing.
+    if (distance < 14 * tileSize && distance > 1.2 * tileSize) {
+      this.chaseCapability.moveTowards(gameState, player.state);
+    } else {
+      stop();
+    }
+  }
+
+  private commentate(gameState: GameState, timeStamp: number) {
+    // Stay quiet while a real conversation is on screen.
+    if (gameState.systems.controlState.state === 'chat') return;
+
+    // One-time warning the first time a corrupted creature is close.
+    if (!this.warnedAboutCorruption) {
+      const tileSize = getSpriteScale();
+      const nearCorrupted = gameState.entities.some(e =>
+        e.name === 'corrupted_slime' && !e.status.dead &&
+        Math.abs(e.state.x - this.state.x) + Math.abs(e.state.y - this.state.y) < 7 * tileSize);
+      if (nearCorrupted) {
+        this.warnedAboutCorruption = true;
+        gameState.systems.speech.say(this, 'There — you see it? That color is not of this forest. Be on your guard.', 6000);
+        this.nextLineAt = timeStamp + 20000;
+        return;
+      }
+    }
+
+    if (!this.nextLineAt) {
+      // First ambient line lands shortly after the escort begins.
+      this.nextLineAt = timeStamp + 6000;
+      return;
+    }
+    if (timeStamp >= this.nextLineAt && this.escortLineIndex < DarkWizardEntity.ESCORT_LINES.length) {
+      gameState.systems.speech.say(this, DarkWizardEntity.ESCORT_LINES[this.escortLineIndex], 5500);
+      this.escortLineIndex++;
+      this.nextLineAt = timeStamp + 18000 + Math.random() * 8000;
     }
   }
 }

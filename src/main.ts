@@ -20,6 +20,7 @@ import { StartMenuSystem } from './systems/startMenuSystem';
 import { SpawnSystem } from './systems/spawnSystem';
 import { NarrativeFlagSystem } from './systems/narrativeFlagSystem';
 import { AreaTransitionSystem } from './systems/areaTransitionSystem';
+import { SpeechSystem } from './systems/speechSystem';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -89,6 +90,7 @@ const init = () => {
       experience: new ExperienceSystem(emitter),
       leveling: new LevelingSystem(emitter),
       physics: new PhysicsSystem(emitter),
+      speech: new SpeechSystem(),
       chat: new ChatSystem(emitter),
       controlState: new ControlStateSystem(emitter),
       gameState: new GameStateSystem(emitter),
