@@ -9,6 +9,9 @@ Top-down TypeScript + Vite browser game. `npm run dev` (serves at `/kuesuto/`),
   hard terrain constraints, `?map=<name>&freecam` in-game viewer.
 - **AI art:** use the `ai-sprites` skill (`.claude/skills/ai-sprites/`) — nano-banana +
   pixelize pipeline, chroma-key rules.
+- **New tiles/wangsets:** use the `tileset-extension` skill
+  (`.claude/skills/tileset-extension/`) — procedural composition method, the three files
+  that must change together, proof requirements.
 - **Git:** work on a feature branch with frequent, descriptive checkpoint commits (the
   user reviews via git history). NEVER add Co-Authored-By / Claude trailers to commits.
 - Architecture: entities + capabilities + systems, event-driven via `EventEmitter`
