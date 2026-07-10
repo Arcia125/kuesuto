@@ -63,6 +63,10 @@ const tileLayer = (name, id, data, width, height, opacity) => ({
 
 const OBJECT_BUILDERS = {
   'Player Start Location': () => ({ type: 'Spawn', point: true, properties: [{ name: 'type', type: 'string', value: 'playerStart' }] }),
+  // Named spawn point a Transition on another map can target via entryPoint
+  // (e.g. { name: 'From Ruins', kind: 'Entry' }).
+  'Entry': () => ({ type: 'Spawn', point: true, properties: [{ name: 'type', type: 'string', value: 'playerStart' }] }),
+  'Dark Wizard': () => ({ type: 'npc', point: true, properties: [{ name: 'hostile', type: 'bool', value: false }, { name: 'type', type: 'string', value: 'Dark Wizard' }] }),
   'Enemy': (o) => ({ type: 'npc', point: true, properties: [{ name: 'hostile', type: 'bool', value: true }, { name: 'type', type: 'string', value: o.type }] }),
   'InteractableZone': (o) => ({ type: 'InteractableZone', point: true, properties: [{ name: 'phrases', type: 'string', value: o.phrases }] }),
   'Transition': (o) => ({ type: 'Transition', width: (o.widthTiles ?? 1) * 16, height: (o.heightTiles ?? 1) * 16, properties: [{ name: 'targetMap', type: 'string', value: o.targetMap }, { name: 'entryPoint', type: 'string', value: o.entryPoint }] }),
@@ -72,15 +76,33 @@ const build = (region) => {
   const { width: W, height: H, rows } = region;
   const walkable = (x, y) => (rows[y]?.[x] ?? '#') === '.';
 
-  // Per-column walkable midline → a dirt trail down the corridor (corner lattice).
+  const TRAIL_HALF = 1.0;
+  // Dirt trail: if the region provides `trails` (arrays of [x,y] polyline points), paint
+  // dirt within TRAIL_HALF of those lines — required for diagonal/branching paths.
+  // Fallback for simple horizontal corridors: the per-column walkable midline.
+  const dist2seg = (px, py, [ax, ay], [bx, by]) => {
+    const dx = bx - ax, dy = by - ay;
+    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy || 1)));
+    return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+  };
   const colMid = [];
   for (let x = 0; x < W; x++) {
     let lo = -1, hi = -1;
     for (let y = 0; y < H; y++) if (walkable(x, y)) { if (lo < 0) lo = y; hi = y; }
     colMid[x] = lo < 0 ? -1 : (lo + hi) / 2;
   }
-  const TRAIL_HALF = 1.0;
-  const tileIsDirt = (x, y) => walkable(x, y) && colMid[x] >= 0 && Math.abs(y - colMid[x]) <= TRAIL_HALF;
+  const trails = region.trails ?? [];
+  const nearTrail = (x, y) => {
+    for (const line of trails) {
+      for (let i = 0; i + 1 < line.length; i++) {
+        if (dist2seg(x, y, line[i], line[i + 1]) <= TRAIL_HALF) return true;
+      }
+    }
+    return false;
+  };
+  const tileIsDirt = (x, y) => walkable(x, y) && (trails.length
+    ? nearTrail(x, y)
+    : (colMid[x] >= 0 && Math.abs(y - colMid[x]) <= TRAIL_HALF));
   // Corner lattice (W+1 x H+1): a corner is dirt if any of its 4 surrounding tiles is dirt.
   const cornerDirt = (cx, cy) => {
     for (const [ox, oy] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) {
@@ -165,11 +187,16 @@ const build = (region) => {
     }
   }
 
-  // --- Deep forest: scatter canopy blobs where the whole footprint is free wall. ---
+  // --- Deep forest: scatter canopy blobs where the whole footprint is free wall, then
+  // fill remaining bare wall (bands too thin for blobs) with single 5x5 trees so no
+  // large solid area reads as open walkable grass. ---
   const blobs = [blobMedium, blobSmall, blobSmall];
   for (let attempt = 0; attempt < W * H / 8; attempt++) {
     const s = blobs[(rand() * blobs.length) | 0];
     stamp(s, (rand() * (W - s.w)) | 0, (rand() * (H - s.h)) | 0);
+  }
+  for (let attempt = 0; attempt < W * H / 4; attempt++) {
+    stamp(tree, (rand() * (W - tree.w)) | 0, (rand() * (H - tree.h)) | 0);
   }
 
   // --- Shrub-fill: any bare wall cell touching the corridor gets a self-contained bush,
@@ -226,7 +253,9 @@ const build = (region) => {
   // Objects
   let nextId = 1;
   const objects = objs.map((o) => {
-    const spec = OBJECT_BUILDERS[o.name](o);
+    const builder = OBJECT_BUILDERS[o.kind ?? o.name];
+    if (!builder) throw new Error(`Unknown object kind "${o.kind ?? o.name}"`);
+    const spec = builder(o);
     const obj = { height: spec.height ?? 0, id: nextId++, name: o.name, properties: spec.properties, rotation: 0, type: spec.type, visible: true, width: spec.width ?? 0, x: o.x * 16, y: o.y * 16 };
     if (spec.point) obj.point = true;
     return obj;
