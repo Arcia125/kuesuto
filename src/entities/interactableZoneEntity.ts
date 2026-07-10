@@ -19,6 +19,8 @@ export class InteractableZoneEntity extends NPCEntity {
     this.interactableCapability = new Interactable(this, interactions);
     // Never drawn and never killable (the sword can otherwise overlap it).
     this.status.immortal = true;
+    // A lore trigger, not a wall: the player can walk straight through it.
+    this.status.nonBlocking = true;
   }
 
   public update(gameState: GameState, timeStamp: number) {

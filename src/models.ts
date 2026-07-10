@@ -59,6 +59,9 @@ export interface Status {
   maxHealth: number;
   immortal?: boolean;
   dead?: boolean;
+  // Trigger volumes (lore zones, transition gates): collide (emit events) but never
+  // physically block movement.
+  nonBlocking?: boolean;
   experience: number;
   level: number;
 }

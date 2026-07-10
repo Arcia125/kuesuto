@@ -22,6 +22,8 @@ export class TransitionTriggerEntity extends NPCEntity {
   ) {
     super(state, TransitionTriggerEntity.NAME, children, emitter, darkWizardSpriteJSONRaw as unknown as SpriteJSON, './ks-dark-wizard.png');
     this.status.immortal = true;
+    // A gate trigger, not a wall: the player walks into it, never bounces off it.
+    this.status.nonBlocking = true;
   }
 
   public update(_gameState: GameState, _timeStamp: number) {

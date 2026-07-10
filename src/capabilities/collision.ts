@@ -126,7 +126,13 @@ export class Collision implements Capability {
         collidedCorners,
         entities,
       });
-      this.movementCapability?.action?.undo();
+      // Trigger volumes (nonBlocking) emit the event but never wall the player off.
+      // Only undo movement for tile collisions or solid entities.
+      const tileHits = Collision.checkTileCollision(gameState, this.entity).length > 0;
+      const solidEntityHits = entities.some(e => !e.status.nonBlocking);
+      if (tileHits || solidEntityHits) {
+        this.movementCapability?.action?.undo();
+      }
     }
 
     // const tileset = gameState.map.activeMap.worldMap.tilesets.find(tileset => tileset.source === gameState.map.activeMap.tileMap.sourceMap[Collision.SOURCE_NAME]);
