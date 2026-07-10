@@ -36,8 +36,9 @@ const buildWangLookup = (name) => {
   }
   return lut;
 };
-const WANG = buildWangLookup('Grass Forrest');      // colors: 1=Dirt, 2=Grass
-const WANG_WATER = buildWangLookup('Grass Water');  // colors: 1=Water, 2=Grass
+const WANG = buildWangLookup('Grass Forrest');        // colors: 1=Dirt, 2=Grass
+const WANG_WATER = buildWangLookup('Grass Water');    // colors: 1=Water, 2=Grass
+const WANG_CANOPY = buildWangLookup('Grass Canopy');  // colors: 1=Canopy, 2=Grass
 // Corner lookup with majority fallback for the two diagonal-opposite combos wangsets omit.
 const wangTile = (lut, tr, br, bl, tl) => {
   const key = `${tr}${br}${bl}${tl}`;
@@ -47,6 +48,7 @@ const wangTile = (lut, tr, br, bl, tl) => {
 };
 const groundTile = (tr, br, bl, tl) => wangTile(WANG, tr, br, bl, tl);
 const waterTile = (tr, br, bl, tl) => wangTile(WANG_WATER, tr, br, bl, tl);
+const canopyTile = (tr, br, bl, tl) => wangTile(WANG_CANOPY, tr, br, bl, tl);
 
 // --- whole-sprite stamps extracted from the hand-authored forest (see tools/stamps.mjs) ---
 import { STAMPS, DECOR_TILES } from './stamps.mjs';
@@ -149,6 +151,34 @@ const build = (region) => {
       // are unreachable, so they can stay decorative grass without becoming holes.
       // Water is a barrier too, even inside the walkable floor.
       collision[i] = (walkable(x, y) && !tileIsWater(x, y)) ? TILE.EMPTY : TILE.COLLISION;
+    }
+  }
+
+  // --- Canopies: arbitrary-outline forest walls via the "Grass Canopy" corner wangset
+  // (the LTTP treeline as any shape). `canopies` = array of circles {x,y,r}; their union
+  // is the canopy mask, autotiled with seamless edges + south trunk fringe. Any tile whose
+  // centre is under the mask becomes a SOLID wall. Applied before stamping so the blob/
+  // hedge/tree stamps treat canopy cells as occupied and never overwrite them. Regions
+  // without `canopies` are unaffected — the stamp-based blobs keep working unchanged. ---
+  const canopies = region.canopies ?? [];
+  const tileIsCanopy = (x, y) => {
+    if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return false;
+    for (const c of canopies) if (Math.hypot(x - c.x, y - c.y) <= c.r) return true;
+    return false;
+  };
+  const cornerCanopy = (cx, cy) => {
+    for (const [ox, oy] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) {
+      if (tileIsCanopy(cx + ox, cy + oy)) return true;
+    }
+    return false;
+  };
+  const ccan = (cx, cy) => (cornerCanopy(cx, cy) ? 1 : 2); // Grass Canopy: 1=Canopy, 2=Grass
+  if (canopies.length) {
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const corners = [ccan(x + 1, y), ccan(x + 1, y + 1), ccan(x, y + 1), ccan(x, y)];
+      if (!corners.includes(1)) continue;          // fully-grass cell: leave as is
+      things[y * W + x] = canopyTile(...corners);   // opaque canopy over the grass ground
+      if (tileIsCanopy(x, y)) collision[y * W + x] = TILE.COLLISION; // solid interior
     }
   }
 

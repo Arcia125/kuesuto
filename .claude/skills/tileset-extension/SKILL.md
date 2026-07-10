@@ -54,5 +54,27 @@ proof render.
 
 - Corruption/thorn decor set for Shadowthorn Heart (standalone tiles — easiest).
 - Hedge end caps + the 2 wang diagonal glue tiles (quadrant-stitch from existing art).
-- Canopy-edge wangset for arbitrary-outline tree clusters (biggest win, most work).
 - Ruins/stone floor + wall wangset for the ruins interior maps.
+
+## Done: "Grass Canopy" wangset (arbitrary-outline LTTP treelines)
+
+`tools/canopy-tiles.mjs` composes the 13 canopy corner tiles (ids 182..194, sheet row 14)
+and `tools/canopy-register.mjs` registers the `Grass Canopy` wangset (1=Canopy, 2=Grass),
+bumps tilecount/imageheight, and regenerates the sprite frames. `tools/forest-gen.mjs`
+gained a `canopies` region field (array of `{x,y,r}` circles, unioned) that draws solid
+forest walls of ANY outline via this wangset — analogous to the `waters`/WANG_WATER path.
+Proof: `tools/_canopy-test.mjs` (irregular concave cluster) + `tools/renders/canopy-proof.png`
+and the generator render `tools/renders/canopy-gen-proof.png`.
+
+Decisions worth knowing before extending it:
+- **Composed procedurally, not reused.** The hand-map blob art (gids 135/158/161 interior,
+  scalloped edges) is a soft rounded-lump style whose bumps deliberately span tile borders,
+  so it is NOT on a strict corner grid — reused in novel corner combos it seams. Colours are
+  all sampled from that art, but the tiles are re-derived by bilinear field so continuity is
+  true by construction (same method as water-tiles.mjs). Interior uses a period-4 leaf-clump
+  texture (divides 16 → seamless) so the mass reads as foliage, not a flat slab.
+- **Trunk fringe lives IN the south tiles (single-tile solution).** Trees show trunks below
+  their leaves, so every tile whose canopy overhangs grass at the bottom grows small trunk
+  tufts in its own grass region, in two fixed interior columns kept ≥3px off the L/R borders
+  (so adjacent south tiles still share pure edges). No second tile row is needed below south
+  edges — generators just draw the wangset and the trunks come for free.
