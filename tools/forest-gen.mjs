@@ -26,8 +26,9 @@ const TILE = { GRASS: 5, BLANK: 1, COLLISION: 170, EMPTY: 0 };
 const DIRT = 1, GRASS = 2; // wang color ids
 
 // --- wang corner lookup: [TR,BR,BL,TL] color string -> ground tile (firstgid=1) ---
-const buildWangLookup = () => {
-  const ws = tileset.wangsets[0];
+const buildWangLookup = (name) => {
+  const ws = tileset.wangsets.find((w) => w.name === name);
+  if (!ws) throw new Error(`Wangset "${name}" not found in tileset`);
   const lut = new Map();
   for (const wt of ws.wangtiles) {
     const key = [wt.wangid[1], wt.wangid[3], wt.wangid[5], wt.wangid[7]].join('');
@@ -35,15 +36,17 @@ const buildWangLookup = () => {
   }
   return lut;
 };
-const WANG = buildWangLookup();
-const groundTile = (tr, br, bl, tl) => {
+const WANG = buildWangLookup('Grass Forrest');      // colors: 1=Dirt, 2=Grass
+const WANG_WATER = buildWangLookup('Grass Water');  // colors: 1=Water, 2=Grass
+// Corner lookup with majority fallback for the two diagonal-opposite combos wangsets omit.
+const wangTile = (lut, tr, br, bl, tl) => {
   const key = `${tr}${br}${bl}${tl}`;
-  if (WANG.has(key)) return WANG.get(key);
-  // Missing combo (the two diagonal-opposite cases the wangset omits): fall back to the
-  // majority color's solid tile so we never emit a broken edge.
-  const dirt = [tr, br, bl, tl].filter((c) => c === DIRT).length;
-  return dirt >= 2 ? (WANG.get('1111') ?? TILE.GRASS) : (WANG.get('2222') ?? TILE.GRASS);
+  if (lut.has(key)) return lut.get(key);
+  const primary = [tr, br, bl, tl].filter((c) => c === 1).length;
+  return primary >= 2 ? (lut.get('1111') ?? TILE.GRASS) : (lut.get('2222') ?? TILE.GRASS);
 };
+const groundTile = (tr, br, bl, tl) => wangTile(WANG, tr, br, bl, tl);
+const waterTile = (tr, br, bl, tl) => wangTile(WANG_WATER, tr, br, bl, tl);
 
 // --- whole-sprite stamps extracted from the hand-authored forest (see tools/stamps.mjs) ---
 import { STAMPS, DECOR_TILES } from './stamps.mjs';
@@ -103,6 +106,15 @@ const build = (region) => {
   const tileIsDirt = (x, y) => walkable(x, y) && (trails.length
     ? nearTrail(x, y)
     : (colMid[x] >= 0 && Math.abs(y - colMid[x]) <= TRAIL_HALF));
+
+  // Water: `waters` = array of circles {x,y,r}. Water is a solid barrier (collision) and
+  // overrides trail/floor art. Keep bodies >= 2 tiles wide (missing wang diagonals).
+  const waters = region.waters ?? [];
+  const tileIsWater = (x, y) => {
+    if (x < 1 || y < 1 || x >= W - 1 || y >= H - 1) return false;
+    for (const c of waters) if (Math.hypot(x - c.x, y - c.y) <= c.r) return true;
+    return false;
+  };
   // Corner lattice (W+1 x H+1): a corner is dirt if any of its 4 surrounding tiles is dirt.
   const cornerDirt = (cx, cy) => {
     for (const [ox, oy] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) {
@@ -112,6 +124,13 @@ const build = (region) => {
     return false;
   };
   const cc = (cx, cy) => (cornerDirt(cx, cy) ? DIRT : GRASS);
+  const cornerWater = (cx, cy) => {
+    for (const [ox, oy] of [[-1, -1], [0, -1], [-1, 0], [0, 0]]) {
+      if (tileIsWater(cx + ox, cy + oy)) return true;
+    }
+    return false;
+  };
+  const cw = (cx, cy) => (cornerWater(cx, cy) ? 1 : 2); // Grass Water colors: 1=Water, 2=Grass
 
   const ground = new Array(W * H);
   const things = new Array(W * H);
@@ -119,11 +138,17 @@ const build = (region) => {
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const i = y * W + x;
-      ground[i] = groundTile(cc(x + 1, y), cc(x + 1, y + 1), cc(x, y + 1), cc(x, y));
+      // Water overrides trail/floor art; any water-touching corner switches the cell to
+      // the Grass Water wangset so the shoreline autotiles seamlessly.
+      const wc = [cw(x + 1, y), cw(x + 1, y + 1), cw(x, y + 1), cw(x, y)];
+      ground[i] = wc.includes(1)
+        ? waterTile(...wc)
+        : groundTile(cc(x + 1, y), cc(x + 1, y + 1), cc(x, y + 1), cc(x, y));
       things[i] = TILE.BLANK;
       // Every wall cell is SOLID regardless of art — visual gaps beyond the tree fences
       // are unreachable, so they can stay decorative grass without becoming holes.
-      collision[i] = walkable(x, y) ? TILE.EMPTY : TILE.COLLISION;
+      // Water is a barrier too, even inside the walkable floor.
+      collision[i] = (walkable(x, y) && !tileIsWater(x, y)) ? TILE.EMPTY : TILE.COLLISION;
     }
   }
 
@@ -134,7 +159,7 @@ const build = (region) => {
       if (s.things[y * s.w + x] === 0) continue;
       const mx = tx + x, my = ty + y;
       if (mx < 0 || my < 0 || mx >= W || my >= H) return false;
-      if (walkable(mx, my) || things[my * W + mx] !== TILE.BLANK) return false;
+      if (walkable(mx, my) || tileIsWater(mx, my) || things[my * W + mx] !== TILE.BLANK) return false;
     }
     return true;
   };
@@ -203,9 +228,9 @@ const build = (region) => {
   // so every solid cell the player can reach has a visual barrier. ---
   const SHRUB = 112;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    if (walkable(x, y) || things[y * W + x] !== TILE.BLANK) continue;
+    if (walkable(x, y) || tileIsWater(x, y) || things[y * W + x] !== TILE.BLANK) continue;
     const nearFloor = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]]
-      .some(([ox, oy]) => walkable(x + ox, y + oy));
+      .some(([ox, oy]) => walkable(x + ox, y + oy) && !tileIsWater(x + ox, y + oy));
     if (nearFloor) things[y * W + x] = SHRUB;
   }
 
@@ -213,6 +238,8 @@ const build = (region) => {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x;
     if (things[i] !== TILE.BLANK || tileIsDirt(x, y)) continue;
+    // Keep water and its autotiled shoreline clear of decor.
+    if ([cw(x + 1, y), cw(x + 1, y + 1), cw(x, y + 1), cw(x, y)].includes(1)) continue;
     if (rand() < 0.06) things[i] = DECOR_TILES[(rand() * DECOR_TILES.length) | 0];
   }
 
