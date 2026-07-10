@@ -101,6 +101,14 @@ export class DarkWizardEntity extends NPCEntity {
     this.behave(gameState, timeStamp);
     this.movementCapability.update(gameState, timeStamp);
     this.collisionCapability.update(gameState, timeStamp);
+    // While escorting, bumping into him must NOT open his reminder chat — his
+    // overhead commentary does the talking. Clear the collision-set flag after
+    // collisions fire but before the interactable capability acts on it.
+    const flags = gameState.systems.narrativeFlags;
+    const escorting = flags.hasFlag('morghal_intro_complete') && !flags.hasFlag('corruption_investigated');
+    if (escorting) {
+      this.interactableCapability.interacting = false;
+    }
     this.interactableCapability.update(gameState, timeStamp);
   }
 
