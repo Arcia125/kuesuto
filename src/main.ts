@@ -22,6 +22,7 @@ import { NarrativeFlagSystem } from './systems/narrativeFlagSystem';
 import { AreaTransitionSystem } from './systems/areaTransitionSystem';
 import { SpeechSystem } from './systems/speechSystem';
 import { SoundSystem } from './systems/soundSystem';
+import { SaveSystem } from './systems/saveSystem';
 import { getMinimapGeometry } from './rendering';
 import { positionFromTileCoord } from './position';
 import { Collision } from './capabilities/collision';
@@ -106,6 +107,7 @@ const init = () => {
       spawn: new SpawnSystem(emitter),
       narrativeFlags: new NarrativeFlagSystem(emitter),
       areaTransition: new AreaTransitionSystem(emitter),
+      save: new SaveSystem(emitter),
     },
     mobileControls: new MobileControls(),
   };

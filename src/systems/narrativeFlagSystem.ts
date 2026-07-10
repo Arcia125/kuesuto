@@ -59,5 +59,9 @@ export class NarrativeFlagSystem implements INarrativeFlagSystem {
     return !!this.flags.get(key);
   }
 
+  public getAllFlags(): Record<string, NarrativeFlagValue> {
+    return Object.fromEntries(this.flags);
+  }
+
   public update(_gameState: GameState, _timeStamp: number): void {}
 }

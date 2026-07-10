@@ -23,6 +23,16 @@ const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | K
 }
 
 export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEvent) => {
+  // Start menu: 'C' continues from the localStorage save (Space = new game).
+  if (gameState.systems.gameState.inStates(['start'])) {
+    if ((event.key === 'c' || event.key === 'C') && gameState.systems.save.hasSave()) {
+      event.preventDefault();
+      if (gameState.systems.save.requestLoad(gameState)) {
+        gameState.systems.gameState.running();
+      }
+      return;
+    }
+  }
   // Game-over screen: Space respawns instead of attacking.
   if (gameState.systems.gameState.inStates(['gameOver'])) {
     if (keyPressed('attack', event)) {

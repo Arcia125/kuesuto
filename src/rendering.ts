@@ -22,7 +22,7 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   ctx.closePath();
 };
 
-const drawStartMenu = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _gameState: GameState) => {
+const drawStartMenu = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   resetContext(ctx, canvas, "#265c42");
   const title = "Kuesuto";
   const text = "Press space to start";
@@ -37,6 +37,10 @@ const drawStartMenu = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   ctx.fillText(title, textX, textY);
   ctx.font = "32px 'Press Start 2P'";
   ctx.fillText(text, textX, textY + 100);
+  if (gameState.systems.save.hasSave()) {
+    ctx.fillStyle = "#ffd54a";
+    ctx.fillText("Press C to continue", textX, textY + 170);
+  }
 };
 
 const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle'], gameState: GameState) => {

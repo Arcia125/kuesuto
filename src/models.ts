@@ -352,6 +352,7 @@ export type GameState = {
     spawn: ISpawnSystem;
     narrativeFlags: INarrativeFlagSystem;
     areaTransition: IAreaTransitionSystem;
+    save: ISaveSystem;
   };
   mobileControls: MobileControls;
 };
@@ -511,6 +512,12 @@ export interface INarrativeFlagSystem extends Updateable {
   getFlag(key: string): NarrativeFlagValue | undefined;
   setFlag(key: string, value: NarrativeFlagValue): void;
   hasFlag(key: string): boolean;
+  getAllFlags(): Record<string, NarrativeFlagValue>;
+}
+
+export interface ISaveSystem extends Updateable {
+  hasSave: () => boolean;
+  requestLoad: (gameState: GameState) => boolean;
 }
 
 export interface IAreaTransitionSystem extends Updateable {
