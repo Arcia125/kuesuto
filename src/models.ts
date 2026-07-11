@@ -315,6 +315,9 @@ export interface ISoundSystem extends Updateable {
   toggleMute: () => void;
 }
 
+export interface IMusicSystem extends Updateable {
+}
+
 export type SpeechBubble = { entity: GameEntity; text: string; expiresAt: number };
 
 export interface ISpeechSystem extends Updateable {
@@ -344,6 +347,7 @@ export type GameState = {
     leveling: ILevelingSystem;
     physics: IPhysicsSystem;
     sound: ISoundSystem;
+    music: IMusicSystem;
     speech: ISpeechSystem;
     chat: IChatSystem;
     controlState: IControlStateSystem;
