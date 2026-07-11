@@ -863,6 +863,29 @@ const drawGameOver = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) 
   }
 };
 
+// Draw failures were silently swallowed for years, which made "entity is invisible"
+// undebuggable. Log each failing entity once (per entity id) with its state so the
+// console shows WHY, without spamming every frame.
+const loggedDrawFailures = new Set<number>();
+const logDrawFailure = (entity: GameEntity, err: unknown) => {
+  if (loggedDrawFailures.has(entity.id)) return;
+  loggedDrawFailures.add(entity.id);
+  console.error(
+    `drawEntity failed: name=${entity.name} id=${entity.id}`,
+    {
+      moving: entity.state.moving,
+      attacking: entity.state.attacking,
+      dead: entity.status.dead,
+      xDir: entity.state.xDir,
+      yDir: entity.state.yDir,
+      currentAnimationName: entity.state.currentAnimationName,
+      animationFrameX: entity.state.animationFrameX,
+      visible: entity.state.visible,
+    },
+    err,
+  );
+};
+
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   gameState.emitter.emit(EVENTS.RENDER_START, null);
 
@@ -886,7 +909,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
         // A failed draw must not poison the canvas state for every entity after it
         // (e.g. the flashing color-dodge composite leaking onto the rest of the map).
         ctx.globalCompositeOperation = "source-over";
-        // console.error(err);
+        logDrawFailure(entities[i], err);
       }
       for (let j = 0; j < (entities[i]?.children?.length || 0); j++) {
         try {
@@ -894,7 +917,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
         }
         catch (err) {
           ctx.globalCompositeOperation = "source-over";
-          // console.log(err);
+          logDrawFailure(entities[i]!.children![j], err);
         }
       }
     }
