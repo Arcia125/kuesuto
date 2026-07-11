@@ -52,6 +52,8 @@ const canopyTile = (tr, br, bl, tl) => wangTile(WANG_CANOPY, tr, br, bl, tl);
 
 // --- whole-sprite stamps extracted from the hand-authored forest (see tools/stamps.mjs) ---
 import { STAMPS, DECOR_TILES } from './stamps.mjs';
+// --- structure stamps: buildings/props with their own collision masks (waystation art) ---
+import { STRUCTURE_STAMPS } from './structure-stamps.mjs';
 
 // --- deterministic RNG ---
 let seed = 1337;
@@ -73,8 +75,18 @@ const OBJECT_BUILDERS = {
   'Entry': () => ({ type: 'Spawn', point: true, properties: [{ name: 'type', type: 'string', value: 'playerStart' }] }),
   'Dark Wizard': () => ({ type: 'npc', point: true, properties: [{ name: 'hostile', type: 'bool', value: false }, { name: 'type', type: 'string', value: 'Dark Wizard' }] }),
   'Enemy': (o) => ({ type: 'npc', point: true, properties: [{ name: 'hostile', type: 'bool', value: true }, { name: 'type', type: 'string', value: o.type }] }),
+  // Friendly villager NPC; `type` selects the entity class in SpawnSystem
+  // (e.g. { name: 'Npc', type: 'villager_keeper', x, y }).
+  'Npc': (o) => ({ type: 'npc', point: true, properties: [{ name: 'hostile', type: 'bool', value: false }, { name: 'type', type: 'string', value: o.type }] }),
   'InteractableZone': (o) => ({ type: 'InteractableZone', point: true, properties: [{ name: 'phrases', type: 'string', value: o.phrases }] }),
-  'Transition': (o) => ({ type: 'Transition', width: (o.widthTiles ?? 1) * 16, height: (o.heightTiles ?? 1) * 16, properties: [{ name: 'targetMap', type: 'string', value: o.targetMap }, { name: 'entryPoint', type: 'string', value: o.entryPoint }] }),
+  // Optional story gate: `requiredFlag` blocks the transition until the narrative flag
+  // is set; `lockedText` is the refusal bubble shown on a blocked attempt.
+  'Transition': (o) => ({ type: 'Transition', width: (o.widthTiles ?? 1) * 16, height: (o.heightTiles ?? 1) * 16, properties: [
+    { name: 'targetMap', type: 'string', value: o.targetMap },
+    { name: 'entryPoint', type: 'string', value: o.entryPoint },
+    ...(o.requiredFlag ? [{ name: 'requiredFlag', type: 'string', value: o.requiredFlag }] : []),
+    ...(o.lockedText ? [{ name: 'lockedText', type: 'string', value: o.lockedText }] : []),
+  ] }),
 };
 
 const build = (region) => {
@@ -250,6 +262,30 @@ const build = (region) => {
       if (tileIsCanopy(x, y)) collision[y * W + x] = TILE.COLLISION; // solid interior
     }
   }
+  // --- Structures: buildings/props stamped onto WALKABLE floor with their own collision
+  // masks (solid walls, walkable doorway alcoves). Placement is authored, not random, so
+  // violations are hard errors: every footprint cell must be in-bounds walkable floor with
+  // blank things. Placed before fences/blobs/shrub/decor (those all respect non-blank
+  // things) and recorded in structureMask so the object ring-clear pass below cannot
+  // punch holes into a building. ---
+  const structures = region.structures ?? [];
+  const structureMask = new Uint8Array(W * H);
+  for (const s of structures) {
+    const st = STRUCTURE_STAMPS[s.id];
+    if (!st) throw new Error(`Unknown structure "${s.id}" at (${s.x},${s.y}) — known: ${Object.keys(STRUCTURE_STAMPS).join(', ')}`);
+    for (let y = 0; y < st.h; y++) for (let x = 0; x < st.w; x++) {
+      const mx = s.x + x, my = s.y + y;
+      if (mx < 0 || my < 0 || mx >= W || my >= H) throw new Error(`Structure "${s.id}" at (${s.x},${s.y}) runs out of bounds at (${mx},${my}).`);
+      const i = my * W + mx;
+      if (!walkable(mx, my) || tileIsWater(mx, my)) throw new Error(`Structure "${s.id}" at (${s.x},${s.y}) needs walkable floor at (${mx},${my}).`);
+      if (things[i] !== TILE.BLANK) throw new Error(`Structure "${s.id}" at (${s.x},${s.y}) overlaps existing art at (${mx},${my}).`);
+      if (tileIsDirt(mx, my)) console.warn(`Warning: structure "${s.id}" covers trail dirt at (${mx},${my}) — the road runs under it.`);
+      things[i] = st.things[y * st.w + x];
+      collision[i] = st.collision[y * st.w + x] ? TILE.COLLISION : TILE.EMPTY;
+      structureMask[i] = 1;
+    }
+  }
+
   // Stamps must never butt against the wangset canopy: treat mask cells + a 1-tile margin
   // as occupied for brush placement.
   const nearCanopy = (x, y) => {
@@ -369,12 +405,17 @@ const build = (region) => {
   }
 
   // Force object tiles + a ring clear & walkable (no tree on an NPC, ground readable).
+  // Structure cells are exempt: an NPC posted beside a hut must not blank the hut's wall
+  // tiles or carve its collision (the object's own center cell still must not be inside
+  // a footprint — that is an authoring error caught below).
   const objs = region.objects ?? [];
   for (const o of objs) {
+    if (structureMask[o.y * W + o.x]) throw new Error(`Object "${o.name}" at (${o.x},${o.y}) is inside a structure footprint.`);
     for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
       const x = o.x + dx, y = o.y + dy;
       if (x < 0 || y < 0 || x >= W || y >= H) continue;
       const i = y * W + x;
+      if (structureMask[i]) continue;
       things[i] = TILE.BLANK;
       collision[i] = TILE.EMPTY;
     }
