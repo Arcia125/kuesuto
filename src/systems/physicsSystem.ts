@@ -16,7 +16,7 @@ export class PhysicsSystem implements IPhysicsSystem {
   private handleAttack = ({ attacker, target }: EVENT_MAPPING[typeof EVENTS.ATTACK]) => {
     this.applyForce(target, {
       direction: directionVectorBetween(attacker.state, target.state),
-      magnitude: 700
+      magnitude: 1500
     });
   };
 
@@ -57,9 +57,13 @@ export class PhysicsSystem implements IPhysicsSystem {
       }
       entity.state.x = newX;
       entity.state.y = newY;
-      force.magnitude -= Math.abs(xForce) + Math.abs(yForce);
-      if (force.magnitude <= 10) {
+      // Impulse decay over TIME, not distance moved: draining the magnitude by the few
+      // pixels moved each frame made knockback slide the entity for seconds. Half-life
+      // ~140ms, cutoff at ~1/10 strength ≈ half a second of shove total.
+      force.magnitude *= Math.pow(0.995, gameState.time.delta);
+      if (force.magnitude <= 70) {
         this.forceEntries.splice(i, 1);
+        i--;
       }
     }
   }

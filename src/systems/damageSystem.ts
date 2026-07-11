@@ -29,6 +29,12 @@ export class DamageSystem implements IDamageSystem {
     if (target.status.immortal) {
       return;
     }
+    // I-frames: while the player is still flashing from the last hit they can't be
+    // hit again — otherwise a slime standing on them shreds their whole health bar.
+    // Player-only: enemies are already once-per-swing via Attack.targetsHit.
+    if (target.name === 'player' && target.state.flashing) {
+      return;
+    }
     damages.forEach(damage => {
       target.status.health -= damage.power;
     });
@@ -44,6 +50,7 @@ export class DamageSystem implements IDamageSystem {
       if (damagedAnimation.duration <= 0) {
         damagedAnimation.entity.state.flashing = false;
         this.damageAnimations.splice(i, 1);
+        i--;
       }
     }
   };

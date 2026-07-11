@@ -6,6 +6,9 @@ const update = (gameState: GameState, timestamp: number) => {
   const entities = gameState.entities;
   const entityCount = entities.length;
   for (let i = 0; i < entityCount; i++) {
+    // Entities may remove themselves during update (heart pickups), shifting the
+    // array under the cached count — a missing slot must not kill the frame.
+    if (!entities[i]) continue;
     entities[i].update(gameState, timestamp);
   }
 
@@ -68,10 +71,14 @@ export const gameLoop = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElemen
       //     break;
       //   }
       // }
-      // let startTime = performance.now();
-      update(gameState, timestamp);
-      // console.log('update time: ', performance.now() - startTime);
-      gameState.time.delta = 0;
+      // Hit-pause: hold the world still for a few frames after a solid hit lands
+      // (rendering continues; delta is discarded so nothing jumps afterwards).
+      if (timestamp < gameState.time.freezeUntil) {
+        gameState.time.delta = 0;
+      } else {
+        update(gameState, timestamp);
+        gameState.time.delta = 0;
+      }
     }
 
 

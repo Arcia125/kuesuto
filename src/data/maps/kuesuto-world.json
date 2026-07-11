@@ -872,29 +872,7 @@
                  "x":1245.97,
                  "y":3649.4
                 }, 
-                {
-                 "height":0,
-                 "id":7,
-                 "name":"Enemy",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"hostile",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"slime"
-                        }],
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":992,
-                 "y":3656
-                }, 
+
                 {
                  "height":0,
                  "id":8,
@@ -918,98 +896,10 @@
                  "x":765.333,
                  "y":3529.33
                 }, 
-                {
-                 "height":0,
-                 "id":9,
-                 "name":"Enemy",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"hostile",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"slime"
-                        }],
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":886.667,
-                 "y":3237.33
-                }, 
-                {
-                 "height":0,
-                 "id":10,
-                 "name":"Enemy",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"hostile",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"slime"
-                        }],
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":314.667,
-                 "y":3268
-                }, 
-                {
-                 "height":0,
-                 "id":11,
-                 "name":"Enemy",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"hostile",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"slime"
-                        }],
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":580,
-                 "y":3370.67
-                }, 
-                {
-                 "height":0,
-                 "id":12,
-                 "name":"Enemy",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"hostile",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"slime"
-                        }],
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":309.333,
-                 "y":2945.33
-                }, 
+
+
+
+
                 {
                  "height":0,
                  "id":13,
@@ -1056,75 +946,9 @@
                  "x":894.667,
                  "y":3001.33
                 }, 
-                {
-                 "height":0,
-                 "id":15,
-                 "name":"Enemy",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"hostile",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"slime"
-                        }],
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":462.667,
-                 "y":2973.33
-                }, 
-                {
-                 "height":0,
-                 "id":16,
-                 "name":"Enemy",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"hostile",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"slime"
-                        }],
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":833.333,
-                 "y":2742.67
-                }, 
-                {
-                 "height":0,
-                 "id":17,
-                 "name":"Enemy",
-                 "point":true,
-                 "properties":[
-                        {
-                         "name":"hostile",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"slime"
-                        }],
-                 "rotation":0,
-                 "type":"npc",
-                 "visible":true,
-                 "width":0,
-                 "x":665.333,
-                 "y":2708
-                }, 
+
+
+
                 {
                  "height":0,
                  "id":18,
@@ -1168,8 +992,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":500,
-                 "y":2500
+                 "x":680,
+                 "y":2620
                 },
                 {
                  "height":0,
@@ -1191,8 +1015,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":700,
-                 "y":2400
+                 "x":840,
+                 "y":2560
                 },
                 {
                  "height":0,
@@ -1214,8 +1038,8 @@
                  "type":"npc",
                  "visible":true,
                  "width":0,
-                 "x":900,
-                 "y":2350
+                 "x":720,
+                 "y":2460
                 },
                 {
                  "height":0,

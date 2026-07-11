@@ -1,7 +1,14 @@
 import { PlayerEntity } from "./entities/playerEntity";
+import { DarkWizardEntity } from "./entities/darkWizardEntity";
+import { SlimeEntity } from "./entities/slimeEntity";
+import { CorruptedSlimeEntity } from "./entities/corruptedSlimeEntity";
+import { FastSlimeEntity } from "./entities/fastSlimeEntity";
+import { TransitionTriggerEntity } from "./entities/transitionTriggerEntity";
+import { HeartPickupEntity } from "./entities/heartPickupEntity";
 import { EVENTS } from './events';
-import { GameEntity, GameState, Rect } from './models';
-import { worldToCamera } from './position';
+import { CORRUPTED_KILLS_REQUIRED } from './systems/narrativeFlagSystem';
+import { GameEntity, GameState, Rect, Vector2, WorldMap } from './models';
+import { worldToCamera, positionToTileCoord, distanceTo } from './position';
 import { getBoundingRect } from './rectangle';
 import { drawSprite, getSpriteScale } from './sprites';
 import { getTintedSprite } from './spriteTinting';
@@ -15,7 +22,7 @@ const resetContext = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   ctx.closePath();
 };
 
-const drawStartMenu = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, _gameState: GameState) => {
+const drawStartMenu = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   resetContext(ctx, canvas, "#265c42");
   const title = "Kuesuto";
   const text = "Press space to start";
@@ -30,6 +37,10 @@ const drawStartMenu = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
   ctx.fillText(title, textX, textY);
   ctx.font = "32px 'Press Start 2P'";
   ctx.fillText(text, textX, textY + 100);
+  if (gameState.systems.save.hasSave()) {
+    ctx.fillStyle = "#ffd54a";
+    ctx.fillText("Press C to continue", textX, textY + 170);
+  }
 };
 
 const drawGrid = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, padding: number, strokeStyle: CanvasFillStrokeStyles['strokeStyle'], gameState: GameState) => {
@@ -106,6 +117,345 @@ const drawBar = (
   ctx.fillStyle = textFillStyle;
   ctx.font = '24px "Press Start 2P"';
   ctx.fillText(`${values.min}/${values.max}`, rect.x + rect.w / 2, rect.y + rect.h / 2);
+};
+
+type ObjectivePhase =
+  | 'meetMorghal'
+  | 'investigate'
+  | 'returnToMorghal'
+  | 'goToRuins'
+  | 'exploreRuins';
+
+/**
+ * The single source of truth for the player's current goal, derived from the
+ * narrative flag chain (see NarrativeFlagSystem). Both the objective text and the
+ * minimap marker read from this so they can never disagree.
+ */
+const getObjectivePhase = (gameState: GameState): ObjectivePhase => {
+  const flags = gameState.systems.narrativeFlags;
+  if (flags.hasFlag('chapter1_complete')) {
+    return gameState.map.activeMap.name === 'ruins-approach' ? 'exploreRuins' : 'goToRuins';
+  }
+  if (flags.hasFlag('corruption_investigated')) return 'returnToMorghal';
+  if (flags.hasFlag('morghal_intro_complete')) return 'investigate';
+  return 'meetMorghal';
+};
+
+const getObjectiveText = (gameState: GameState): string | null => {
+  switch (getObjectivePhase(gameState)) {
+    case 'exploreRuins':
+      return 'Explore the ruins approach';
+    case 'goToRuins':
+      return 'Travel east, to the ancient ruins';
+    case 'returnToMorghal':
+      return 'Return to Morghal in the glade';
+    case 'investigate': {
+      const killsValue = gameState.systems.narrativeFlags.getFlag('corrupted_slimes_killed');
+      const kills = Math.min(
+        typeof killsValue === 'number' ? killsValue : 0,
+        CORRUPTED_KILLS_REQUIRED
+      );
+      return `Defeat the corrupted (purple) slimes  ${kills}/${CORRUPTED_KILLS_REQUIRED}`;
+    }
+    case 'meetMorghal':
+    default:
+      return 'Speak with Morghal in the glade';
+  }
+};
+
+/**
+ * World-space position of the current objective, resolved from live entities so the
+ * minimap can mark it. Returns null when there is nothing to point at yet.
+ */
+const getObjectiveTarget = (gameState: GameState): Vector2 | null => {
+  const entities = gameState.entities;
+  const positionOf = (e: GameEntity | undefined): Vector2 | null =>
+    e ? { x: e.state.x, y: e.state.y } : null;
+  const averageOf = (matches: GameEntity[]): Vector2 | null => {
+    if (!matches.length) return null;
+    const sum = matches.reduce((acc, e) => ({ x: acc.x + e.state.x, y: acc.y + e.state.y }), { x: 0, y: 0 });
+    return { x: sum.x / matches.length, y: sum.y / matches.length };
+  };
+
+  switch (getObjectivePhase(gameState)) {
+    case 'meetMorghal':
+    case 'returnToMorghal':
+      return positionOf(entities.find(e => e.name === DarkWizardEntity.NAME));
+    case 'investigate': {
+      const player = entities.find(e => e.name === PlayerEntity.NAME);
+      const corrupted = entities.filter(e => e.name === CorruptedSlimeEntity.NAME && !e.status.dead);
+      if (!corrupted.length) return null;
+      if (!player) return positionOf(corrupted[0]);
+      const nearest = corrupted.reduce((best, e) =>
+        distanceTo(player.state, e.state) < distanceTo(player.state, best.state) ? e : best
+      );
+      return positionOf(nearest);
+    }
+    case 'goToRuins':
+    case 'exploreRuins':
+    default:
+      // Point at the gate the player should cross next (triggers tile the gateway).
+      return averageOf(entities.filter(e => e.name === TransitionTriggerEntity.NAME));
+  }
+};
+
+/**
+ * Draws a small "OBJECTIVE" panel at the top-center of the screen so the current
+ * quest goal and progress are always visible.
+ */
+const QUEST_TITLE = 'Chapter 1: The Glade Corruption';
+
+/**
+ * A small persistent tab hinting that the quest log can be opened, so the player
+ * discovers the keybind without an always-on objective banner cluttering the screen.
+ */
+const drawQuestLogHint = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+  const label = '[J] Quests';
+  ctx.save();
+  ctx.font = '22px "Press Start 2P"';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const w = Math.abs(ctx.measureText(label).width) + 40;
+  const h = 48;
+  const x = (canvas.width - w) / 2;
+  const y = 18;
+  ctx.fillStyle = 'rgba(25, 60, 62, 0.7)';
+  ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = '#feae34';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillStyle = '#ead4aa';
+  ctx.fillText(label, canvas.width / 2, y + h / 2);
+  ctx.restore();
+};
+
+/**
+ * The quest log panel, shown only while toggled open (J). Lists the current quest and
+ * its active objective derived from the shared objective source.
+ */
+const drawQuestLog = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+  const objective = getObjectiveText(gameState) || 'No active objective.';
+
+  const boxW = 1180;
+  const boxH = 380;
+  const boxX = (canvas.width - boxW) / 2;
+  const boxY = 140;
+  const padX = 56;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(20, 48, 50, 0.94)';
+  ctx.fillRect(boxX, boxY, boxW, boxH);
+  ctx.strokeStyle = '#feae34';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+
+  // Header.
+  ctx.fillStyle = '#feae34';
+  ctx.font = '34px "Press Start 2P"';
+  ctx.fillText('QUEST LOG', boxX + padX, boxY + 40);
+
+  // Divider.
+  ctx.strokeStyle = 'rgba(254, 174, 52, 0.5)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(boxX + padX, boxY + 96);
+  ctx.lineTo(boxX + boxW - padX, boxY + 96);
+  ctx.stroke();
+
+  // Quest title.
+  ctx.fillStyle = '#ffd54a';
+  ctx.font = '26px "Press Start 2P"';
+  ctx.fillText(QUEST_TITLE, boxX + padX, boxY + 132);
+
+  // Active objective.
+  ctx.fillStyle = '#ead4aa';
+  ctx.font = '24px "Press Start 2P"';
+  const lines = getLines(ctx, '- ' + objective, boxW - padX * 2);
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i]!, boxX + padX, boxY + 196 + i * 40);
+  }
+
+  // Footer hint.
+  ctx.fillStyle = 'rgba(234, 212, 170, 0.7)';
+  ctx.font = '20px "Press Start 2P"';
+  ctx.fillText('[J] Close', boxX + padX, boxY + boxH - 52);
+
+  ctx.restore();
+};
+
+// Cached pre-rendered terrain images, one per map (keyed by map name). The forest is
+// 256x256 tiles, so we rasterize it once into a 1px-per-tile offscreen canvas and blit
+// it scaled each frame rather than re-walking 65k tiles every render.
+const minimapTerrainCache = new Map<string, HTMLCanvasElement>();
+
+const getTileLayerData = (worldMap: WorldMap, name: string): number[] | undefined => {
+  const layer = worldMap.layers.find(l => l.type === 'tilelayer' && l.name === name);
+  return layer && layer.type === 'tilelayer' ? layer.data : undefined;
+};
+
+/**
+ * Rasterizes a map's terrain to a 1px-per-tile offscreen canvas: collision tiles read
+ * as walls, decorated Things tiles as forest, everything else as ground. Tile id 1 in
+ * the Things layer is the blank filler and is treated as empty.
+ */
+const buildMinimapTerrain = (worldMap: WorldMap): HTMLCanvasElement => {
+  const w = worldMap.width;
+  const h = worldMap.height;
+  const off = document.createElement('canvas');
+  off.width = w;
+  off.height = h;
+  const octx = off.getContext('2d')!;
+  const collision = getTileLayerData(worldMap, 'Collision');
+  const things = getTileLayerData(worldMap, 'Things');
+  const ground = getTileLayerData(worldMap, 'Ground');
+  // Ground gids 170-182 are the "Grass Water" wangset (tileset ids 169-181, firstgid 1).
+  const isWater = (gid: number) => gid >= 170 && gid <= 182;
+  const image = octx.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) {
+    let r = 74, g = 140, b = 79; // ground #4a8c4f
+    if (things && things[i] && things[i] !== 1) { r = 46; g = 90; b = 52; } // tree #2e5a34
+    if (collision && collision[i]) { r = 28; g = 28; b = 34; } // wall #1c1c22
+    // Water is solid too, so this must come after the wall pass to win the pixel.
+    if (ground && isWater(ground[i])) { r = 70; g = 130; b = 200; } // water #4682c8
+    const o = i * 4;
+    image.data[o] = r;
+    image.data[o + 1] = g;
+    image.data[o + 2] = b;
+    image.data[o + 3] = 255;
+  }
+  octx.putImageData(image, 0, 0);
+  return off;
+};
+
+/**
+ * Minimap panel geometry + viewport, shared by drawMinimap and the teleport click
+ * handler (main.ts) so a click maps to exactly what is drawn. Returns null before
+ * the player exists.
+ */
+export const getMinimapGeometry = (canvas: HTMLCanvasElement, gameState: GameState) => {
+  const worldMap = gameState.map.activeMap.worldMap;
+  const player = gameState.entities.find(e => e.name === PlayerEntity.NAME);
+  if (!worldMap || !worldMap.layers || !player) return null;
+
+  const size = 360;
+  const margin = 28;
+  const rect = { x: canvas.width - size - margin, y: margin, w: size, h: size };
+
+  // Zoomed, player-centered viewport: show viewTiles across, panning with the player
+  // and clamped to the map edges (rather than fitting the whole map in the panel).
+  const viewTiles = 80;
+  const playerTile = positionToTileCoord(player.state);
+  const half = viewTiles / 2;
+  const viewX = Math.max(0, Math.min(worldMap.width - viewTiles, playerTile.x - half));
+  const viewY = Math.max(0, Math.min(worldMap.height - viewTiles, playerTile.y - half));
+  return { rect, viewX, viewY, viewTiles };
+};
+
+/**
+ * Draws a minimap panel in the top-right corner: a scaled rasterization of the current
+ * map plus live markers for the player, enemies, and the current objective. Shares its
+ * objective target with the objective text via getObjectiveTarget so they agree.
+ */
+const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+  const worldMap = gameState.map.activeMap.worldMap;
+  if (!worldMap || !worldMap.layers) return;
+  const player = gameState.entities.find(e => e.name === PlayerEntity.NAME);
+  if (!player) return;
+
+  const mapName = gameState.map.activeMap.name;
+  let terrain = minimapTerrainCache.get(mapName);
+  if (!terrain) {
+    terrain = buildMinimapTerrain(worldMap);
+    minimapTerrainCache.set(mapName, terrain);
+  }
+
+  const { rect, viewX, viewY, viewTiles: VIEW_TILES } = getMinimapGeometry(canvas, gameState)!;
+
+  ctx.save();
+  // Backing + terrain crop + border. Clip so the cropped terrain can't bleed past the panel.
+  ctx.fillStyle = 'rgba(25, 60, 62, 0.85)';
+  ctx.fillRect(rect.x - 6, rect.y - 6, rect.w + 12, rect.h + 12);
+  ctx.imageSmoothingEnabled = false;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(rect.x, rect.y, rect.w, rect.h);
+  ctx.clip();
+  ctx.drawImage(terrain, viewX, viewY, VIEW_TILES, VIEW_TILES, rect.x, rect.y, rect.w, rect.h);
+  ctx.restore();
+  // Teleport mode ('T'): cyan border + hint, click on the panel warps the player.
+  ctx.strokeStyle = gameState.debugSettings.teleport ? '#4ae0e0' : '#feae34';
+  ctx.lineWidth = 5;
+  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  if (gameState.debugSettings.teleport) {
+    ctx.fillStyle = '#4ae0e0';
+    ctx.font = '26px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TELEPORT: CLICK MAP', rect.x + rect.w / 2, rect.y + rect.h + 34);
+  }
+
+  const toMini = (pos: Vector2) => {
+    const tile = positionToTileCoord(pos);
+    return {
+      x: rect.x + ((tile.x - viewX) / VIEW_TILES) * rect.w,
+      y: rect.y + ((tile.y - viewY) / VIEW_TILES) * rect.h,
+    };
+  };
+  const inView = (pos: Vector2) => {
+    const tile = positionToTileCoord(pos);
+    return tile.x >= viewX && tile.x <= viewX + VIEW_TILES && tile.y >= viewY && tile.y <= viewY + VIEW_TILES;
+  };
+  const dot = (pos: Vector2, color: string, radius: number) => {
+    const p = toMini(pos);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  };
+
+  // Enemies: corrupted targets stand out in purple, the rest are faded red.
+  for (const e of gameState.entities) {
+    if (e.status.dead || !inView(e.state)) continue;
+    if (e.name === CorruptedSlimeEntity.NAME) dot(e.state, '#c040c0', 5);
+    else if (e.name === SlimeEntity.NAME || e.name === FastSlimeEntity.NAME) dot(e.state, 'rgba(200, 70, 70, 0.7)', 4);
+  }
+
+  // Objective: a pulsing yellow ring at the current goal. If off the viewport, clamp it
+  // to the panel edge as a direction hint so the player still knows which way to go.
+  const target = getObjectiveTarget(gameState);
+  if (target) {
+    const pulse = 8 + Math.sin(Date.now() / 200) * 2;
+    let p = toMini(target);
+    const edge = 10;
+    const clamped = !inView(target);
+    p = {
+      x: Math.max(rect.x + edge, Math.min(rect.x + rect.w - edge, p.x)),
+      y: Math.max(rect.y + edge, Math.min(rect.y + rect.h - edge, p.y)),
+    };
+    ctx.strokeStyle = '#ffd54a';
+    ctx.lineWidth = clamped ? 5 : 3;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, pulse, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Player on top, ringed for visibility (always centered-ish in the viewport).
+  dot(player.state, '#ffffff', 6);
+  const pp = toMini(player.state);
+  ctx.strokeStyle = '#2ce8f5';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(pp.x, pp.y, 6, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.fillStyle = '#feae34';
+  ctx.font = '22px "Press Start 2P"';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText('MAP', rect.x + 8, rect.y + 8);
+  ctx.restore();
 };
 
 const drawHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
@@ -414,6 +764,133 @@ const drawEntity = (
   ctx.globalCompositeOperation = "source-over";
 };
 
+// Heart pickups have no sprite sheet; draw them as chunky pixel hearts that bob.
+// Blink during the last seconds before they expire.
+const HEART_ROWS = ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'];
+const drawHeartPickups = (ctx: CanvasRenderingContext2D, gameState: GameState) => {
+  const now = performance.now();
+  for (const e of gameState.entities) {
+    if (!(e instanceof HeartPickupEntity)) continue;
+    const age = now - e.spawnedAt;
+    if (age > 9000 && Math.floor(now / 150) % 2 === 0) continue;
+    const bob = Math.sin(now / 300 + e.id) * 6;
+    const pos = worldToCamera({ x: e.state.x, y: e.state.y + bob }, gameState.camera);
+    const cell = 12;
+    ctx.fillStyle = '#e04848';
+    HEART_ROWS.forEach((row, ry) => {
+      for (let rx = 0; rx < row.length; rx++) {
+        if (row[rx] === 'X') ctx.fillRect(pos.x + (rx - 3.5) * cell, pos.y + (ry - 3) * cell, cell, cell);
+      }
+    });
+    ctx.fillStyle = '#ffb0b0';
+    ctx.fillRect(pos.x - 2.5 * cell, pos.y - 2 * cell, cell, cell);
+  }
+};
+
+// Overhead speech bubbles (SpeechSystem): small rounded panels floating above the
+// speaker's head. Non-blocking flavor text, styled to match the HUD panels.
+const drawSpeechBubbles = (ctx: CanvasRenderingContext2D, gameState: GameState) => {
+  const bubbles = gameState.systems.speech.bubbles;
+  if (!bubbles.length) return;
+
+  const fontSize = 30;
+  const padding = 16;
+  const maxTextWidth = 620;
+  ctx.font = `${fontSize}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+
+  for (const bubble of bubbles) {
+    const entity = bubble.entity;
+    if (!entity.state.visible) continue;
+
+    const size = getSpriteScale() * entity.state.scaleX;
+    const anchor = worldToCamera({ x: entity.state.x, y: entity.state.y - size * 0.7 }, gameState.camera);
+
+    // Word-wrap to maxTextWidth.
+    const words = bubble.text.split(' ');
+    const lines: string[] = [];
+    let line = '';
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (ctx.measureText(candidate).width > maxTextWidth && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = candidate;
+      }
+    }
+    if (line) lines.push(line);
+
+    const textWidth = Math.min(maxTextWidth, Math.max(...lines.map(l => ctx.measureText(l).width)));
+    const boxWidth = textWidth + padding * 2;
+    const boxHeight = lines.length * (fontSize + 6) + padding * 2 - 6;
+    const boxX = anchor.x - boxWidth / 2;
+    const boxY = anchor.y - boxHeight - 18;
+
+    ctx.beginPath();
+    ctx.fillStyle = 'rgba(25, 60, 62, 0.88)';
+    ctx.strokeStyle = '#feae34';
+    ctx.lineWidth = 3;
+    ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 12);
+    ctx.fill();
+    ctx.stroke();
+    // Tail pointing at the speaker.
+    ctx.beginPath();
+    ctx.moveTo(anchor.x - 12, boxY + boxHeight - 1);
+    ctx.lineTo(anchor.x + 12, boxY + boxHeight - 1);
+    ctx.lineTo(anchor.x, boxY + boxHeight + 16);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(25, 60, 62, 0.88)';
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    lines.forEach((l, i) => {
+      ctx.fillText(l, anchor.x, boxY + padding + fontSize - 6 + i * (fontSize + 6));
+    });
+    ctx.closePath();
+  }
+};
+
+// Game-over screen: the fallen world stays visible under a dark red-black veil.
+const drawGameOver = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement) => {
+  ctx.fillStyle = 'rgba(20, 4, 8, 0.78)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#c03030';
+  ctx.font = 'bold 110px monospace';
+  ctx.fillText('YOU HAVE FALLEN', canvas.width / 2, canvas.height / 2 - 40);
+  ctx.fillStyle = '#e8d8b0';
+  ctx.font = '40px monospace';
+  const blink = Math.floor(Date.now() / 600) % 2 === 0;
+  if (blink) {
+    ctx.fillText('press SPACE to rise again', canvas.width / 2, canvas.height / 2 + 70);
+  }
+};
+
+// Draw failures were silently swallowed for years, which made "entity is invisible"
+// undebuggable. Log each failing entity once (per entity id) with its state so the
+// console shows WHY, without spamming every frame.
+const loggedDrawFailures = new Set<number>();
+const logDrawFailure = (entity: GameEntity, err: unknown) => {
+  if (loggedDrawFailures.has(entity.id)) return;
+  loggedDrawFailures.add(entity.id);
+  console.error(
+    `drawEntity failed: name=${entity.name} id=${entity.id}`,
+    {
+      moving: entity.state.moving,
+      attacking: entity.state.attacking,
+      dead: entity.status.dead,
+      xDir: entity.state.xDir,
+      yDir: entity.state.yDir,
+      currentAnimationName: entity.state.currentAnimationName,
+      animationFrameX: entity.state.animationFrameX,
+      visible: entity.state.visible,
+    },
+    err,
+  );
+};
+
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   gameState.emitter.emit(EVENTS.RENDER_START, null);
 
@@ -429,26 +906,44 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
     const entities = gameState.entities;
     const entityCount = entities.length;
     for (let i = 0; i < entityCount; i++) {
+      if (!entities[i]) continue;
       try {
         drawEntity(entities[i], ctx, canvas, gameState);
       }
       catch (err) {
-        // console.error(err);
+        // A failed draw must not poison the canvas state for every entity after it
+        // (e.g. the flashing color-dodge composite leaking onto the rest of the map).
+        ctx.globalCompositeOperation = "source-over";
+        logDrawFailure(entities[i], err);
       }
       for (let j = 0; j < (entities[i]?.children?.length || 0); j++) {
         try {
           drawEntity(entities[i]!.children![j], ctx, canvas, gameState);
         }
         catch (err) {
-          // console.log(err);
+          ctx.globalCompositeOperation = "source-over";
+          logDrawFailure(entities[i]!.children![j], err);
         }
       }
     }
 
+    drawHeartPickups(ctx, gameState);
+    drawSpeechBubbles(ctx, gameState);
+
     drawHUD(ctx, canvas, gameState);
+    drawMinimap(ctx, canvas, gameState);
+    if (gameState.ui.questLogOpen) {
+      drawQuestLog(ctx, canvas, gameState);
+    } else {
+      drawQuestLogHint(ctx, canvas);
+    }
     // Only draw the chat UI if the game is in the chat state.
     if (gameState.systems.controlState.state === 'chat') {
       drawChat(ctx, canvas, gameState);
+    }
+
+    if (gameState.systems.gameState.inStates(['gameOver'])) {
+      drawGameOver(ctx, canvas);
     }
   }
 

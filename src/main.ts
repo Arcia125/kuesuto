@@ -20,6 +20,14 @@ import { StartMenuSystem } from './systems/startMenuSystem';
 import { SpawnSystem } from './systems/spawnSystem';
 import { NarrativeFlagSystem } from './systems/narrativeFlagSystem';
 import { AreaTransitionSystem } from './systems/areaTransitionSystem';
+import { SpeechSystem } from './systems/speechSystem';
+import { SoundSystem } from './systems/soundSystem';
+import { SaveSystem } from './systems/saveSystem';
+import { MusicSystem } from './systems/musicSystem';
+import { getMinimapGeometry } from './rendering';
+import { positionFromTileCoord } from './position';
+import { Collision } from './capabilities/collision';
+import { PlayerEntity } from './entities/playerEntity';
 
 
 let mainCanvas: HTMLCanvasElement;
@@ -64,6 +72,11 @@ const init = () => {
       showGrid: false,
       activateDebugger: false,
       drawEntityHitboxes: false,
+      freecam: typeof location !== 'undefined' && new URLSearchParams(location.search).has('freecam'),
+      teleport: false,
+    },
+    ui: {
+      questLogOpen: false,
     },
     time: {
       delta: 0,
@@ -75,6 +88,7 @@ const init = () => {
       timeStep: 1000 / 60,
       stepID: 0,
       frameID: 0,
+      freezeUntil: 0,
       resetDeltaCount: 0,
     },
     elements: new BrowserElements(),
@@ -85,6 +99,9 @@ const init = () => {
       experience: new ExperienceSystem(emitter),
       leveling: new LevelingSystem(emitter),
       physics: new PhysicsSystem(emitter),
+      sound: new SoundSystem(emitter),
+      music: new MusicSystem(),
+      speech: new SpeechSystem(),
       chat: new ChatSystem(emitter),
       controlState: new ControlStateSystem(emitter),
       gameState: new GameStateSystem(emitter),
@@ -92,11 +109,23 @@ const init = () => {
       spawn: new SpawnSystem(emitter),
       narrativeFlags: new NarrativeFlagSystem(emitter),
       areaTransition: new AreaTransitionSystem(emitter),
+      save: new SaveSystem(emitter),
     },
     mobileControls: new MobileControls(),
   };
 
 
+
+  // Map-viewer affordance: ?map=<name> starts on any known map (pairs with &freecam
+  // for flying around it — see debugSettings.freecam).
+  if (typeof location !== 'undefined') {
+    const mapParam = new URLSearchParams(location.search).get('map');
+    if (mapParam && gameState.map.tileMaps[mapParam]) {
+      gameState.map.setActiveMap(mapParam);
+    } else if (mapParam) {
+      console.warn(`Unknown ?map=${mapParam}; known maps: ${Object.keys(gameState.map.tileMaps).join(', ')}`);
+    }
+  }
 
   gameState.mobileControls.init(gameState.elements);
 
@@ -105,9 +134,60 @@ const init = () => {
   mainCanvas = gameState.elements.mainCanvas;
   mainCanvasContext = gameState.elements.mainCanvasContext;
 
+  // Testing superpower: with teleport mode on ('T'), clicking the minimap warps the
+  // player there. Uses the same geometry the minimap is drawn with, and lands on the
+  // nearest non-colliding tile so you can never warp into a wall.
+  mainCanvas.addEventListener('click', (event) => {
+    if (!gameState.debugSettings.teleport) return;
+    if (!gameState.systems.gameState.inStates(['running'])) return;
+    const player = gameState.entities.find(e => e.name === PlayerEntity.NAME);
+    const geo = getMinimapGeometry(mainCanvas, gameState);
+    if (!player || !geo) return;
+
+    // Browser click coords -> internal canvas coords (canvas is CSS-scaled).
+    const bounds = mainCanvas.getBoundingClientRect();
+    const cx = (event.clientX - bounds.left) * (mainCanvas.width / bounds.width);
+    const cy = (event.clientY - bounds.top) * (mainCanvas.height / bounds.height);
+    const { rect, viewX, viewY, viewTiles } = geo;
+    if (cx < rect.x || cx > rect.x + rect.w || cy < rect.y || cy > rect.y + rect.h) return;
+
+    const tileX = Math.floor(viewX + ((cx - rect.x) / rect.w) * viewTiles);
+    const tileY = Math.floor(viewY + ((cy - rect.y) / rect.h) * viewTiles);
+    const collidesAt = (tx: number, ty: number) => {
+      const p = positionFromTileCoord({ x: tx, y: ty });
+      return Collision.checkTileCollision(gameState, { x: p.x, y: p.y, w: 1, h: 1 }).length > 0;
+    };
+    // Spiral out to find the nearest walkable tile (radius 6 covers clicks on canopy).
+    for (let r = 0; r <= 6; r++) {
+      for (let oy = -r; oy <= r; oy++) for (let ox = -r; ox <= r; ox++) {
+        if (Math.max(Math.abs(ox), Math.abs(oy)) !== r) continue;
+        if (!collidesAt(tileX + ox, tileY + oy)) {
+          const world = positionFromTileCoord({ x: tileX + ox, y: tileY + oy });
+          player.state.x = world.x;
+          player.state.y = world.y;
+          return;
+        }
+      }
+    }
+  });
+
   emitter.emit(EVENTS.INIT, {
     mainCanvas,
     mainCanvasContext
+  });
+
+  // Game feel: brief hit-pause when the player lands a hit; screen shake scaled to
+  // whether you dealt it or took it.
+  emitter.on(EVENTS.ATTACK, (_, payload) => {
+    if (payload.attacker.name === PlayerEntity.NAME) {
+      gameState.time.freezeUntil = performance.now() + 70;
+      gameState.camera.shake(7, 100);
+    }
+  });
+  emitter.on(EVENTS.DAMAGE, (_, payload) => {
+    if (payload.target.name === PlayerEntity.NAME) {
+      gameState.camera.shake(16, 200);
+    }
   });
 
   emitter.on(EVENTS.FPS, (_, msg) => {

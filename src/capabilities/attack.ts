@@ -10,6 +10,10 @@ export class Attack implements Capability {
   }
 
   public update = (gameState: GameState, _timeStamp: number) => {
+    // No combat while a chat has the player frozen — they can't dodge or fight back.
+    if (gameState.systems.controlState.state === 'chat') {
+      return;
+    }
     if (this.entity.state.attacking) {
       const weapon = this.entity.children?.find(child => child instanceof WeaponEntity) as WeaponEntity | undefined;
       if (!weapon) {

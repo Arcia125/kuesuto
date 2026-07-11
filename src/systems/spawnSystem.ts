@@ -9,9 +9,11 @@ import { CorruptedSlimeEntity } from '../entities/corruptedSlimeEntity';
 import { FastSlimeEntity } from '../entities/fastSlimeEntity';
 import { InteractableZoneEntity } from '../entities/interactableZoneEntity';
 import { TransitionTriggerEntity } from '../entities/transitionTriggerEntity';
+import { VillagerKeeperEntity, VillagerChildEntity, VillagerHunterEntity, VillagerCarterEntity } from '../entities/villagerEntity';
 import { RENDERING_SCALE } from '../constants';
 import { PlayerEntity } from '../entities/playerEntity';
 import { SwordEntity } from '../entities/swordEntity';
+import { HeartPickupEntity } from '../entities/heartPickupEntity';
 
 export class SpawnSystem implements ISpawnSystem {
   private spawnedMaps: Record<string, boolean> = {};
@@ -20,6 +22,10 @@ export class SpawnSystem implements ISpawnSystem {
     [DarkWizardEntity.NAME]: DarkWizardEntity,
     [CorruptedSlimeEntity.NAME]: CorruptedSlimeEntity,
     [FastSlimeEntity.NAME]: FastSlimeEntity,
+    [VillagerKeeperEntity.NAME]: VillagerKeeperEntity,
+    [VillagerChildEntity.NAME]: VillagerChildEntity,
+    [VillagerHunterEntity.NAME]: VillagerHunterEntity,
+    [VillagerCarterEntity.NAME]: VillagerCarterEntity,
   };
 
   private static readonly defaultGameEntityState = {
@@ -41,9 +47,19 @@ export class SpawnSystem implements ISpawnSystem {
   }
 
 
+  private pendingHearts: { x: number; y: number }[] = [];
+
   public constructor(private emitter: EventEmitter) {
     emitter.on(EVENTS.AREA_TRANSITION_COMPLETE, (_eventName, payload) => {
       this.spawnedMaps[payload.mapName] = false;
+    });
+    // Slain slimes sometimes drop a heart (spawned next update, when gameState is
+    // in hand). Corrupted ones always drop — they're the quest fights.
+    emitter.on(EVENTS.DEATH, (_eventName, { entity }) => {
+      const chance = entity.name === CorruptedSlimeEntity.NAME ? 1 : 0.35;
+      if ([SlimeEntity.NAME, FastSlimeEntity.NAME, CorruptedSlimeEntity.NAME].includes(entity.name) && Math.random() < chance) {
+        this.pendingHearts.push({ x: entity.state.x, y: entity.state.y });
+      }
     });
   }
 
@@ -52,6 +68,16 @@ export class SpawnSystem implements ISpawnSystem {
     if (!this.spawnedMaps[currentMap] && gameState.systems.gameState.inStates(['running'])) {
       this.spawnFromMapData(gameState);
       this.spawnedMaps[currentMap] = true;
+    }
+    if (this.pendingHearts.length) {
+      for (const drop of this.pendingHearts) {
+        gameState.entities.push(new HeartPickupEntity({
+          ...SpawnSystem.defaultGameEntityState,
+          x: drop.x,
+          y: drop.y,
+        }, this.emitter));
+      }
+      this.pendingHearts = [];
     }
   }
 
@@ -107,13 +133,29 @@ export class SpawnSystem implements ISpawnSystem {
         }, this.emitter)
       ], this.emitter);
 
+      if (gameState.debugSettings.freecam) {
+        // Map-viewer ghost: fast, unkillable, walks through everything (see Collision).
+        playerEntity.state.speedX *= 2.5;
+        playerEntity.state.speedY *= 2.5;
+        playerEntity.status.immortal = true;
+      }
+
       gameState.camera.follow(playerEntity);
       gameState.entities.push(playerEntity);
+
+      // Arcia's one dry line of arrival, first time only (the flag auto-saves, so
+      // continues — even mid-prologue — never replay it).
+      const flags = gameState.systems.narrativeFlags;
+      if (gameState.map.activeMap.name === 'prologue' && !flags.hasFlag('prologue_opening_said')) {
+        flags.setFlag('prologue_opening_said', true);
+        gameState.systems.speech.say(playerEntity, 'Thornwick, then. And a barred gate where the road should be.', 6000);
+      }
     }
 
     // Spawn enemies and NPCs
     const startLocationsObject = gameState.map.getObjectStartLocations('Enemy')
-      .concat(gameState.map.getObjectStartLocations('Dark Wizard'));
+      .concat(gameState.map.getObjectStartLocations('Dark Wizard'))
+      .concat(gameState.map.getObjectStartLocations('Npc'));
 
     startLocationsObject.forEach(entityObj => {
       const EntityClass = SpawnSystem.getEntityClass(entityObj);
@@ -151,6 +193,9 @@ export class SpawnSystem implements ISpawnSystem {
     const targetMap = transitionObj.properties.find(p => p.name === 'targetMap')?.value;
     const entryPoint = transitionObj.properties.find(p => p.name === 'entryPoint')?.value;
     if (!targetMap || !entryPoint) return;
+    // Story-locked gates (see TransitionTriggerEntity).
+    const requiredFlag = transitionObj.properties.find(p => p.name === 'requiredFlag')?.value;
+    const lockedText = transitionObj.properties.find(p => p.name === 'lockedText')?.value;
 
     // Gates can be wide (the forrest gate is 16 tiles across). A collision box is a
     // single tile, so tile the gate with one trigger per tile to make it reliably
@@ -171,6 +216,8 @@ export class SpawnSystem implements ISpawnSystem {
           gameState.emitter,
           targetMap,
           entryPoint,
+          requiredFlag,
+          lockedText,
         );
         gameState.entities.push(entity);
       }

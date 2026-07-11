@@ -59,6 +59,9 @@ export interface Status {
   maxHealth: number;
   immortal?: boolean;
   dead?: boolean;
+  // Trigger volumes (lore zones, transition gates): collide (emit events) but never
+  // physically block movement.
+  nonBlocking?: boolean;
   experience: number;
   level: number;
 }
@@ -206,6 +209,12 @@ export type Time = {
   stepID: number;
   frameID: number;
   resetDeltaCount: number;
+  // Hit-pause: while now < freezeUntil the world holds still (rendering continues).
+  freezeUntil: number;
+};
+
+export type UIState = {
+  questLogOpen: boolean;
 };
 
 export type DebugSettings = {
@@ -215,12 +224,18 @@ export type DebugSettings = {
   showGrid: boolean;
   activateDebugger: boolean;
   drawEntityHitboxes: boolean;
+  // Map-viewer mode (?map=<name>&freecam): player is a fast, immortal ghost for
+  // flying around a map to inspect terrain.
+  freecam: boolean;
+  // Testing superpower ('T' to toggle): click the minimap to teleport there.
+  teleport: boolean;
 };
 
 export interface Camera extends ShortDimensions, Updateable, Follower {
   canvasWidth: number;
   canvasHeight: number;
   aspectRatio: number;
+  shake: (magnitude: number, durationMs: number) => void;
 }
 
 export type Elements = {
@@ -281,6 +296,7 @@ export interface ISpawnSystem extends Updateable {
 export interface IDeathSystem extends Updateable {
   kill: (entity: GameEntity, killer: GameEntity) => void;
   checkDeath: (entity: GameEntity) => boolean;
+  respawnPlayer: (gameState: GameState) => void;
 }
 
 export interface IExperienceSystem {
@@ -292,6 +308,21 @@ export interface ILevelingSystem {
   y: number;
   levelUp: (entity: GameEntity) => void;
   calculateXPToNextLevel: (entity: GameEntity) => number;
+}
+
+export interface ISoundSystem extends Updateable {
+  muted: boolean;
+  toggleMute: () => void;
+}
+
+export interface IMusicSystem extends Updateable {
+}
+
+export type SpeechBubble = { entity: GameEntity; text: string; expiresAt: number };
+
+export interface ISpeechSystem extends Updateable {
+  bubbles: SpeechBubble[];
+  say: (entity: GameEntity, text: string, durationMs?: number) => void;
 }
 
 export interface IPhysicsSystem extends Updateable {
@@ -306,6 +337,7 @@ export type GameState = {
   world: World;
   time: Time;
   debugSettings: DebugSettings;
+  ui: UIState;
   elements: Elements;
   emitter: EventEmitter;
   systems: {
@@ -314,6 +346,9 @@ export type GameState = {
     experience: IExperienceSystem;
     leveling: ILevelingSystem;
     physics: IPhysicsSystem;
+    sound: ISoundSystem;
+    music: IMusicSystem;
+    speech: ISpeechSystem;
     chat: IChatSystem;
     controlState: IControlStateSystem;
     gameState: IGameStateSystem;
@@ -321,6 +356,7 @@ export type GameState = {
     spawn: ISpawnSystem;
     narrativeFlags: INarrativeFlagSystem;
     areaTransition: IAreaTransitionSystem;
+    save: ISaveSystem;
   };
   mobileControls: MobileControls;
 };
@@ -480,6 +516,12 @@ export interface INarrativeFlagSystem extends Updateable {
   getFlag(key: string): NarrativeFlagValue | undefined;
   setFlag(key: string, value: NarrativeFlagValue): void;
   hasFlag(key: string): boolean;
+  getAllFlags(): Record<string, NarrativeFlagValue>;
+}
+
+export interface ISaveSystem extends Updateable {
+  hasSave: () => boolean;
+  requestLoad: (gameState: GameState) => boolean;
 }
 
 export interface IAreaTransitionSystem extends Updateable {

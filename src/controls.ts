@@ -11,7 +11,10 @@ const keyMappings = {
   toggleDebugGameState: ['O'],
   debugPlayerSpriteSheet: ['P'],
   showGrid: ['G'],
-  activateDebugger: ['<']
+  activateDebugger: ['<'],
+  toggleQuestLog: ['j', 'J'],
+  toggleTeleport: ['t', 'T'],
+  toggleMute: ['m', 'M']
 };
 
 const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | KeyboardEvent['key']) => {
@@ -20,8 +23,28 @@ const keyPressed = (key: keyof typeof keyMappings, eventOrKey: KeyboardEvent | K
 }
 
 export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEvent) => {
+  // Start menu: 'C' continues from the localStorage save (Space = new game).
+  if (gameState.systems.gameState.inStates(['start'])) {
+    if ((event.key === 'c' || event.key === 'C') && gameState.systems.save.hasSave()) {
+      event.preventDefault();
+      if (gameState.systems.save.requestLoad(gameState)) {
+        gameState.systems.gameState.running();
+      }
+      return;
+    }
+  }
+  // Game-over screen: Space respawns instead of attacking.
+  if (gameState.systems.gameState.inStates(['gameOver'])) {
+    if (keyPressed('attack', event)) {
+      event.preventDefault();
+      gameState.systems.death.respawnPlayer(gameState);
+    }
+    return;
+  }
   if (keyPressed('attack', event)) {
     event.preventDefault();
+    // Auto-repeat keydowns are what keep the sword swinging while the key is held —
+    // let them through. The attack SFX is rate-limited in SoundSystem instead.
     gameState.controls.attack = true;
     gameState.emitter.emit(EVENTS.ATTACK_COMMAND, null);
   }
@@ -68,6 +91,18 @@ export const createKeyDownHandler = (gameState: GameState) => (event: KeyboardEv
   if (keyPressed('activateDebugger', event)) {
     event.preventDefault();
     gameState.debugSettings.activateDebugger = !gameState.debugSettings.activateDebugger;
+  }
+  if (keyPressed('toggleQuestLog', event)) {
+    event.preventDefault();
+    gameState.ui.questLogOpen = !gameState.ui.questLogOpen;
+  }
+  if (keyPressed('toggleTeleport', event)) {
+    event.preventDefault();
+    gameState.debugSettings.teleport = !gameState.debugSettings.teleport;
+  }
+  if (keyPressed('toggleMute', event)) {
+    event.preventDefault();
+    gameState.systems.sound.toggleMute();
   }
 };
 
