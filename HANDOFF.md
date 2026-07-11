@@ -58,19 +58,18 @@ Glade → Morghal quest chain → ruins-approach and back, with save/continue.
 - Hold-space attack relies on OS key auto-repeat reaching `controls.attack` — do NOT
   filter `event.repeat` in controls (SFX spam is rate-limited in SoundSystem instead).
 
-## In-flight conversation (answer this first)
+## In-flight conversation — RESOLVED (2026-07-11)
 
-User asked (verbatim intent): should the game OPEN with story/exposition — "starting
-somewhere… before you just get dropped in with slimes" to make Arcia feel real — likely
-needing a new map/environment. I had just re-read DESIGN.md to ground a proposal.
-Canon constraints: **no prophecy/chosen-one; corruption stays a mystery; Arcia is a
-grounded, capable outsider who walks INTO the corruption**. Natural options to propose:
-(a) tiny prologue map (forest edge at dusk / roadside camp) with speech-bubble-driven
-cold open, one-way transition into Verdelight — cheap via `new-region.mjs` + Entry/
-Transition + a `prologue_complete` flag (skip on save-continue; skip with ?map= for dev);
-(b) no new map: scripted opening beat on the existing start clearing (bubbles + slow-walk
-before control unlocks); (c) title-screen text crawl (cheapest, weakest). The 'safe-haven'
-archived song fits a prologue camp. User hasn't chosen — present options, recommend, build.
+The opening question was answered with the **Thornwick Waystation prologue**, built on
+branch `feature/prologue-thornwick` (stacked on this one): new opening map with
+buildings/props (structure stamps + grass-bay dirt masking in forest-gen), four
+villager NPCs (VillagerEntity, errand chain: `prologue_errand_started → _done →
+prologue_complete`), a flag-locked one-way gate into forrest, per-map music
+('safe-haven' at the waystation), Morghal re-skinned to the new "Named Monster" story
+spine, and DESIGN.md rewritten (Arcia is male — he/him everywhere). New games start at
+Thornwick; saves and `?map=` override. Engine fix along the way: exactly-axis-aligned
+entities used to pass through each other (strict corner tests) — AABB overlap now
+gates the corner checks in `Collision.checkEntityCollision`.
 
 ## Verification workflow
 

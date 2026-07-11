@@ -50,10 +50,20 @@ section. Strike items when done (leave them listed as a record).
 
 ## Content
 
+- [x] Prologue: Thornwick Waystation opening map + cast + errand gate (2026-07-11 pass;
+      see DESIGN.md "The Named Monster" spine)
 - [ ] Shadowthorn Heart region (chapter 1 finale beyond ruins-approach)
 - [ ] Ruins-approach needs its own enemy mix + lore zones (sparse right now)
 - [ ] Corruption/thorn decor tiles for corrupted pocket (tileset-extension skill)
 - [ ] Morghal walk cycle sprites via ai-sprites pipeline (currently glides in idle pose)
+- [ ] Walk frames for the four Thornwick villagers (same idle-glide limitation; the
+      keeper visibly glides his two-tile step-aside)
+- [ ] Regenerate waystation art + villager sheets with the AI pipeline when a
+      GEMINI_API_KEY is available (procedural fallbacks shipped; register scripts
+      make piecewise replacement cheap)
+- [ ] Thornwick recurring news: travelers in later regions relay the waystation's
+      small decline (Wren's birdsong count, per the DESIGN.md series engine)
+- [ ] Fade/iris transition on map changes (the prologue gate crossing is a hard cut)
 - [ ] More weapon/loot variety (only sword + tackle exist)
 
 ## Audio (after first SFX pass)

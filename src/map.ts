@@ -70,10 +70,13 @@ export class RenderableMap implements GameMap {
       }, sourceMap),
     }
 
+    // New games open at Thornwick Waystation (the prologue). Anything with an
+    // opinion about the map — ?map= (main.ts) and SaveSystem.requestLoad — runs
+    // after construction and overrides this, so saves and deep links win.
     this.activeMap = {
-      name: 'forrest',
-      tileMap: this.tileMaps.forrest,
-      worldMap: this.tileMaps.forrest.worldMaps.forrest,
+      name: 'prologue',
+      tileMap: this.tileMaps.prologue,
+      worldMap: this.tileMaps.prologue.worldMaps.prologue,
     };
   }
 
