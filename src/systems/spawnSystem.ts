@@ -185,6 +185,9 @@ export class SpawnSystem implements ISpawnSystem {
     const targetMap = transitionObj.properties.find(p => p.name === 'targetMap')?.value;
     const entryPoint = transitionObj.properties.find(p => p.name === 'entryPoint')?.value;
     if (!targetMap || !entryPoint) return;
+    // Story-locked gates (see TransitionTriggerEntity).
+    const requiredFlag = transitionObj.properties.find(p => p.name === 'requiredFlag')?.value;
+    const lockedText = transitionObj.properties.find(p => p.name === 'lockedText')?.value;
 
     // Gates can be wide (the forrest gate is 16 tiles across). A collision box is a
     // single tile, so tile the gate with one trigger per tile to make it reliably
@@ -205,6 +208,8 @@ export class SpawnSystem implements ISpawnSystem {
           gameState.emitter,
           targetMap,
           entryPoint,
+          requiredFlag,
+          lockedText,
         );
         gameState.entities.push(entity);
       }

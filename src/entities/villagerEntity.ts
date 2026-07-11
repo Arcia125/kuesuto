@@ -276,8 +276,38 @@ const CARTER: VillagerDefinition = {
 
 export class VillagerKeeperEntity extends VillagerEntity {
   public static NAME = 'villager_keeper';
+  private homeX: number | null = null;
+  private homeY = 0;
+
   public constructor(state: GameEntityState, children: GameEntity[], emitter: EventEmitter) {
     super(state, VillagerKeeperEntity.NAME, KEEPER, children, emitter);
+    // He IS the gate until the story opens it: too heavy to shove off his post.
+    this.state.mass = 1000;
+  }
+
+  // Posture is re-derived from the flag every frame, never stored: a save made
+  // mid-prologue restores the right keeper (at his post, or aside) for free.
+  // Straight-line steering, not Aggro's pathfinder — its A* "arrived" tolerance is
+  // 2 tiles, which is exactly this walk's length, so it would never take a step.
+  protected behave(gameState: GameState, _timeStamp: number) {
+    if (this.homeX === null) {
+      this.homeX = this.state.x;
+      this.homeY = this.state.y;
+    }
+    const tileSize = getSpriteScale();
+    const roadOpen = gameState.systems.narrativeFlags.hasFlag('prologue_complete');
+    // Post at spawn; two tiles west of it (off the road) once the road is open.
+    const post = { x: roadOpen ? this.homeX - 2 * tileSize : this.homeX, y: this.homeY };
+    const dx = post.x - this.state.x;
+    const dy = post.y - this.state.y;
+    const tolerance = tileSize * 0.08;
+    if (Math.abs(dx) > tolerance || Math.abs(dy) > tolerance) {
+      this.state.moving = true;
+      this.state.xDir = Math.abs(dx) > tolerance ? Math.sign(dx) : 0;
+      this.state.yDir = Math.abs(dy) > tolerance ? Math.sign(dy) : 0;
+    } else {
+      this.stop();
+    }
   }
 }
 
