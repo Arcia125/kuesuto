@@ -702,8 +702,12 @@ const drawEntity = (
 
 
   const spriteData = {
-    canvasX: canvasPos.x,
-    canvasY: canvasPos.y,
+    // Rounded like the map tiles: drawImage at sub-pixel destinations samples texels
+    // just OUTSIDE the source rect, bleeding the neighboring sheet frame's edge into
+    // this one (seen as a stray outline row above sprites whose sheet packs frames in
+    // multiple rows). Integer coords + integer scale = exact texel mapping.
+    canvasX: Math.round(canvasPos.x),
+    canvasY: Math.round(canvasPos.y),
     canvasWidth,
     canvasHeight,
     spriteX: spriteX,
