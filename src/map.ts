@@ -6,6 +6,7 @@ import tileMapJSONRaw from './data/spriteJSON/kuesuto-tilemap.json';
 // hand-authored map (kuesuto-world.json) stays in the repo as the stamp art source.
 import forrestWorldMap from './data/maps/forrest.json';
 import ruinsApproachWorldMap from './data/maps/ruins-approach.json';
+import prologueWorldMap from './data/maps/prologue.json';
 import forrestTileset from './data/tilesets/ks-forrest-tileset.json';
 import { EventEmitter } from './events';
 import { GameMap, GameMapState, GameState, Vector2, TileMap, TileMapJSON, WorldMap, TileLayer, TileSetJSON } from './models';
@@ -61,6 +62,11 @@ export class RenderableMap implements GameMap {
         'ruins-approach': tileSetImage,
       }, {
         'ruins-approach': ruinsApproachWorldMap as unknown as WorldMap
+      }, sourceMap),
+      prologue: new GameTileMap(tileMapJSONRaw, {
+        prologue: tileSetImage,
+      }, {
+        prologue: prologueWorldMap as unknown as WorldMap
       }, sourceMap),
     }
 

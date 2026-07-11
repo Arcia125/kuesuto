@@ -108,11 +108,14 @@ const build = (region) => {
     for (let y = 0; y < H; y++) if (walkable(x, y)) { if (lo < 0) lo = y; hi = y; }
     colMid[x] = lo < 0 ? -1 : (lo + hi) / 2;
   }
-  const trails = region.trails ?? [];
+  // A trail is either a bare polyline (default width) or { points, half } for custom
+  // widths — e.g. a broad trampled yard is a single-point "trail" with a big radius.
+  const trails = (region.trails ?? []).map((t) => (Array.isArray(t) ? { points: t, half: TRAIL_HALF } : t));
   const nearTrail = (x, y) => {
-    for (const line of trails) {
-      for (let i = 0; i + 1 < line.length; i++) {
-        if (dist2seg(x, y, line[i], line[i + 1]) <= TRAIL_HALF) return true;
+    for (const { points, half } of trails) {
+      if (points.length === 1) { if (Math.hypot(x - points[0][0], y - points[0][1]) <= half) return true; continue; }
+      for (let i = 0; i + 1 < points.length; i++) {
+        if (dist2seg(x, y, points[i], points[i + 1]) <= half) return true;
       }
     }
     return false;
