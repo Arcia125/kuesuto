@@ -878,10 +878,14 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
     const entities = gameState.entities;
     const entityCount = entities.length;
     for (let i = 0; i < entityCount; i++) {
+      if (!entities[i]) continue;
       try {
         drawEntity(entities[i], ctx, canvas, gameState);
       }
       catch (err) {
+        // A failed draw must not poison the canvas state for every entity after it
+        // (e.g. the flashing color-dodge composite leaking onto the rest of the map).
+        ctx.globalCompositeOperation = "source-over";
         // console.error(err);
       }
       for (let j = 0; j < (entities[i]?.children?.length || 0); j++) {
@@ -889,6 +893,7 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
           drawEntity(entities[i]!.children![j], ctx, canvas, gameState);
         }
         catch (err) {
+          ctx.globalCompositeOperation = "source-over";
           // console.log(err);
         }
       }

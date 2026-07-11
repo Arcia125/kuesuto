@@ -6,6 +6,9 @@ const update = (gameState: GameState, timestamp: number) => {
   const entities = gameState.entities;
   const entityCount = entities.length;
   for (let i = 0; i < entityCount; i++) {
+    // Entities may remove themselves during update (heart pickups), shifting the
+    // array under the cached count — a missing slot must not kill the frame.
+    if (!entities[i]) continue;
     entities[i].update(gameState, timestamp);
   }
 
