@@ -67,24 +67,45 @@ export class Collision implements Capability {
         continue
       }
       const foreignEntityCorners = getRectCorners({ x: foreignEntity.state.x, y: foreignEntity.state.y, h: tileSize, w: tileSize });
+      // Rect overlap first (strict, so entities merely resting edge-to-edge don't
+      // collide). The corner-in-rect tests below use strict inequalities too, which
+      // means two EXACTLY axis-aligned entities have every corner ON the other's
+      // edge and no corner test passes — the player could walk straight through an
+      // NPC standing dead-center on his path. The overlap test catches that case.
+      const overlaps =
+        corners[0].x < foreignEntityCorners[1].x && corners[1].x > foreignEntityCorners[0].x &&
+        corners[0].y < foreignEntityCorners[2].y && corners[2].y > foreignEntityCorners[0].y;
+      if (!overlaps) {
+        continue;
+      }
+      let anyCorner = false;
       // top-left corner collides foreign entity
       if (corners[0].x > foreignEntityCorners[0].x && corners[0].x < foreignEntityCorners[1].x && corners[0].y > foreignEntityCorners[0].y && corners[0].y < foreignEntityCorners[2].y) {
         collidedCorners.push(corners[0]);
         entities.push(foreignEntity);
+        anyCorner = true;
       }
       // top-right corner collides foreign entity
       if (corners[1].x > foreignEntityCorners[0].x && corners[1].x < foreignEntityCorners[1].x && corners[1].y > foreignEntityCorners[0].y && corners[1].y < foreignEntityCorners[2].y) {
         collidedCorners.push(corners[1]);
         entities.push(foreignEntity);
+        anyCorner = true;
       }
       // bottom-right corner collides foreign entity
       if (corners[2].x > foreignEntityCorners[0].x && corners[2].x < foreignEntityCorners[1].x && corners[2].y > foreignEntityCorners[0].y && corners[2].y < foreignEntityCorners[2].y) {
         collidedCorners.push(corners[2]);
         entities.push(foreignEntity);
+        anyCorner = true;
       }
       // bottom-left corner collides foreign entity
       if (corners[3].x > foreignEntityCorners[0].x && corners[3].x < foreignEntityCorners[1].x && corners[3].y > foreignEntityCorners[0].y && corners[3].y < foreignEntityCorners[2].y) {
         collidedCorners.push(corners[3]);
+        entities.push(foreignEntity);
+        anyCorner = true;
+      }
+      // Exact alignment: overlapping but no corner strictly inside.
+      if (!anyCorner) {
+        collidedCorners.push(corners[0]);
         entities.push(foreignEntity);
       }
     }
