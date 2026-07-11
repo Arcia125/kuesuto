@@ -310,11 +310,16 @@ const buildMinimapTerrain = (worldMap: WorldMap): HTMLCanvasElement => {
   const octx = off.getContext('2d')!;
   const collision = getTileLayerData(worldMap, 'Collision');
   const things = getTileLayerData(worldMap, 'Things');
+  const ground = getTileLayerData(worldMap, 'Ground');
+  // Ground gids 170-182 are the "Grass Water" wangset (tileset ids 169-181, firstgid 1).
+  const isWater = (gid: number) => gid >= 170 && gid <= 182;
   const image = octx.createImageData(w, h);
   for (let i = 0; i < w * h; i++) {
     let r = 74, g = 140, b = 79; // ground #4a8c4f
     if (things && things[i] && things[i] !== 1) { r = 46; g = 90; b = 52; } // tree #2e5a34
     if (collision && collision[i]) { r = 28; g = 28; b = 34; } // wall #1c1c22
+    // Water is solid too, so this must come after the wall pass to win the pixel.
+    if (ground && isWater(ground[i])) { r = 70; g = 130; b = 200; } // water #4682c8
     const o = i * 4;
     image.data[o] = r;
     image.data[o + 1] = g;
