@@ -1,12 +1,12 @@
 {
  "columns": 13,
  "image": "kuesuto-tilemap.png",
- "imageheight": 240,
+ "imageheight": 320,
  "imagewidth": 208,
  "margin": 0,
  "name": "ks-forrest-tileset",
  "spacing": 0,
- "tilecount": 195,
+ "tilecount": 260,
  "tiledversion": "1.10.2",
  "tileheight": 16,
  "tiles": [
