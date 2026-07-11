@@ -174,6 +174,13 @@ export const SONGS: Record<string, Song> = {
 };
 const ACTIVE_SONG = 'verdant-gloom';
 
+// Per-map songs: maps not listed here play the default (the overworld theme).
+// Thornwick Waystation is a safe place — it gets the bright one.
+const MAP_SONGS: Record<string, keyof typeof SONGS> = {
+  prologue: 'safe-haven',
+};
+const songForMap = (mapName: string) => MAP_SONGS[mapName] ?? ACTIVE_SONG;
+
 const LOOKAHEAD_S = 0.2;
 
 type TrackNote = { step: number; freq: number; durEighths: number };
@@ -205,6 +212,7 @@ const parseTrack = (source: string): { notes: TrackNote[]; length: number } => {
 export class MusicSystem implements IMusicSystem {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
+  private songId: string = ACTIVE_SONG;
   private song: Song = SONGS[ACTIVE_SONG];
   private secondsPerEighth = 60 / SONGS[ACTIVE_SONG].tempoBpm / 2;
   private tracks: { notes: TrackNote[]; length: number; type: OscillatorType; vol: number }[] = [];
@@ -290,6 +298,20 @@ export class MusicSystem implements IMusicSystem {
     }
     const ctx = this.ensure();
     if (!ctx) return;
+
+    // Per-map songs: on a map change, reparse the new song's tracks and restart the
+    // sequencer clock (mirrors the initial parse in ensure()). Notes already
+    // scheduled inside the 0.2s lookahead ring out — no hard cut needed.
+    const wantedSongId = songForMap(gameState.map.activeMap.name);
+    if (wantedSongId !== this.songId) {
+      this.songId = wantedSongId;
+      this.song = SONGS[wantedSongId];
+      this.secondsPerEighth = 60 / this.song.tempoBpm / 2;
+      this.tracks = this.song.tracks.map(t => ({ ...parseTrack(t.src), type: t.type, vol: t.vol }));
+      this.loopSteps = Math.max(...this.tracks.map(t => t.length));
+      this.step = 0;
+      this.nextStepTime = ctx.currentTime + 0.1;
+    }
 
     // If we fell far behind (tab hidden, long freeze), jump the clock instead of
     // machine-gunning every missed note.
