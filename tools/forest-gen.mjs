@@ -120,13 +120,27 @@ const build = (region) => {
     }
     return false;
   };
+  // Structures bake a grass background into their art, so the ground under a footprint
+  // must stay grass even where a trail/plaza runs. Excluding just the footprint isn't
+  // enough: the corner-wang lattice can't render grass slivers thinner than the tile
+  // lattice (same reason trails must be >= 2 wide), so exclude a 1-tile APRON around
+  // each footprint too — every structure sits in its own little grass bay.
+  const structApron = new Uint8Array(W * H);
+  for (const s of region.structures ?? []) {
+    const st = STRUCTURE_STAMPS[s.id];
+    if (!st) continue; // unknown ids throw with a good message in the placement pass
+    for (let y = s.y - 1; y <= s.y + st.h; y++) for (let x = s.x - 1; x <= s.x + st.w; x++) {
+      if (x >= 0 && y >= 0 && x < W && y < H) structApron[y * W + x] = 1;
+    }
+  }
+
   // Dirt mask as a grid so we can post-process it: where two trails diverge they can
   // pinch off a lone grass cell inside the dirt. The wangset has no tile for a dirt
   // ring around grass (missing diagonal combos), so it renders as a hard square notch.
   // Closing pass: grass cells nearly surrounded by dirt get absorbed into the trail.
   const dirtGrid = new Uint8Array(W * H);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    dirtGrid[y * W + x] = (walkable(x, y) && (trails.length
+    dirtGrid[y * W + x] = (walkable(x, y) && !structApron[y * W + x] && (trails.length
       ? nearTrail(x, y)
       : (colMid[x] >= 0 && Math.abs(y - colMid[x]) <= TRAIL_HALF))) ? 1 : 0;
   }
@@ -149,7 +163,7 @@ const build = (region) => {
     }
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const i = y * W + x;
-      if (!dirtGrid[i] && walkable(x, y) && !anyNeighbor(dilated, x, y, 0)) dirtGrid[i] = 1;
+      if (!dirtGrid[i] && walkable(x, y) && !structApron[i] && !anyNeighbor(dilated, x, y, 0)) dirtGrid[i] = 1;
     }
   }
   const tileIsDirt = (x, y) => x >= 0 && y >= 0 && x < W && y < H && dirtGrid[y * W + x] === 1;
