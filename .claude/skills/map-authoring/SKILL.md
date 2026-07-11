@@ -41,6 +41,10 @@ Optional region fields:
 - `waters`: array of circles (`{x,y,r}`) — ponds/lakes with autotiled shoreline (the
   "Grass Water" wangset). Water is ALWAYS solid collision; keep bodies ≥ 2 tiles wide and
   never cover an object tile or the only route (the BFS validator will fail the build).
+  CRITICAL: every water circle must sit INSIDE a walkable clearing with a floor ring of
+  ≥ 2 tiles around the waterline. Wall cells near water render as bare grass (the canopy
+  retreats from shorelines), so un-carved shores become INVISIBLE WALLS that look
+  walkable — verify with `--collision` that the shore ring is open all the way around.
 
 Objects use TILE coordinates (not pixels). Supported object names:
 `'Player Start Location'`, `'Enemy'` (with `type: 'corrupted_slime' | 'fast_slime' | 'slime'`),

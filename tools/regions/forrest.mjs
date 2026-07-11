@@ -17,6 +17,10 @@ const CLEARINGS = [
   { x: 20, y: 34, r: 7 },  // Morghal
   { x: 24, y: 12, r: 6 },  // corrupted pocket
   { x: 62, y: 28, r: 4 },  // gate yard
+  // Pond shore: the water circles (waters below) sit inside this clearing so the
+  // player can walk the whole way around the pond — otherwise the grass apron south
+  // of the water is non-walkable wall that LOOKS open (canopy retreats near water).
+  { x: 49, y: 34, r: 7 },
 ];
 const PATHS = [ // polylines, corridor half-width 3
   [[50, 56], [44, 48], [30, 44], [22, 38]],   // start -> Morghal
