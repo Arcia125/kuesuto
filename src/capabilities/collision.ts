@@ -127,11 +127,28 @@ export class Collision implements Capability {
         entities,
       });
       // Trigger volumes (nonBlocking) emit the event but never wall the player off.
-      // Only undo movement for tile collisions or solid entities.
-      const tileHits = Collision.checkTileCollision(gameState, this.entity).length > 0;
-      const solidEntityHits = entities.some(e => !e.status.nonBlocking);
-      if (tileHits || solidEntityHits) {
-        this.movementCapability?.action?.undo();
+      // Only resolve movement against tile collisions or solid entities.
+      const solid = () =>
+        Collision.checkTileCollision(gameState, this.entity).length > 0 ||
+        Collision.checkEntityCollision(gameState, this.entity).entities.some(e => !e.status.nonBlocking);
+      if (this.movementCapability?.action && solid()) {
+        // Axis-separated resolution: instead of cancelling the whole step (which
+        // glues the entity to walls on any diagonal contact), retry each axis of
+        // the attempted move alone and keep whichever is free — sliding along the
+        // obstacle at full speed on the open axis.
+        const attemptedX = this.entity.state.x;
+        const attemptedY = this.entity.state.y;
+        this.movementCapability.action.undo();
+        const baseX = this.entity.state.x;
+        const baseY = this.entity.state.y;
+        this.entity.state.x = attemptedX;
+        if (solid()) {
+          this.entity.state.x = baseX;
+        }
+        this.entity.state.y = attemptedY;
+        if (solid()) {
+          this.entity.state.y = baseY;
+        }
       }
     }
 
