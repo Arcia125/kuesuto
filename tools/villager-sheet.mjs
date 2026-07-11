@@ -50,6 +50,7 @@ const VILLAGERS = {
     // Sturdy, dark-haired, forest-green tunic, broad belt with a brass clasp —
     // the man who holds the gate.
     map: { K: 'K', H: 'H', S: 'S', s: 's', M: 'M', T: 'G', d: 'g', W: 'W', B: 'B' },
+    bobSplit: 10, // head rows 0-9 squash onto the shoulders at row 10
     eyes: [[5, 6], [10, 6]],
     grid: [
       '................',
@@ -73,6 +74,7 @@ const VILLAGERS = {
   child: {
     // Small — a head shorter than everyone — bright orange tunic, sun-colored mop.
     map: { K: 'K', H: 'B', S: 'S', s: 's', T: 'O', d: 'o' },
+    bobSplit: 12, // head rows 4-11 squash onto the tunic at row 12
     eyes: [[6, 9], [9, 9]],
     grid: [
       '................',
@@ -97,6 +99,7 @@ const VILLAGERS = {
     // Hood up like the rumors' "dark wizard" — but a plain human face looks out.
     // Forest-green cloak, leather strap across the chest.
     map: { K: 'K', G: 'G', g: 'g', S: 'S', s: 's', W: 'W', w: 'w' },
+    bobSplit: 10, // hood rows 0-9 squash onto the cloak at row 10
     eyes: [[6, 6], [9, 6]],
     grid: [
       '................',
@@ -120,6 +123,7 @@ const VILLAGERS = {
   carter: {
     // Wide straw hat, teal work tunic, leather suspenders — all road and freight.
     map: { K: 'K', A: 'B', a: 'b', S: 'S', s: 's', M: 'M', T: 'T', d: 't', W: 'W' },
+    bobSplit: 10, // hat + face rows 0-9 squash onto the tunic at row 10
     eyes: [[5, 6], [10, 6]],
     grid: [
       '................',
@@ -143,7 +147,10 @@ const VILLAGERS = {
 };
 
 // --- frame composition ---
-// f0/f2: base, eyes open. f1: 1px bob (sprite shifted down, bottom row clipped).
+// f0/f2: base, eyes open. f1: bob — a head SQUASH like the wizard's art, not a
+// whole-sprite shift: rows above bobSplit drop 1px onto anchored shoulders/feet
+// (shifting everything read as a one-frame jerk at 10x scale and wiped the bottom
+// outline row for that frame).
 // f3/f5: eyes half (lower pixel only). f4: eyes closed (dark lash line). f6: open.
 const drawFrame = (out, frameIndex, v, { bob = false, eye = 'open' }) => {
   const ox = (frameIndex % 4) * T;
@@ -153,8 +160,8 @@ const drawFrame = (out, frameIndex, v, { bob = false, eye = 'open' }) => {
     const i = ((oy + y) * out.width + (ox + x)) * 4;
     out.data[i] = rgb[0]; out.data[i + 1] = rgb[1]; out.data[i + 2] = rgb[2]; out.data[i + 3] = 255;
   };
-  const dy = bob ? 1 : 0;
-  for (let y = 0; y < T; y++) {
+  const split = bob ? v.bobSplit : 0;
+  const drawRow = (y, dy) => {
     const row = v.grid[y];
     for (let x = 0; x < T; x++) {
       const ch = row[x];
@@ -163,9 +170,13 @@ const drawFrame = (out, frameIndex, v, { bob = false, eye = 'open' }) => {
       if (!key) throw new Error(`No palette mapping for "${ch}"`);
       put(x, y + dy, C[key]);
     }
-  }
+  };
+  // Body first (anchored), then the head rows 1px lower on top of it.
+  // (Without bob, split is 0 and the first loop draws the whole grid in place.)
+  for (let y = split; y < T; y++) drawRow(y, 0);
+  for (let y = 0; y < split; y++) drawRow(y, 1);
   for (const [exRaw, eyRaw] of v.eyes) {
-    const ex = exRaw, ey = eyRaw + dy;
+    const ex = exRaw, ey = eyRaw + (bob && eyRaw < split ? 1 : 0);
     if (eye === 'open') { put(ex, ey, C.N); put(ex, ey + 1, C.N); }
     else if (eye === 'half') { put(ex, ey + 1, C.N); }
     else if (eye === 'closed') { put(ex, ey + 1, C.M); }
