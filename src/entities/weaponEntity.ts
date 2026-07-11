@@ -21,6 +21,10 @@ export class WeaponEntity extends Entity {
       this.sprite = new Sprite(spriteJSONRAW as SpriteJSON, spritePath, emitter);
     }
     this.status.immortal = true;
+    // Weapon sheets only have attack animations: an idle weapon has no frames to
+    // draw (getSpritePos would throw every frame until the first swing ends).
+    // Weapons become visible when a swing starts (update / Aggro).
+    this.state.visible = false;
   }
 
   public update = (gameState: GameState, _timeStamp: number) => {
