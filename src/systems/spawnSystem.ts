@@ -9,6 +9,7 @@ import { CorruptedSlimeEntity } from '../entities/corruptedSlimeEntity';
 import { FastSlimeEntity } from '../entities/fastSlimeEntity';
 import { InteractableZoneEntity } from '../entities/interactableZoneEntity';
 import { TransitionTriggerEntity } from '../entities/transitionTriggerEntity';
+import { VillagerKeeperEntity, VillagerChildEntity, VillagerHunterEntity, VillagerCarterEntity } from '../entities/villagerEntity';
 import { RENDERING_SCALE } from '../constants';
 import { PlayerEntity } from '../entities/playerEntity';
 import { SwordEntity } from '../entities/swordEntity';
@@ -21,6 +22,10 @@ export class SpawnSystem implements ISpawnSystem {
     [DarkWizardEntity.NAME]: DarkWizardEntity,
     [CorruptedSlimeEntity.NAME]: CorruptedSlimeEntity,
     [FastSlimeEntity.NAME]: FastSlimeEntity,
+    [VillagerKeeperEntity.NAME]: VillagerKeeperEntity,
+    [VillagerChildEntity.NAME]: VillagerChildEntity,
+    [VillagerHunterEntity.NAME]: VillagerHunterEntity,
+    [VillagerCarterEntity.NAME]: VillagerCarterEntity,
   };
 
   private static readonly defaultGameEntityState = {
@@ -141,7 +146,8 @@ export class SpawnSystem implements ISpawnSystem {
 
     // Spawn enemies and NPCs
     const startLocationsObject = gameState.map.getObjectStartLocations('Enemy')
-      .concat(gameState.map.getObjectStartLocations('Dark Wizard'));
+      .concat(gameState.map.getObjectStartLocations('Dark Wizard'))
+      .concat(gameState.map.getObjectStartLocations('Npc'));
 
     startLocationsObject.forEach(entityObj => {
       const EntityClass = SpawnSystem.getEntityClass(entityObj);
