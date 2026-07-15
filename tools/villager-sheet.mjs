@@ -121,18 +121,19 @@ const VILLAGERS = {
     ],
   },
   carter: {
-    // Wide straw hat, teal work tunic, leather suspenders — all road and freight.
-    map: { K: 'K', A: 'B', a: 'b', S: 'S', s: 's', M: 'M', T: 'T', d: 't', W: 'W' },
-    bobSplit: 10, // hat + face rows 0-9 squash onto the tunic at row 10
+    // Russet headscarf knotted at the side, teal work tunic, leather suspenders —
+    // all road and freight.
+    map: { K: 'K', R: 'w', r: 'M', S: 'S', s: 's', M: 'M', T: 'T', d: 't', W: 'W' },
+    bobSplit: 10, // scarf + face rows 0-9 squash onto the tunic at row 10
     eyes: [[5, 6], [10, 6]],
     grid: [
       '................',
       '.....KKKKKK.....',
-      '....KAAAAAAK....',
-      '...KAAAAAAAAK...',
-      '..KaAAAAAAAAaK..',
-      '.KaaaaaaaaaaaaK.',
-      '..KKSSSSSSSSKK..',
+      '....KRRRRRRK....',
+      '...KRRRRRRRRK...',
+      '...KRrrrrrRRKK..',
+      '...KSSSSSSSSKrK.',
+      '...KSSSSSSSSKK..',
       '...KSSSSSSSSK...',
       '...KSSSMMSSSK...',
       '....KssssssK....',
