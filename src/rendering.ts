@@ -10,6 +10,7 @@ import { EVENTS } from './events';
 import { CORRUPTED_KILLS_REQUIRED } from './systems/narrativeFlagSystem';
 import { GameEntity, GameState, Rect, Vector2, WorldMap } from './models';
 import { worldToCamera, positionToTileCoord, distanceTo } from './position';
+import { drawWoodPanel, drawWoodChip, uiPanelScale, UI_CREAM } from './uiPanel';
 import { getBoundingRect } from './rectangle';
 import { drawSprite, getSpriteScale } from './sprites';
 import { getTintedSprite } from './spriteTinting';
@@ -216,16 +217,12 @@ const drawQuestLogHint = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
   ctx.font = '22px "Press Start 2P"';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const w = Math.abs(ctx.measureText(label).width) + 40;
-  const h = 48;
+  const w = Math.abs(ctx.measureText(label).width) + 44;
+  const h = 52;
   const x = (canvas.width - w) / 2;
   const y = 18;
-  ctx.fillStyle = 'rgba(25, 60, 62, 0.7)';
-  ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = '#feae34';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(x, y, w, h);
-  ctx.fillStyle = '#ead4aa';
+  drawWoodChip(ctx, x, y, w, h);
+  ctx.fillStyle = UI_CREAM;
   ctx.fillText(label, canvas.width / 2, y + h / 2);
   ctx.restore();
 };
@@ -238,51 +235,49 @@ const drawQuestLog = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   const objective = getObjectiveText(gameState) || 'No active objective.';
 
   const boxW = 1180;
-  const boxH = 380;
+  const boxH = 460;
   const boxX = (canvas.width - boxW) / 2;
   const boxY = 140;
-  const padX = 56;
+  const logScale = uiPanelScale(canvas);
+  const padX = Math.max(56, 14 * logScale + 24);
 
   ctx.save();
-  ctx.fillStyle = 'rgba(20, 48, 50, 0.94)';
-  ctx.fillRect(boxX, boxY, boxW, boxH);
-  ctx.strokeStyle = '#feae34';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(boxX, boxY, boxW, boxH);
+  drawWoodPanel(ctx, boxX, boxY, boxW, boxH, logScale);
 
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
+  const padY = Math.max(40, 12 * logScale + 18);
 
   // Header.
   ctx.fillStyle = '#feae34';
   ctx.font = '34px "Press Start 2P"';
-  ctx.fillText('QUEST LOG', boxX + padX, boxY + 40);
+  ctx.fillText('QUEST LOG', boxX + padX, boxY + padY);
 
   // Divider.
   ctx.strokeStyle = 'rgba(254, 174, 52, 0.5)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(boxX + padX, boxY + 96);
-  ctx.lineTo(boxX + boxW - padX, boxY + 96);
+  ctx.moveTo(boxX + padX, boxY + padY + 56);
+  ctx.lineTo(boxX + boxW - padX, boxY + padY + 56);
   ctx.stroke();
 
   // Quest title.
   ctx.fillStyle = '#ffd54a';
   ctx.font = '26px "Press Start 2P"';
-  ctx.fillText(QUEST_TITLE, boxX + padX, boxY + 132);
+  ctx.fillText(QUEST_TITLE, boxX + padX, boxY + padY + 92);
 
   // Active objective.
   ctx.fillStyle = '#ead4aa';
   ctx.font = '24px "Press Start 2P"';
   const lines = getLines(ctx, '- ' + objective, boxW - padX * 2);
   for (let i = 0; i < lines.length; i++) {
-    ctx.fillText(lines[i]!, boxX + padX, boxY + 196 + i * 40);
+    ctx.fillText(lines[i]!, boxX + padX, boxY + padY + 156 + i * 40);
   }
 
   // Footer hint.
   ctx.fillStyle = 'rgba(234, 212, 170, 0.7)';
   ctx.font = '20px "Press Start 2P"';
-  ctx.fillText('[J] Close', boxX + padX, boxY + boxH - 52);
+  ctx.fillText('[J] Close', boxX + padX, boxY + boxH - padY - 24);
 
   ctx.restore();
 };
@@ -358,7 +353,8 @@ export const getMinimapGeometry = (canvas: HTMLCanvasElement, gameState: GameSta
   if (!worldMap || !worldMap.layers || !player) return null;
 
   const size = 360;
-  const margin = 28;
+  // Leave room for the carved-wood frame drawn around the map crop (drawMinimap).
+  const margin = 20 + 12 * uiPanelScale(canvas);
   const rect = { x: canvas.width - size - margin, y: margin, w: size, h: size };
 
   // Zoomed, player-centered viewport: show viewTiles across, panning with the player
@@ -395,9 +391,11 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
   const { rect, viewX, viewY, viewTiles: VIEW_TILES } = getMinimapGeometry(canvas, gameState)!;
 
   ctx.save();
-  // Backing + terrain crop + border. Clip so the cropped terrain can't bleed past the panel.
-  ctx.fillStyle = 'rgba(25, 60, 62, 0.85)';
-  ctx.fillRect(rect.x - 6, rect.y - 6, rect.w + 12, rect.h + 12);
+  // Carved-wood frame around the map crop (shared UI skin); the frame's border sits
+  // outside rect so the crop and the teleport click geometry stay identical.
+  const mapScale = uiPanelScale(canvas);
+  const frame = 12 * mapScale;
+  drawWoodPanel(ctx, rect.x - frame, rect.y - frame, rect.w + frame * 2, rect.h + frame * 2, mapScale);
   ctx.imageSmoothingEnabled = false;
   ctx.save();
   ctx.beginPath();
@@ -406,14 +404,14 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
   ctx.drawImage(terrain, viewX, viewY, VIEW_TILES, VIEW_TILES, rect.x, rect.y, rect.w, rect.h);
   ctx.restore();
   // Teleport mode ('T'): cyan border + hint, click on the panel warps the player.
-  ctx.strokeStyle = gameState.debugSettings.teleport ? '#4ae0e0' : '#feae34';
-  ctx.lineWidth = 5;
-  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
   if (gameState.debugSettings.teleport) {
+    ctx.strokeStyle = '#4ae0e0';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
     ctx.fillStyle = '#4ae0e0';
     ctx.font = '26px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('TELEPORT: CLICK MAP', rect.x + rect.w / 2, rect.y + rect.h + 34);
+    ctx.fillText('TELEPORT: CLICK MAP', rect.x + rect.w / 2, rect.y + rect.h + frame + 30);
   }
 
   const toMini = (pos: Vector2) => {
@@ -502,10 +500,14 @@ const drawHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameS
   // ctx.font = '32px "Press Start 2P"';
   // ctx.fillText(`${player!.status.health} / ${player!.status.maxHealth}`, xOffset + gridWidth / 5 / 2, yOffset + gridHeight / 20 / 2);
 
-  const yOffset = 20;
+  // Carved-wood backing plate behind the health/xp cluster (shared UI skin).
+  // Fixed light scale: the cluster is small and the corner blocks are 16 art px.
+  drawWoodPanel(ctx, 10, 8, gridWidth / 8 + 120, 160, 3);
+
+  const yOffset = 52;
 
   const barRect = {
-    x: 50,
+    x: 70,
     y: yOffset,
     w: gridWidth / 8,
     h: 35
@@ -545,7 +547,7 @@ const drawHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameS
 
   // XP Bar
   ctx.fillStyle ='#68386c';
-  const xOffset2 = 86;
+  const xOffset2 = 106;
   const yOffset2 = yOffset + 48;
   ctx.fillRect(xOffset2, yOffset2, (player!.status.experience / (gameState.systems.leveling.calculateXPToNextLevel(player!) + player!.status.experience)) * (gridWidth / 12), (gridHeight / 48));
   ctx.strokeStyle = '#000'
@@ -583,31 +585,20 @@ const drawChat = (
 
   ctx.beginPath();
 
-  // Set the fill style for the chat background.
-  ctx.fillStyle = '#193c3e';
   const size = {
     height: 400,
     width: gridWidth,
   };
-  // Draw the chat background rectangle.
-  ctx.fillRect(0, gridHeight - size.height, size.width, size.height);
-  // Set the stroke style for the chat border.
-  ctx.strokeStyle = '#feae34';
-  const paddingWidth = 10;
-  ctx.lineWidth = paddingWidth;
-  // Draw the chat border rectangle.
-  ctx.strokeRect(
-    paddingWidth / 2,
-    gridHeight - size.height,
-    size.width - paddingWidth,
-    size.height
-  );
-  // Set the fill style for the chat text background.
-  ctx.fillStyle = '#ead4aa';
+  // Carved-wood dialog panel (shared UI skin, see uiPanel.ts).
+  const panelScale = uiPanelScale(canvas);
+  drawWoodPanel(ctx, 0, gridHeight - size.height, size.width, size.height, panelScale);
+  // Set the fill style for the chat text.
+  ctx.fillStyle = UI_CREAM;
   const fontSize = 54;
   ctx.font = `${fontSize}px "Press Start 2P"`;
-  const offsetHeight = 24;
-  const offsetWidth = 32;
+  const paddingWidth = 10;
+  const offsetHeight = 14 * panelScale + 10;
+  const offsetWidth = 14 * panelScale + 14;
   // Split the chat phrase into lines.
   const lines = getLines(
     ctx,

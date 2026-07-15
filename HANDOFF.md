@@ -39,6 +39,11 @@ Glade → Morghal quest chain → ruins-approach and back, with save/continue.
   banner (`public/ks-area-banner.png`) + DESIGN.md area name, on AREA_TRANSITION_COMPLETE
   and the first running frame. Names live in `AREA_TITLES` (areaTitleSystem.ts) — add an
   entry when adding a map. Draws under speech bubbles.
+- **UI skin** — `src/uiPanel.ts`: carved-wood nine-slice (`public/ks-ui-panel.png`,
+  16px corner studs, edges tile, flat `UI_WOOD_FILL` interior). `drawWoodPanel` for
+  surfaces (chat, quest log, HUD plate, minimap frame — all in rendering.ts),
+  `drawWoodChip` for elements too small for the frame (hint chips). New UI should use
+  these + `uiPanelScale(canvas)` so everything stays in the banner's family.
 - **Debug: teleport** — `T` toggles, click minimap to warp (nearest walkable tile).
   Minimap geometry shared via `getMinimapGeometry` (rendering.ts) with the click handler
   (main.ts). Minimap terrain classifies by gid: dirt trail (ground 74–86) tan, water
