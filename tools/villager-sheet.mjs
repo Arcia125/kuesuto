@@ -121,18 +121,19 @@ const VILLAGERS = {
     ],
   },
   carter: {
-    // Wide straw hat, teal work tunic, leather suspenders — all road and freight.
-    map: { K: 'K', A: 'B', a: 'b', S: 'S', s: 's', M: 'M', T: 'T', d: 't', W: 'W' },
-    bobSplit: 10, // hat + face rows 0-9 squash onto the tunic at row 10
+    // Russet headscarf knotted at the side, teal work tunic, leather suspenders —
+    // all road and freight.
+    map: { K: 'K', R: 'w', r: 'M', S: 'S', s: 's', M: 'M', T: 'T', d: 't', W: 'W' },
+    bobSplit: 10, // scarf + face rows 0-9 squash onto the tunic at row 10
     eyes: [[5, 6], [10, 6]],
     grid: [
       '................',
       '.....KKKKKK.....',
-      '....KAAAAAAK....',
-      '...KAAAAAAAAK...',
-      '..KaAAAAAAAAaK..',
-      '.KaaaaaaaaaaaaK.',
-      '..KKSSSSSSSSKK..',
+      '....KRRRRRRK....',
+      '...KRRRRRRRRK...',
+      '...KRrrrrrRRKK..',
+      '...KSSSSSSSSKrK.',
+      '...KSSSSSSSSKK..',
       '...KSSSSSSSSK...',
       '...KSSSMMSSSK...',
       '....KssssssK....',
@@ -153,8 +154,10 @@ const VILLAGERS = {
 // outline row for that frame).
 // f3/f5: eyes half (lower pixel only). f4: eyes closed (dark lash line). f6: open.
 const drawFrame = (out, frameIndex, v, { bob = false, eye = 'open' }) => {
-  const ox = (frameIndex % 4) * T;
-  const oy = ((frameIndex / 4) | 0) * T;
+  // Frame positions must match the wizard spriteJSON: Bounce Down = frames 0-2 on
+  // row 0, BlinK Down = frames 3-6 on row 1 (row 1 holds FOUR frames, x=0..48).
+  const ox = (frameIndex < 3 ? frameIndex : frameIndex - 3) * T;
+  const oy = frameIndex < 3 ? 0 : T;
   const put = (x, y, rgb) => {
     if (y < 0 || y >= T) return;
     const i = ((oy + y) * out.width + (ox + x)) * 4;
@@ -177,9 +180,10 @@ const drawFrame = (out, frameIndex, v, { bob = false, eye = 'open' }) => {
   for (let y = 0; y < split; y++) drawRow(y, 1);
   for (const [exRaw, eyRaw] of v.eyes) {
     const ex = exRaw, ey = eyRaw + (bob && eyRaw < split ? 1 : 0);
+    // Blink is purely the black eye pixels shrinking (2px -> 1px -> 2px); a
+    // skin/leather-toned "lid" pixel read as a jarring color pop at 10x scale.
     if (eye === 'open') { put(ex, ey, C.N); put(ex, ey + 1, C.N); }
-    else if (eye === 'half') { put(ex, ey + 1, C.N); }
-    else if (eye === 'closed') { put(ex, ey + 1, C.M); }
+    else { put(ex, ey + 1, C.N); }
   }
 };
 
@@ -200,6 +204,27 @@ for (const [name, v] of Object.entries(VILLAGERS)) {
 
   const json = JSON.parse(JSON.stringify(wizardJSON));
   json.meta.image = `ks-${name}.png`;
+  // The wizard JSON's flat 100ms per frame makes every state change a one-frame
+  // pop (the engine alternates Bounce<->Blink back to back, so villagers spent
+  // ~43% of the time squinting and the reopen flashed for a single frame — read
+  // as glitchy flicker at 10x scale). Pace it like an actual idle: long stable
+  // open-eye holds, a soft bob, and a quick ~220ms blink. Every villager gets a
+  // different total cycle length so entities spawned on the same tick drift out
+  // of phase instead of blinking in lockstep.
+  // Bob frames stay >=300ms: the 1px head squash also shifts the eyes, and at a
+  // quick hold it read as a second too-fast blink rather than a breath.
+  const IDLE_TIMING = {
+    keeper: { bounce: [600, 350, 650], blinkHold: 500 },
+    child: { bounce: [480, 300, 520], blinkHold: 420 },
+    hunter: { bounce: [700, 380, 620], blinkHold: 540 },
+    carter: { bounce: [560, 330, 690], blinkHold: 470 },
+  };
+  const timing = IDLE_TIMING[name];
+  const DURATIONS = {
+    'Bounce Down--0': timing.bounce[0], 'Bounce Down--1': timing.bounce[1], 'Bounce Down--2': timing.bounce[2],
+    'BlinK Down--0': 70, 'BlinK Down--1': 80, 'BlinK Down--2': 70, 'BlinK Down--3': timing.blinkHold,
+  };
+  for (const [frameKey, ms] of Object.entries(DURATIONS)) json.frames[frameKey].duration = ms;
   const jsonPath = path.join(repoRoot, `src/data/spriteJSON/ks-${name}.json`);
   writeFileSync(jsonPath, JSON.stringify(json, null, 1));
   console.log(`Wrote public/ks-${name}.png + src/data/spriteJSON/ks-${name}.json`);

@@ -19,7 +19,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 100
+   "duration": 600
   },
   "Bounce Down--1": {
    "frame": {
@@ -40,7 +40,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 100
+   "duration": 350
   },
   "Bounce Down--2": {
    "frame": {
@@ -61,7 +61,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 100
+   "duration": 650
   },
   "BlinK Down--0": {
    "frame": {
@@ -82,7 +82,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 100
+   "duration": 70
   },
   "BlinK Down--1": {
    "frame": {
@@ -103,7 +103,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 100
+   "duration": 80
   },
   "BlinK Down--2": {
    "frame": {
@@ -124,7 +124,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 100
+   "duration": 70
   },
   "BlinK Down--3": {
    "frame": {
@@ -145,7 +145,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 100
+   "duration": 500
   }
  },
  "meta": {
