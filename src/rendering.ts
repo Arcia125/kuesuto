@@ -363,7 +363,10 @@ export const getMinimapGeometry = (canvas: HTMLCanvasElement, gameState: GameSta
 
   // Zoomed, player-centered viewport: show viewTiles across, panning with the player
   // and clamped to the map edges (rather than fitting the whole map in the panel).
-  const viewTiles = 80;
+  // Maps smaller than the nominal zoom shrink the viewport to their short side —
+  // otherwise drawImage clips the oversized source rect and squishes the map into
+  // the panel's top-left corner instead of filling it.
+  const viewTiles = Math.min(80, worldMap.width, worldMap.height);
   const playerTile = positionToTileCoord(player.state);
   const half = viewTiles / 2;
   const viewX = Math.max(0, Math.min(worldMap.width - viewTiles, playerTile.x - half));
