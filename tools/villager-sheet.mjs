@@ -154,8 +154,10 @@ const VILLAGERS = {
 // outline row for that frame).
 // f3/f5: eyes half (lower pixel only). f4: eyes closed (dark lash line). f6: open.
 const drawFrame = (out, frameIndex, v, { bob = false, eye = 'open' }) => {
-  const ox = (frameIndex % 4) * T;
-  const oy = ((frameIndex / 4) | 0) * T;
+  // Frame positions must match the wizard spriteJSON: Bounce Down = frames 0-2 on
+  // row 0, BlinK Down = frames 3-6 on row 1 (row 1 holds FOUR frames, x=0..48).
+  const ox = (frameIndex < 3 ? frameIndex : frameIndex - 3) * T;
+  const oy = frameIndex < 3 ? 0 : T;
   const put = (x, y, rgb) => {
     if (y < 0 || y >= T) return;
     const i = ((oy + y) * out.width + (ox + x)) * 4;
