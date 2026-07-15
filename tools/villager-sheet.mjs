@@ -180,9 +180,10 @@ const drawFrame = (out, frameIndex, v, { bob = false, eye = 'open' }) => {
   for (let y = 0; y < split; y++) drawRow(y, 1);
   for (const [exRaw, eyRaw] of v.eyes) {
     const ex = exRaw, ey = eyRaw + (bob && eyRaw < split ? 1 : 0);
+    // Blink is purely the black eye pixels shrinking (2px -> 1px -> 2px); a
+    // skin/leather-toned "lid" pixel read as a jarring color pop at 10x scale.
     if (eye === 'open') { put(ex, ey, C.N); put(ex, ey + 1, C.N); }
-    else if (eye === 'half') { put(ex, ey + 1, C.N); }
-    else if (eye === 'closed') { put(ex, ey + 1, C.M); }
+    else { put(ex, ey + 1, C.N); }
   }
 };
 
