@@ -35,6 +35,10 @@ Glade → Morghal quest chain → ruins-approach and back, with save/continue.
   bubble) → escort to corrupted glade w/ ambient commentary bubbles (bump-chat suppressed)
   → runs to player when quest completes for the ruins debrief → farewell bubble, retires.
   Renders idle-down always (sheet has no walk frames — glides).
+- **Area title cards** — `AreaTitleSystem` + `drawAreaTitle` (rendering.ts): AI-prerendered
+  banner (`public/ks-area-banner.png`) + DESIGN.md area name, on AREA_TRANSITION_COMPLETE
+  and the first running frame. Names live in `AREA_TITLES` (areaTitleSystem.ts) — add an
+  entry when adding a map. Draws under speech bubbles.
 - **Debug: teleport** — `T` toggles, click minimap to warp (nearest walkable tile).
   Minimap geometry shared via `getMinimapGeometry` (rendering.ts) with the click handler
   (main.ts). Minimap terrain classifies by gid: dirt trail (ground 74–86) tan, water
