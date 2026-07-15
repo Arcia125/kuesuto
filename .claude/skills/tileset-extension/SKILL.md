@@ -75,8 +75,11 @@ Decisions worth knowing before extending it:
   water-tiles.mjs). For DEEP INTERIOR cells (all 4 corners canopy) the generator emits the
   hand-map blob-interior pattern instead — gid 135 on the (x+y)-even checker, 158/161 on
   the other — so big masses read as repeated LTTP crown lobes, not a flat slab. The
-  wangset's own all-canopy tile (182) carries a per-tile crown lobe as fallback for
-  wangset-only consumers.
+  wangset's own all-canopy tile (182) carries the crown texture as fallback for
+  wangset-only consumers. All 13 composed tiles draw their canopy region with a dense
+  wrapped lobe lattice (brick-offset elliptical scallops, period 16 — seamless mod-16)
+  so edge/corner fragments show crowns instead of flat gutter; a single centered lobe
+  previously left N/E/W-facing edges as flat dark voids that read as gaps in the woods.
 - **Generator coordination rules** (in forest-gen): the canopy mask never covers walkable
   cells and keeps ≥2 grass tiles from trail dirt (mask shrinks, not the trail) so the two
   corner lattices can't bite notches/slivers; stamps treat canopy cells + a 1-tile margin
