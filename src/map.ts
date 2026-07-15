@@ -130,7 +130,8 @@ export class RenderableMap implements GameMap {
     };
   };
 
-  public isTileOutOfBounds = (position: Vector2) => position.x < 0 || position.y < 0 || position.x > this.activeMap.worldMap.width || position.y > this.activeMap.worldMap.height;
+  // Tile coords run 0..width-1 / 0..height-1, so >= is the out-of-bounds edge.
+  public isTileOutOfBounds = (position: Vector2) => position.x < 0 || position.y < 0 || position.x >= this.activeMap.worldMap.width || position.y >= this.activeMap.worldMap.height;
 
   private getObjectLayer = () => this.activeMap.worldMap.layers.find(layer => layer.type === 'objectgroup');
 
@@ -215,11 +216,14 @@ export class RenderableMap implements GameMap {
           // }
           // i++;
 
+          // The camera overscans past the map edge by design; those lookups come
+          // back undefined and simply aren't drawn (the page background shows).
+          if (tiles[tI].tile === undefined) {
+            continue;
+          }
           // const tileset = this.tileMaps.forrest.worldMaps.forrest.tilesets.find(ts => ts.firstgid <= tiles[tI].tile);
           const tileset = this.activeMap.worldMap.tilesets.find(ts => ts.firstgid <= tiles[tI].tile);
           if (!tileset) {
-
-            // TODO: fix out of bounds for the bottom and right edges of the map (maybe let camera go past edge, but render black or some fallback)
             console.error('tileset not found');
             continue;
           }

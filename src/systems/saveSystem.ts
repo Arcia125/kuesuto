@@ -1,5 +1,6 @@
 import { EventEmitter, EVENTS } from '../events';
 import { GameState, ISaveSystem, NarrativeFlagValue } from '../models';
+import { getSpriteScale } from '../sprites';
 
 const SAVE_KEY = 'kuesuto-save-v1';
 
@@ -58,12 +59,21 @@ export class SaveSystem implements ISaveSystem {
     } catch {
       return false;
     }
+    // A save naming a map this build doesn't know (renamed/removed) can't be
+    // half-loaded — its position belongs to the wrong world. Start fresh instead.
+    if (!gameState.map.tileMaps[data.mapName]) {
+      return false;
+    }
     for (const [key, value] of Object.entries(data.flags)) {
       gameState.systems.narrativeFlags.setFlag(key, value);
     }
-    if (gameState.map.tileMaps[data.mapName]) {
-      gameState.map.setActiveMap(data.mapName);
-    }
+    gameState.map.setActiveMap(data.mapName);
+    // Older builds let the player walk (and save) past the map edge. Clamp the
+    // stored position into bounds so loading never strands them in the void.
+    const worldMap = gameState.map.activeMap.worldMap;
+    const tileSize = getSpriteScale();
+    data.player.x = Math.min(Math.max(data.player.x, 0), (worldMap.width - 1) * tileSize);
+    data.player.y = Math.min(Math.max(data.player.y, 0), (worldMap.height - 1) * tileSize);
     this.pendingPlayer = data.player;
     return true;
   };
