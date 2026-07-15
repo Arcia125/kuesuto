@@ -917,6 +917,51 @@ const logDrawFailure = (entity: GameEntity, err: unknown) => {
   );
 };
 
+// Area title card: the AI-prerendered banner with the area's name in the game font,
+// fading in with a small downward drift, holding, then fading out. AreaTitleSystem
+// decides when a card starts; this owns the envelope and layout.
+const TITLE_FADE_IN = 450;
+const TITLE_HOLD = 2400;
+const TITLE_FADE_OUT = 800;
+const drawAreaTitle = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+  const { bannerImage, current } = gameState.systems.areaTitle;
+  if (!current || !bannerImage.complete || !bannerImage.naturalWidth) return;
+  const t = Date.now() - current.shownAtMs;
+  if (t >= TITLE_FADE_IN + TITLE_HOLD + TITLE_FADE_OUT) return;
+  const alpha = t < TITLE_FADE_IN
+    ? t / TITLE_FADE_IN
+    : t < TITLE_FADE_IN + TITLE_HOLD
+      ? 1
+      : 1 - (t - TITLE_FADE_IN - TITLE_HOLD) / TITLE_FADE_OUT;
+
+  // Integer pixel scale keeps the banner art crisp at ~40% of the canvas width.
+  const scale = Math.max(4, Math.round((canvas.width * 0.4) / bannerImage.naturalWidth));
+  const w = bannerImage.naturalWidth * scale;
+  const h = bannerImage.naturalHeight * scale;
+  const x = (canvas.width - w) / 2;
+  const drift = t < TITLE_FADE_IN ? (1 - t / TITLE_FADE_IN) * -h * 0.25 : 0;
+  const y = canvas.height * 0.1 + drift;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(bannerImage, x, y, w, h);
+
+  // Name centered in the banner's carved inner panel, sized to fit its width.
+  // Press Start 2P is effectively monospace: advance = font size per character.
+  const fontSize = Math.floor(Math.min((w * 0.66) / current.title.length, h * 0.3));
+  ctx.font = `${fontSize}px "Press Start 2P"`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const cx = canvas.width / 2;
+  const cy = y + h * 0.52;
+  ctx.fillStyle = 'rgba(20, 12, 28, 0.9)';
+  ctx.fillText(current.title, cx, cy + Math.max(3, fontSize * 0.12));
+  ctx.fillStyle = '#feae34';
+  ctx.fillText(current.title, cx, cy);
+  ctx.restore();
+};
+
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   gameState.emitter.emit(EVENTS.RENDER_START, null);
 
@@ -954,6 +999,8 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
     }
 
     drawHeartPickups(ctx, gameState);
+    // Title card sits under speech bubbles: dialogue must always stay readable.
+    drawAreaTitle(ctx, canvas, gameState);
     drawSpeechBubbles(ctx, gameState);
 
     drawHUD(ctx, canvas, gameState);

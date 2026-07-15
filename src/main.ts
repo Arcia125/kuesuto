@@ -20,6 +20,7 @@ import { StartMenuSystem } from './systems/startMenuSystem';
 import { SpawnSystem } from './systems/spawnSystem';
 import { NarrativeFlagSystem } from './systems/narrativeFlagSystem';
 import { AreaTransitionSystem } from './systems/areaTransitionSystem';
+import { AreaTitleSystem } from './systems/areaTitleSystem';
 import { SpeechSystem } from './systems/speechSystem';
 import { SoundSystem } from './systems/soundSystem';
 import { SaveSystem } from './systems/saveSystem';
@@ -109,6 +110,7 @@ const init = () => {
       spawn: new SpawnSystem(emitter),
       narrativeFlags: new NarrativeFlagSystem(emitter),
       areaTransition: new AreaTransitionSystem(emitter),
+      areaTitle: new AreaTitleSystem(emitter),
       save: new SaveSystem(emitter),
     },
     mobileControls: new MobileControls(),
