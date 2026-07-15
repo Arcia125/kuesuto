@@ -332,7 +332,7 @@ const buildMinimapTerrain = (worldMap: WorldMap): HTMLCanvasElement => {
     const t = things ? things[i] : 0;
     if (t > 1 && !isDecor(t)) {
       if (t >= 196) { r = 172; g = 74; b = 58; } // structure #ac4a3a
-      else { r = 46; g = 90; b = 52; } // tree #2e5a34
+      else { r = 22; g = 30; b = 24; } // tree — blackish with a green cast #161e18
       claimed = true;
     }
     if (ground && isWater(ground[i])) { r = 70; g = 130; b = 200; claimed = true; } // water #4682c8
