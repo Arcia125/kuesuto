@@ -211,11 +211,13 @@ for (const [name, v] of Object.entries(VILLAGERS)) {
   // open-eye holds, a soft bob, and a quick ~220ms blink. Every villager gets a
   // different total cycle length so entities spawned on the same tick drift out
   // of phase instead of blinking in lockstep.
+  // Bob frames stay >=300ms: the 1px head squash also shifts the eyes, and at a
+  // quick hold it read as a second too-fast blink rather than a breath.
   const IDLE_TIMING = {
-    keeper: { bounce: [600, 150, 650], blinkHold: 500 },
-    child: { bounce: [480, 130, 520], blinkHold: 420 },
-    hunter: { bounce: [700, 160, 620], blinkHold: 540 },
-    carter: { bounce: [560, 140, 690], blinkHold: 470 },
+    keeper: { bounce: [600, 350, 650], blinkHold: 500 },
+    child: { bounce: [480, 300, 520], blinkHold: 420 },
+    hunter: { bounce: [700, 380, 620], blinkHold: 540 },
+    carter: { bounce: [560, 330, 690], blinkHold: 470 },
   };
   const timing = IDLE_TIMING[name];
   const DURATIONS = {
