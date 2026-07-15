@@ -204,6 +204,16 @@ for (const [name, v] of Object.entries(VILLAGERS)) {
 
   const json = JSON.parse(JSON.stringify(wizardJSON));
   json.meta.image = `ks-${name}.png`;
+  // The wizard JSON's flat 100ms per frame makes every state change a one-frame
+  // pop (the engine alternates Bounce<->Blink back to back, so villagers spent
+  // ~43% of the time squinting and the reopen flashed for a single frame — read
+  // as glitchy flicker at 10x scale). Pace it like an actual idle: long stable
+  // open-eye holds, a soft bob, and a quick ~220ms blink.
+  const DURATIONS = {
+    'Bounce Down--0': 600, 'Bounce Down--1': 150, 'Bounce Down--2': 600,
+    'BlinK Down--0': 70, 'BlinK Down--1': 80, 'BlinK Down--2': 70, 'BlinK Down--3': 500,
+  };
+  for (const [frameKey, ms] of Object.entries(DURATIONS)) json.frames[frameKey].duration = ms;
   const jsonPath = path.join(repoRoot, `src/data/spriteJSON/ks-${name}.json`);
   writeFileSync(jsonPath, JSON.stringify(json, null, 1));
   console.log(`Wrote public/ks-${name}.png + src/data/spriteJSON/ks-${name}.json`);
