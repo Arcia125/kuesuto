@@ -19,6 +19,12 @@ export class Collision implements Capability {
       const x = corners[i].x;
       const y = corners[i].y;
 
+      // The world ends at the map edge: out-of-bounds is solid, otherwise entities
+      // walk off into the void and the autosave strands the player out there.
+      if (gameState.map.isTileOutOfBounds({ x, y })) {
+        collidedCorners.push(corners[i]);
+        continue;
+      }
       const tiles = gameState.map.getTilesAt({ x, y });
       const collisionLayer = tiles.find(tile => tile.layer.name === Collision.NAME);
       if (collisionLayer?.tile && collisionLayer.tile !== 0) {
@@ -36,6 +42,10 @@ export class Collision implements Capability {
       const x = corners[i].x;
       const y = corners[i].y;
 
+      if (gameState.map.isTileOutOfBounds({ x, y })) {
+        collidedCorners.push(corners[i]);
+        continue;
+      }
       const tiles = gameState.map.getTilesAt({ x, y });
       // gameState.map.getCollisionShapesAt({ x, y });
       const collisionLayer = tiles.find(tile => tile.layer.name === Collision.NAME);
