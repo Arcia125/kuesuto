@@ -1,17 +1,19 @@
 # HANDOFF — session state for re-acclimation
 
 Read this after a context compaction or when starting a fresh session on branch
-`feature/chapter1-legibility`. Companion docs: `CLAUDE.md` (rules), `DESIGN.md` (story
+`feature/prologue-thornwick`. Companion docs: `CLAUDE.md` (rules), `DESIGN.md` (story
 canon), `BACKLOG.md` (opportunity list), `.claude/skills/` (map-authoring, ai-sprites,
 tileset-extension — read before touching maps/art/tiles).
 
-## Where things stand (2026-07-10)
+## Where things stand (2026-07-15)
 
-Branch `feature/chapter1-legibility`, ~40 commits ahead of master, NOT pushed, no PR yet.
-Everything builds (`npm run build`) and the game is playable end-to-end: title → Verdelight
-Glade → Morghal quest chain → ruins-approach and back, with save/continue.
+Branch `feature/prologue-thornwick`, 15 commits ahead of master (9 unpushed locally, all
+from today's session — minimap overhaul through the UI skin, see below), no PR yet.
+Everything builds (`npm run build`) and the game is playable end-to-end: title/continue →
+Thornwick Waystation prologue → Verdelight Glade → Morghal quest chain → ruins-approach
+and back, with save/continue.
 
-### Systems added this session (all committed)
+### Systems & features on this branch (all committed)
 
 - **SpeechSystem** — overhead speech bubbles (`gameState.systems.speech.say(entity, text)`),
   non-blocking flavor dialogue. Used by Morghal.
@@ -39,6 +41,10 @@ Glade → Morghal quest chain → ruins-approach and back, with save/continue.
   banner (`public/ks-area-banner.png`) + DESIGN.md area name, on AREA_TRANSITION_COMPLETE
   and the first running frame. Names live in `AREA_TITLES` (areaTitleSystem.ts) — add an
   entry when adding a map. Draws under speech bubbles.
+- **Opening declutter** — Arcia's one-line arrival bubble (flag `prologue_opening_said`)
+  is cut; title card + signpost already carried its content, and title + signpost + bubble
+  all landing at once crowded the opening. The title card is now the arrival beat.
+  DESIGN.md updated in both spots (prologue flow, flag table).
 - **UI skin** — `src/uiPanel.ts`: carved-wood nine-slice (`public/ks-ui-panel.png`,
   16px corner studs, edges tile, flat `UI_WOOD_FILL` interior). `drawWoodPanel` for
   surfaces (chat, quest log, HUD plate, minimap frame — all in rendering.ts),
@@ -69,11 +75,24 @@ Glade → Morghal quest chain → ruins-approach and back, with save/continue.
   prevents chat reopen loops; trigger entities are `status.nonBlocking`.
 - Hold-space attack relies on OS key auto-repeat reaching `controls.attack` — do NOT
   filter `event.repeat` in controls (SFX spam is rate-limited in SoundSystem instead).
+- **Composed wang tiles need DENSE coverage, not one centered motif.** The 13 procedural
+  canopy edge/corner tiles (`tools/canopy-tiles.mjs`) drew a single leaf-clump lobe
+  centered mid-tile; an edge or corner tile only exposes a FRAGMENT of its canopy region,
+  so most fragments landed in the lobe's empty gutter — flat dark voids that read as
+  torn gaps in the treeline (not a map-layout bug, a texture-coverage bug). Fixed with a
+  brick-offset lattice of lobes wrapped mod-16 (still seamless by construction). Rule for
+  any future composed tile: cover the whole 16×16 densely, since a wang neighbor will
+  crop away most of it.
+- **Layered raster passes: don't let a "solid" pass unconditionally win.** The minimap
+  painted collision black AFTER the terrain pass, but trees/buildings/water are ALSO
+  collision, so it blanketed every set piece in wall-black regardless of what drew it.
+  Fixed with a `claimed` flag — collision only paints where nothing narrower already
+  explained the tile. Applies to any future minimap/terrain classification: order passes
+  narrow-to-wide, or gate the wide one.
 
-## In-flight conversation — RESOLVED (2026-07-11)
+## Prologue arc — background (built 2026-07-11, extended since)
 
-The opening question was answered with the **Thornwick Waystation prologue**, built on
-branch `feature/prologue-thornwick` (stacked on this one): new opening map with
+The opening question was answered with the **Thornwick Waystation prologue**: new opening map with
 buildings/props (structure stamps + grass-bay dirt masking in forest-gen), four
 villager NPCs (VillagerEntity, errand chain: `prologue_errand_started → _done →
 prologue_complete`), a flag-locked one-way gate into forrest, per-map music
@@ -90,9 +109,16 @@ gates the corner checks in `Collision.checkEntityCollision`.
 <region>` then READ the PNG; `--collision` for walkability. Never hand-edit map JSON.
 Commit style: descriptive, NO Co-Authored-By trailers, docs/ build output is committed.
 
+For UI/timing work with no interactive browser available: `npm run build`, then
+`npx vite preview --outDir docs --port 4181`, drive it headless with `puppeteer-core`
+against installed Chrome, screenshot at specific delays (e.g. mid-fade, post-fade) and
+Read the PNG. Full setup (Chrome/Firefox paths, save-seeding, GPU-accel caveat) is in
+memory (`kuesuto-browser-debugging`) — check there before re-deriving it.
+
 ## Near-term options (user-priority order unknown — ask)
 
-1. The prologue/opening decision above (in-flight).
+1. HUD is intentionally unfinished — health/xp bars are plain rects on the new wood
+   backing plate, no heart pips or level badge yet. Natural next pass on `uiPanel.ts`.
 2. Play-test feedback loop on this session's systems (knockback feel, music, SFX volumes).
 3. Open the PR for this branch (it is getting very large).
 4. BACKLOG.md top items: attack cooldown, save v2 (persist enemy deaths), mobile Continue
