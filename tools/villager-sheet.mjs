@@ -208,10 +208,19 @@ for (const [name, v] of Object.entries(VILLAGERS)) {
   // pop (the engine alternates Bounce<->Blink back to back, so villagers spent
   // ~43% of the time squinting and the reopen flashed for a single frame — read
   // as glitchy flicker at 10x scale). Pace it like an actual idle: long stable
-  // open-eye holds, a soft bob, and a quick ~220ms blink.
+  // open-eye holds, a soft bob, and a quick ~220ms blink. Every villager gets a
+  // different total cycle length so entities spawned on the same tick drift out
+  // of phase instead of blinking in lockstep.
+  const IDLE_TIMING = {
+    keeper: { bounce: [600, 150, 650], blinkHold: 500 },
+    child: { bounce: [480, 130, 520], blinkHold: 420 },
+    hunter: { bounce: [700, 160, 620], blinkHold: 540 },
+    carter: { bounce: [560, 140, 690], blinkHold: 470 },
+  };
+  const timing = IDLE_TIMING[name];
   const DURATIONS = {
-    'Bounce Down--0': 600, 'Bounce Down--1': 150, 'Bounce Down--2': 600,
-    'BlinK Down--0': 70, 'BlinK Down--1': 80, 'BlinK Down--2': 70, 'BlinK Down--3': 500,
+    'Bounce Down--0': timing.bounce[0], 'Bounce Down--1': timing.bounce[1], 'Bounce Down--2': timing.bounce[2],
+    'BlinK Down--0': 70, 'BlinK Down--1': 80, 'BlinK Down--2': 70, 'BlinK Down--3': timing.blinkHold,
   };
   for (const [frameKey, ms] of Object.entries(DURATIONS)) json.frames[frameKey].duration = ms;
   const jsonPath = path.join(repoRoot, `src/data/spriteJSON/ks-${name}.json`);

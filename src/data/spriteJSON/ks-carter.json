@@ -19,7 +19,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 600
+   "duration": 560
   },
   "Bounce Down--1": {
    "frame": {
@@ -40,7 +40,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 150
+   "duration": 140
   },
   "Bounce Down--2": {
    "frame": {
@@ -61,7 +61,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 600
+   "duration": 690
   },
   "BlinK Down--0": {
    "frame": {
@@ -145,7 +145,7 @@
     "w": 16,
     "h": 16
    },
-   "duration": 500
+   "duration": 470
   }
  },
  "meta": {
