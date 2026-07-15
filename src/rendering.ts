@@ -3,6 +3,7 @@ import { DarkWizardEntity } from "./entities/darkWizardEntity";
 import { SlimeEntity } from "./entities/slimeEntity";
 import { CorruptedSlimeEntity } from "./entities/corruptedSlimeEntity";
 import { FastSlimeEntity } from "./entities/fastSlimeEntity";
+import { VillagerEntity } from "./entities/villagerEntity";
 import { TransitionTriggerEntity } from "./entities/transitionTriggerEntity";
 import { HeartPickupEntity } from "./entities/heartPickupEntity";
 import { EVENTS } from './events';
@@ -297,9 +298,12 @@ const getTileLayerData = (worldMap: WorldMap, name: string): number[] | undefine
 };
 
 /**
- * Rasterizes a map's terrain to a 1px-per-tile offscreen canvas: collision tiles read
- * as walls, decorated Things tiles as forest, everything else as ground. Tile id 1 in
- * the Things layer is the blank filler and is treated as empty.
+ * Rasterizes a map's terrain to a 1px-per-tile offscreen canvas. Ground reads as grass
+ * with the dirt trail and water wangsets picked out; decorated Things tiles split into
+ * passable ambience decor (kept as grass), waystation structures (buildings, well —
+ * warm brown), and tree/canopy art (dark green). Collision only paints as wall where
+ * nothing above explained it — trees and buildings are solid too, and blackening them
+ * turned every set piece into an unreadable blob.
  */
 const buildMinimapTerrain = (worldMap: WorldMap): HTMLCanvasElement => {
   const w = worldMap.width;
@@ -311,15 +315,28 @@ const buildMinimapTerrain = (worldMap: WorldMap): HTMLCanvasElement => {
   const collision = getTileLayerData(worldMap, 'Collision');
   const things = getTileLayerData(worldMap, 'Things');
   const ground = getTileLayerData(worldMap, 'Ground');
-  // Ground gids 170-182 are the "Grass Water" wangset (tileset ids 169-181, firstgid 1).
+  // Ground gids 74-86 are the "Grass Forrest" dirt-trail wangset, 170-182 the
+  // "Grass Water" wangset (tileset ids -1, firstgid 1).
+  const isTrail = (gid: number) => gid >= 74 && gid <= 86;
   const isWater = (gid: number) => gid >= 170 && gid <= 182;
+  // Things gid 1 is the blank filler; 109-116 are the passable single-tile ambience
+  // decor (stamps.mjs DECOR_TILES); >= 196 are the waystation structure rows
+  // (waystation-tiles.mjs pieces, gid = tile id + 1). Everything else decorated is
+  // tree/canopy art.
+  const isDecor = (gid: number) => gid >= 109 && gid <= 116;
   const image = octx.createImageData(w, h);
   for (let i = 0; i < w * h; i++) {
-    let r = 74, g = 140, b = 79; // ground #4a8c4f
-    if (things && things[i] && things[i] !== 1) { r = 46; g = 90; b = 52; } // tree #2e5a34
-    if (collision && collision[i]) { r = 28; g = 28; b = 34; } // wall #1c1c22
-    // Water is solid too, so this must come after the wall pass to win the pixel.
-    if (ground && isWater(ground[i])) { r = 70; g = 130; b = 200; } // water #4682c8
+    let r = 74, g = 140, b = 79; // grass #4a8c4f
+    let claimed = false;
+    if (ground && isTrail(ground[i])) { r = 232; g = 183; b = 150; claimed = true; } // trail #e8b796
+    const t = things ? things[i] : 0;
+    if (t > 1 && !isDecor(t)) {
+      if (t >= 196) { r = 172; g = 74; b = 58; } // structure #ac4a3a
+      else { r = 46; g = 90; b = 52; } // tree #2e5a34
+      claimed = true;
+    }
+    if (ground && isWater(ground[i])) { r = 70; g = 130; b = 200; claimed = true; } // water #4682c8
+    if (!claimed && collision && collision[i]) { r = 28; g = 28; b = 34; } // bare wall #1c1c22
     const o = i * 4;
     image.data[o] = r;
     image.data[o + 1] = g;
@@ -416,10 +433,12 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
   };
 
   // Enemies: corrupted targets stand out in purple, the rest are faded red.
+  // Villagers read as warm gold — people, not threats.
   for (const e of gameState.entities) {
     if (e.status.dead || !inView(e.state)) continue;
     if (e.name === CorruptedSlimeEntity.NAME) dot(e.state, '#c040c0', 5);
     else if (e.name === SlimeEntity.NAME || e.name === FastSlimeEntity.NAME) dot(e.state, 'rgba(200, 70, 70, 0.7)', 4);
+    else if (e instanceof VillagerEntity) dot(e.state, '#ffd98c', 4);
   }
 
   // Objective: a pulsing yellow ring at the current goal. If off the viewport, clamp it

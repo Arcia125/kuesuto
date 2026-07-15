@@ -37,7 +37,10 @@ Glade → Morghal quest chain → ruins-approach and back, with save/continue.
   Renders idle-down always (sheet has no walk frames — glides).
 - **Debug: teleport** — `T` toggles, click minimap to warp (nearest walkable tile).
   Minimap geometry shared via `getMinimapGeometry` (rendering.ts) with the click handler
-  (main.ts). Minimap draws water blue (ground gids 170–182 after the wall pass).
+  (main.ts). Minimap terrain classifies by gid: dirt trail (ground 74–86) tan, water
+  (ground 170–182) blue, Things decor 109–116 stays grass, structures (≥196) brown,
+  other Things art tree-green; collision paints wall-black only where nothing else
+  claimed the tile. Villagers are gold dots.
 
 ### Hard-won bug knowledge (do not re-learn these)
 
