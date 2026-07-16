@@ -75,6 +75,7 @@ export type EVENT_MAPPING = {
   };
   [EVENTS.CHAT_NEXT]: {
     phraseIndex: number;
+    pageIndex?: number;
   };
   [EVENTS.CONTROL_STATE]: {
     state: IControlStateSystem['state'];

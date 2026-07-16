@@ -260,6 +260,11 @@ export interface IChatSystem extends Updateable {
   next: () => void;
   phrase: string;
   hasNextPhrase: boolean;
+  // Pagination: a phrase too tall for the panel is shown one page at a time.
+  pageIndex: number;
+  pageCount: number;
+  hasMore: boolean;
+  setPageCount: (count: number) => void;
 }
 
 export interface IControlStateSystem extends Updateable {

@@ -600,7 +600,7 @@ const drawChat = (
   const offsetHeight = 14 * panelScale + 10;
   const offsetWidth = 14 * panelScale + 14;
   // Split the chat phrase into lines.
-  const lines = getLines(
+  const allLines = getLines(
     ctx,
     gameState.systems.chat.phrase,
     size.width - paddingWidth * 2 - offsetWidth
@@ -612,11 +612,22 @@ const drawChat = (
   const textX = paddingWidth / 2 + offsetWidth;
   const textHeight = fontSize;
   const textGap = lineGap;
+  // Paginate: fit as many lines as the panel's height allows (symmetric top/
+  // bottom inset), then let the advance control page through the rest before
+  // moving to the next phrase. Keeps long phrases from spilling past the panel.
+  const availableHeight = size.height - offsetHeight * 2;
+  const linesPerPage = Math.max(
+    1,
+    Math.floor((availableHeight + textGap) / (textHeight + textGap))
+  );
+  gameState.systems.chat.setPageCount(Math.ceil(allLines.length / linesPerPage));
+  const pageStart = gameState.systems.chat.pageIndex * linesPerPage;
+  const lines = allLines.slice(pageStart, pageStart + linesPerPage);
   // set text alignment
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
 
-  // Draw each line of chat text.
+  // Draw each line of the current page.
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const y = textY + i * (textHeight + textGap);
@@ -624,8 +635,8 @@ const drawChat = (
     ctx.strokeText(line, textX, y);
   }
 
-  // Draw the next phrase indicator if there is one.
-  if (gameState.systems.chat.hasNextPhrase) {
+  // Draw the advance indicator if there's more to come (another page or phrase).
+  if (gameState.systems.chat.hasMore) {
 
     ctx.fillText(
       '▼',
