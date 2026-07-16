@@ -120,7 +120,6 @@ every flag set auto-saves.
 
 | Flag | Set when |
 |---|---|
-| `prologue_opening_said` | Arcia's one-line arrival bubble has played (never replays) |
 | `prologue_errand_started` | Keeper asks Arcia to fetch the child from the well |
 | `prologue_errand_done` | Child agrees to head back |
 | `prologue_complete` | Keeper opens the north gate (the Fern ask) |
@@ -171,8 +170,10 @@ paths, simple sequencing). Detailed later, per region.
 
 ## Prologue (Thornwick Waystation)
 
-Arrive on the south road → one dry arrival line → the yard: signpost, well, campfire,
-hut, tent → NPCs seed the contradicting rumors and the Fern hole → keeper's errand
+Arrive on the south road — the area title card is the arrival beat; Arcia stays quiet
+(a dry arrival bubble was cut: title + signpost + bubble crowded the opening) → the
+yard: signpost, well, campfire, hut, tent → NPCs seed the contradicting rumors and the
+Fern hole → keeper's errand
 (the child at the well) → errand done → keeper asks Arcia to look for Fern and opens
 the north gate (`prologue_complete`) → one-way transition into Verdelight Glade.
 Minutes, not hours: **the errand is tiny on purpose** — it exists so the gate opening

@@ -260,6 +260,11 @@ export interface IChatSystem extends Updateable {
   next: () => void;
   phrase: string;
   hasNextPhrase: boolean;
+  // Pagination: a phrase too tall for the panel is shown one page at a time.
+  pageIndex: number;
+  pageCount: number;
+  hasMore: boolean;
+  setPageCount: (count: number) => void;
 }
 
 export interface IControlStateSystem extends Updateable {
@@ -356,6 +361,7 @@ export type GameState = {
     spawn: ISpawnSystem;
     narrativeFlags: INarrativeFlagSystem;
     areaTransition: IAreaTransitionSystem;
+    areaTitle: IAreaTitleSystem;
     save: ISaveSystem;
   };
   mobileControls: MobileControls;
@@ -525,6 +531,12 @@ export interface ISaveSystem extends Updateable {
 }
 
 export interface IAreaTransitionSystem extends Updateable {
+}
+
+export interface IAreaTitleSystem extends Updateable {
+  bannerImage: HTMLImageElement;
+  current: { title: string; shownAtMs: number } | null;
+  show: (mapName: string) => void;
 }
 
 export type Interaction = {

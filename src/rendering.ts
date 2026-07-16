@@ -3,12 +3,14 @@ import { DarkWizardEntity } from "./entities/darkWizardEntity";
 import { SlimeEntity } from "./entities/slimeEntity";
 import { CorruptedSlimeEntity } from "./entities/corruptedSlimeEntity";
 import { FastSlimeEntity } from "./entities/fastSlimeEntity";
+import { VillagerEntity } from "./entities/villagerEntity";
 import { TransitionTriggerEntity } from "./entities/transitionTriggerEntity";
 import { HeartPickupEntity } from "./entities/heartPickupEntity";
 import { EVENTS } from './events';
 import { CORRUPTED_KILLS_REQUIRED } from './systems/narrativeFlagSystem';
 import { GameEntity, GameState, Rect, Vector2, WorldMap } from './models';
 import { worldToCamera, positionToTileCoord, distanceTo } from './position';
+import { drawWoodPanel, drawWoodChip, uiPanelScale, UI_CREAM } from './uiPanel';
 import { getBoundingRect } from './rectangle';
 import { drawSprite, getSpriteScale } from './sprites';
 import { getTintedSprite } from './spriteTinting';
@@ -215,16 +217,12 @@ const drawQuestLogHint = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEleme
   ctx.font = '22px "Press Start 2P"';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  const w = Math.abs(ctx.measureText(label).width) + 40;
-  const h = 48;
+  const w = Math.abs(ctx.measureText(label).width) + 44;
+  const h = 52;
   const x = (canvas.width - w) / 2;
   const y = 18;
-  ctx.fillStyle = 'rgba(25, 60, 62, 0.7)';
-  ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = '#feae34';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(x, y, w, h);
-  ctx.fillStyle = '#ead4aa';
+  drawWoodChip(ctx, x, y, w, h);
+  ctx.fillStyle = UI_CREAM;
   ctx.fillText(label, canvas.width / 2, y + h / 2);
   ctx.restore();
 };
@@ -237,51 +235,49 @@ const drawQuestLog = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
   const objective = getObjectiveText(gameState) || 'No active objective.';
 
   const boxW = 1180;
-  const boxH = 380;
+  const boxH = 460;
   const boxX = (canvas.width - boxW) / 2;
   const boxY = 140;
-  const padX = 56;
+  const logScale = uiPanelScale(canvas);
+  const padX = Math.max(56, 14 * logScale + 24);
 
   ctx.save();
-  ctx.fillStyle = 'rgba(20, 48, 50, 0.94)';
-  ctx.fillRect(boxX, boxY, boxW, boxH);
-  ctx.strokeStyle = '#feae34';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(boxX, boxY, boxW, boxH);
+  drawWoodPanel(ctx, boxX, boxY, boxW, boxH, logScale);
 
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
+  const padY = Math.max(40, 12 * logScale + 18);
 
   // Header.
   ctx.fillStyle = '#feae34';
   ctx.font = '34px "Press Start 2P"';
-  ctx.fillText('QUEST LOG', boxX + padX, boxY + 40);
+  ctx.fillText('QUEST LOG', boxX + padX, boxY + padY);
 
   // Divider.
   ctx.strokeStyle = 'rgba(254, 174, 52, 0.5)';
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(boxX + padX, boxY + 96);
-  ctx.lineTo(boxX + boxW - padX, boxY + 96);
+  ctx.moveTo(boxX + padX, boxY + padY + 56);
+  ctx.lineTo(boxX + boxW - padX, boxY + padY + 56);
   ctx.stroke();
 
   // Quest title.
   ctx.fillStyle = '#ffd54a';
   ctx.font = '26px "Press Start 2P"';
-  ctx.fillText(QUEST_TITLE, boxX + padX, boxY + 132);
+  ctx.fillText(QUEST_TITLE, boxX + padX, boxY + padY + 92);
 
   // Active objective.
   ctx.fillStyle = '#ead4aa';
   ctx.font = '24px "Press Start 2P"';
   const lines = getLines(ctx, '- ' + objective, boxW - padX * 2);
   for (let i = 0; i < lines.length; i++) {
-    ctx.fillText(lines[i]!, boxX + padX, boxY + 196 + i * 40);
+    ctx.fillText(lines[i]!, boxX + padX, boxY + padY + 156 + i * 40);
   }
 
   // Footer hint.
   ctx.fillStyle = 'rgba(234, 212, 170, 0.7)';
   ctx.font = '20px "Press Start 2P"';
-  ctx.fillText('[J] Close', boxX + padX, boxY + boxH - 52);
+  ctx.fillText('[J] Close', boxX + padX, boxY + boxH - padY - 24);
 
   ctx.restore();
 };
@@ -297,9 +293,12 @@ const getTileLayerData = (worldMap: WorldMap, name: string): number[] | undefine
 };
 
 /**
- * Rasterizes a map's terrain to a 1px-per-tile offscreen canvas: collision tiles read
- * as walls, decorated Things tiles as forest, everything else as ground. Tile id 1 in
- * the Things layer is the blank filler and is treated as empty.
+ * Rasterizes a map's terrain to a 1px-per-tile offscreen canvas. Ground reads as grass
+ * with the dirt trail and water wangsets picked out; decorated Things tiles split into
+ * passable ambience decor (kept as grass), waystation structures (buildings, well —
+ * warm brown), and tree/canopy art (dark green). Collision only paints as wall where
+ * nothing above explained it — trees and buildings are solid too, and blackening them
+ * turned every set piece into an unreadable blob.
  */
 const buildMinimapTerrain = (worldMap: WorldMap): HTMLCanvasElement => {
   const w = worldMap.width;
@@ -311,15 +310,28 @@ const buildMinimapTerrain = (worldMap: WorldMap): HTMLCanvasElement => {
   const collision = getTileLayerData(worldMap, 'Collision');
   const things = getTileLayerData(worldMap, 'Things');
   const ground = getTileLayerData(worldMap, 'Ground');
-  // Ground gids 170-182 are the "Grass Water" wangset (tileset ids 169-181, firstgid 1).
+  // Ground gids 74-86 are the "Grass Forrest" dirt-trail wangset, 170-182 the
+  // "Grass Water" wangset (tileset ids -1, firstgid 1).
+  const isTrail = (gid: number) => gid >= 74 && gid <= 86;
   const isWater = (gid: number) => gid >= 170 && gid <= 182;
+  // Things gid 1 is the blank filler; 109-116 are the passable single-tile ambience
+  // decor (stamps.mjs DECOR_TILES); >= 196 are the waystation structure rows
+  // (waystation-tiles.mjs pieces, gid = tile id + 1). Everything else decorated is
+  // tree/canopy art.
+  const isDecor = (gid: number) => gid >= 109 && gid <= 116;
   const image = octx.createImageData(w, h);
   for (let i = 0; i < w * h; i++) {
-    let r = 74, g = 140, b = 79; // ground #4a8c4f
-    if (things && things[i] && things[i] !== 1) { r = 46; g = 90; b = 52; } // tree #2e5a34
-    if (collision && collision[i]) { r = 28; g = 28; b = 34; } // wall #1c1c22
-    // Water is solid too, so this must come after the wall pass to win the pixel.
-    if (ground && isWater(ground[i])) { r = 70; g = 130; b = 200; } // water #4682c8
+    let r = 74, g = 140, b = 79; // grass #4a8c4f
+    let claimed = false;
+    if (ground && isTrail(ground[i])) { r = 232; g = 183; b = 150; claimed = true; } // trail #e8b796
+    const t = things ? things[i] : 0;
+    if (t > 1 && !isDecor(t)) {
+      if (t >= 196) { r = 172; g = 74; b = 58; } // structure #ac4a3a
+      else { r = 22; g = 30; b = 24; } // tree — blackish with a green cast #161e18
+      claimed = true;
+    }
+    if (ground && isWater(ground[i])) { r = 70; g = 130; b = 200; claimed = true; } // water #4682c8
+    if (!claimed && collision && collision[i]) { r = 28; g = 28; b = 34; } // bare wall #1c1c22
     const o = i * 4;
     image.data[o] = r;
     image.data[o + 1] = g;
@@ -341,12 +353,16 @@ export const getMinimapGeometry = (canvas: HTMLCanvasElement, gameState: GameSta
   if (!worldMap || !worldMap.layers || !player) return null;
 
   const size = 360;
-  const margin = 28;
+  // Leave room for the carved-wood frame drawn around the map crop (drawMinimap).
+  const margin = 20 + 12 * uiPanelScale(canvas);
   const rect = { x: canvas.width - size - margin, y: margin, w: size, h: size };
 
   // Zoomed, player-centered viewport: show viewTiles across, panning with the player
   // and clamped to the map edges (rather than fitting the whole map in the panel).
-  const viewTiles = 80;
+  // Maps smaller than the nominal zoom shrink the viewport to their short side —
+  // otherwise drawImage clips the oversized source rect and squishes the map into
+  // the panel's top-left corner instead of filling it.
+  const viewTiles = Math.min(80, worldMap.width, worldMap.height);
   const playerTile = positionToTileCoord(player.state);
   const half = viewTiles / 2;
   const viewX = Math.max(0, Math.min(worldMap.width - viewTiles, playerTile.x - half));
@@ -375,9 +391,11 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
   const { rect, viewX, viewY, viewTiles: VIEW_TILES } = getMinimapGeometry(canvas, gameState)!;
 
   ctx.save();
-  // Backing + terrain crop + border. Clip so the cropped terrain can't bleed past the panel.
-  ctx.fillStyle = 'rgba(25, 60, 62, 0.85)';
-  ctx.fillRect(rect.x - 6, rect.y - 6, rect.w + 12, rect.h + 12);
+  // Carved-wood frame around the map crop (shared UI skin); the frame's border sits
+  // outside rect so the crop and the teleport click geometry stay identical.
+  const mapScale = uiPanelScale(canvas);
+  const frame = 12 * mapScale;
+  drawWoodPanel(ctx, rect.x - frame, rect.y - frame, rect.w + frame * 2, rect.h + frame * 2, mapScale);
   ctx.imageSmoothingEnabled = false;
   ctx.save();
   ctx.beginPath();
@@ -386,14 +404,14 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
   ctx.drawImage(terrain, viewX, viewY, VIEW_TILES, VIEW_TILES, rect.x, rect.y, rect.w, rect.h);
   ctx.restore();
   // Teleport mode ('T'): cyan border + hint, click on the panel warps the player.
-  ctx.strokeStyle = gameState.debugSettings.teleport ? '#4ae0e0' : '#feae34';
-  ctx.lineWidth = 5;
-  ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
   if (gameState.debugSettings.teleport) {
+    ctx.strokeStyle = '#4ae0e0';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(rect.x, rect.y, rect.w, rect.h);
     ctx.fillStyle = '#4ae0e0';
     ctx.font = '26px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('TELEPORT: CLICK MAP', rect.x + rect.w / 2, rect.y + rect.h + 34);
+    ctx.fillText('TELEPORT: CLICK MAP', rect.x + rect.w / 2, rect.y + rect.h + frame + 30);
   }
 
   const toMini = (pos: Vector2) => {
@@ -416,10 +434,12 @@ const drawMinimap = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, g
   };
 
   // Enemies: corrupted targets stand out in purple, the rest are faded red.
+  // Villagers read as warm gold — people, not threats.
   for (const e of gameState.entities) {
     if (e.status.dead || !inView(e.state)) continue;
     if (e.name === CorruptedSlimeEntity.NAME) dot(e.state, '#c040c0', 5);
     else if (e.name === SlimeEntity.NAME || e.name === FastSlimeEntity.NAME) dot(e.state, 'rgba(200, 70, 70, 0.7)', 4);
+    else if (e instanceof VillagerEntity) dot(e.state, '#ffd98c', 4);
   }
 
   // Objective: a pulsing yellow ring at the current goal. If off the viewport, clamp it
@@ -480,10 +500,14 @@ const drawHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameS
   // ctx.font = '32px "Press Start 2P"';
   // ctx.fillText(`${player!.status.health} / ${player!.status.maxHealth}`, xOffset + gridWidth / 5 / 2, yOffset + gridHeight / 20 / 2);
 
-  const yOffset = 20;
+  // Carved-wood backing plate behind the health/xp cluster (shared UI skin).
+  // Fixed light scale: the cluster is small and the corner blocks are 16 art px.
+  drawWoodPanel(ctx, 10, 8, gridWidth / 8 + 120, 160, 3);
+
+  const yOffset = 52;
 
   const barRect = {
-    x: 50,
+    x: 70,
     y: yOffset,
     w: gridWidth / 8,
     h: 35
@@ -523,7 +547,7 @@ const drawHUD = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameS
 
   // XP Bar
   ctx.fillStyle ='#68386c';
-  const xOffset2 = 86;
+  const xOffset2 = 106;
   const yOffset2 = yOffset + 48;
   ctx.fillRect(xOffset2, yOffset2, (player!.status.experience / (gameState.systems.leveling.calculateXPToNextLevel(player!) + player!.status.experience)) * (gridWidth / 12), (gridHeight / 48));
   ctx.strokeStyle = '#000'
@@ -561,33 +585,22 @@ const drawChat = (
 
   ctx.beginPath();
 
-  // Set the fill style for the chat background.
-  ctx.fillStyle = '#193c3e';
   const size = {
     height: 400,
     width: gridWidth,
   };
-  // Draw the chat background rectangle.
-  ctx.fillRect(0, gridHeight - size.height, size.width, size.height);
-  // Set the stroke style for the chat border.
-  ctx.strokeStyle = '#feae34';
-  const paddingWidth = 10;
-  ctx.lineWidth = paddingWidth;
-  // Draw the chat border rectangle.
-  ctx.strokeRect(
-    paddingWidth / 2,
-    gridHeight - size.height,
-    size.width - paddingWidth,
-    size.height
-  );
-  // Set the fill style for the chat text background.
-  ctx.fillStyle = '#ead4aa';
+  // Carved-wood dialog panel (shared UI skin, see uiPanel.ts).
+  const panelScale = uiPanelScale(canvas);
+  drawWoodPanel(ctx, 0, gridHeight - size.height, size.width, size.height, panelScale);
+  // Set the fill style for the chat text.
+  ctx.fillStyle = UI_CREAM;
   const fontSize = 54;
   ctx.font = `${fontSize}px "Press Start 2P"`;
-  const offsetHeight = 24;
-  const offsetWidth = 32;
+  const paddingWidth = 10;
+  const offsetHeight = 14 * panelScale + 10;
+  const offsetWidth = 14 * panelScale + 14;
   // Split the chat phrase into lines.
-  const lines = getLines(
+  const allLines = getLines(
     ctx,
     gameState.systems.chat.phrase,
     size.width - paddingWidth * 2 - offsetWidth
@@ -599,11 +612,22 @@ const drawChat = (
   const textX = paddingWidth / 2 + offsetWidth;
   const textHeight = fontSize;
   const textGap = lineGap;
+  // Paginate: fit as many lines as the panel's height allows (symmetric top/
+  // bottom inset), then let the advance control page through the rest before
+  // moving to the next phrase. Keeps long phrases from spilling past the panel.
+  const availableHeight = size.height - offsetHeight * 2;
+  const linesPerPage = Math.max(
+    1,
+    Math.floor((availableHeight + textGap) / (textHeight + textGap))
+  );
+  gameState.systems.chat.setPageCount(Math.ceil(allLines.length / linesPerPage));
+  const pageStart = gameState.systems.chat.pageIndex * linesPerPage;
+  const lines = allLines.slice(pageStart, pageStart + linesPerPage);
   // set text alignment
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
 
-  // Draw each line of chat text.
+  // Draw each line of the current page.
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const y = textY + i * (textHeight + textGap);
@@ -611,8 +635,8 @@ const drawChat = (
     ctx.strokeText(line, textX, y);
   }
 
-  // Draw the next phrase indicator if there is one.
-  if (gameState.systems.chat.hasNextPhrase) {
+  // Draw the advance indicator if there's more to come (another page or phrase).
+  if (gameState.systems.chat.hasMore) {
 
     ctx.fillText(
       '▼',
@@ -895,6 +919,51 @@ const logDrawFailure = (entity: GameEntity, err: unknown) => {
   );
 };
 
+// Area title card: the AI-prerendered banner with the area's name in the game font,
+// fading in with a small downward drift, holding, then fading out. AreaTitleSystem
+// decides when a card starts; this owns the envelope and layout.
+const TITLE_FADE_IN = 450;
+const TITLE_HOLD = 2400;
+const TITLE_FADE_OUT = 800;
+const drawAreaTitle = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
+  const { bannerImage, current } = gameState.systems.areaTitle;
+  if (!current || !bannerImage.complete || !bannerImage.naturalWidth) return;
+  const t = Date.now() - current.shownAtMs;
+  if (t >= TITLE_FADE_IN + TITLE_HOLD + TITLE_FADE_OUT) return;
+  const alpha = t < TITLE_FADE_IN
+    ? t / TITLE_FADE_IN
+    : t < TITLE_FADE_IN + TITLE_HOLD
+      ? 1
+      : 1 - (t - TITLE_FADE_IN - TITLE_HOLD) / TITLE_FADE_OUT;
+
+  // Integer pixel scale keeps the banner art crisp at ~40% of the canvas width.
+  const scale = Math.max(4, Math.round((canvas.width * 0.4) / bannerImage.naturalWidth));
+  const w = bannerImage.naturalWidth * scale;
+  const h = bannerImage.naturalHeight * scale;
+  const x = (canvas.width - w) / 2;
+  const drift = t < TITLE_FADE_IN ? (1 - t / TITLE_FADE_IN) * -h * 0.25 : 0;
+  const y = canvas.height * 0.1 + drift;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(bannerImage, x, y, w, h);
+
+  // Name centered in the banner's carved inner panel, sized to fit its width.
+  // Press Start 2P is effectively monospace: advance = font size per character.
+  const fontSize = Math.floor(Math.min((w * 0.66) / current.title.length, h * 0.3));
+  ctx.font = `${fontSize}px "Press Start 2P"`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const cx = canvas.width / 2;
+  const cy = y + h * 0.52;
+  ctx.fillStyle = 'rgba(20, 12, 28, 0.9)';
+  ctx.fillText(current.title, cx, cy + Math.max(3, fontSize * 0.12));
+  ctx.fillStyle = '#feae34';
+  ctx.fillText(current.title, cx, cy);
+  ctx.restore();
+};
+
 export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, gameState: GameState) => {
   gameState.emitter.emit(EVENTS.RENDER_START, null);
 
@@ -932,6 +1001,8 @@ export const render = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement,
     }
 
     drawHeartPickups(ctx, gameState);
+    // Title card sits under speech bubbles: dialogue must always stay readable.
+    drawAreaTitle(ctx, canvas, gameState);
     drawSpeechBubbles(ctx, gameState);
 
     drawHUD(ctx, canvas, gameState);

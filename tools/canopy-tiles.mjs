@@ -74,20 +74,27 @@ const field = (c, x, y) => {
   return tl * (1 - u) * (1 - v) + tr * u * (1 - v) + bl * (1 - u) * v + br * u * v;
 };
 
-// Rounded leaf-clump texture for the canopy interior: a regular grid of 4px lit clumps
-// Crown texture for the canopy interior: one rounded tree-crown lobe per tile (like the
-// LTTP forest wall and the hand-art blobs' repeated crowns): a lit dome with a dark swirl
-// detail, a navy shading crescent on the lower-right, sitting in a shadow gutter. Pure
-// function of (x mod 16, y mod 16), so identical on every tile -> continuous across
-// borders and unaffected by tile arrangement (no seams by construction).
+// Crown texture for the canopy interior: a dense lattice of overlapping crown lobes
+// (quincunx per 16px period, distances wrapped mod 16 so the pattern continues across
+// tile borders — seamless by construction). Dense coverage matters: edge and corner
+// tiles only expose a FRAGMENT of the tile's canopy region, and with a single centered
+// lobe those fragments landed in the empty gutter and rendered as flat dark voids —
+// the "gap in the trees" look. The lit/dark balance (~46% lit) matches the hand-art
+// crown tiles (135/158/161), which use this exact palette.
+const LOBES = [[8, 4], [0, 12]]; // brick-offset rows of wide lobes
 const leafPixel = (x, y) => {
-  const lx = (x % TILE) - 7.5, ly = (y % TILE) - 7.5;
-  const d = Math.hypot(lx, ly);
-  if (d > 7.7) return CANOPY_DK;                        // shadow gutter between crowns
-  if (d > 6.2) return lx + ly > 1.5 ? RIM : CANOPY_DK;  // navy crescent on lower-right
-  if (d > 5.2) return CANOPY_DK;                        // dark ring around the dome
-  if (d > 2.4 && d <= 3.6 && ly < 0.5) return CANOPY_DK; // inner swirl arc detail
-  return CANOPY;                                        // lit dome
+  const lx = x % TILE, ly = y % TILE;
+  let d = Infinity, nx = 0, ny = 0;
+  for (const [bx, by] of LOBES) {
+    let dx = Math.abs(lx - bx); dx = Math.min(dx, TILE - dx);
+    let dy = Math.abs(ly - by); dy = Math.min(dy, TILE - dy);
+    const dd = Math.hypot(dx / 1.6, dy); // wide, shallow ellipse = LTTP crown lobe
+    if (dd < d) { d = dd; nx = lx - bx; ny = ly - by; }
+  }
+  if (d <= 2.1 && d > 1.2 && ny < 0.5 && nx < 1) return CANOPY_DK; // swirl arc in the dome
+  if (d <= 3.5) return CANOPY;                                     // lit dome
+  if (d <= 4.6) return CANOPY_DK;                                  // dark ring
+  return RIM;                                                      // navy seams between rows
 };
 
 // Base terrain color for a pixel, purely a function of its canopy field value (so any tile

@@ -142,14 +142,6 @@ export class SpawnSystem implements ISpawnSystem {
 
       gameState.camera.follow(playerEntity);
       gameState.entities.push(playerEntity);
-
-      // Arcia's one dry line of arrival, first time only (the flag auto-saves, so
-      // continues — even mid-prologue — never replay it).
-      const flags = gameState.systems.narrativeFlags;
-      if (gameState.map.activeMap.name === 'prologue' && !flags.hasFlag('prologue_opening_said')) {
-        flags.setFlag('prologue_opening_said', true);
-        gameState.systems.speech.say(playerEntity, 'Thornwick, then. And a barred gate where the road should be.', 6000);
-      }
     }
 
     // Spawn enemies and NPCs

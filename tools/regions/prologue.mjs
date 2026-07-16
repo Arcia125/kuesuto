@@ -13,6 +13,10 @@ const pads = [
   { x0: 16, y0: 18, x1: 23, y1: 32 }, // south road corridor (8 wide)
   { x0: 10, y0: 10, x1: 16, y1: 16 }, // hut pad (west)
   { x0: 24, y0: 11, x1: 29, y1: 16 }, // tent pad (east)
+  // Hunter's clearing: squares off the yard circle's ragged SE rim (aligned with the
+  // tent pad's east edge) so the treeline runs one clean line past the hunter's post
+  // instead of a stair-stepped notch of bare canopy-edge tiles.
+  { x0: 24, y0: 17, x1: 29, y1: 24 },
   { x0: 17, y0: 3, x1: 22, y1: 17 },  // north gate corridor
 ];
 const yard = { x: 20, y: 17, r: 9 };
